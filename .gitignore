@@ -103,4 +103,7 @@ coverage/
 
 # Submodules
 !pubspec.lock
+
+# Added rules
+.devtools/
 .packages
