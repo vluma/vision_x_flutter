@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vision_x_flutter/models/douban_movie.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vision_x_flutter/components/bottom_navigation_bar.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -13,14 +13,42 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  final TextEditingController _searchController = TextEditingController();
-  List<DoubanMovie> _searchResults = [];
   List<MediaDetail> _mediaResults = [];
   bool _isLoading = false;
   bool _hasSearched = false;
-  bool _useMediaDetail = false; // 切换使用新模型
 
-  // 执行搜索
+  @override
+  void initState() {
+    super.initState();
+    // 监听搜索数据源的变化
+    searchDataSource.addListener(_handleSearchDataChange);
+
+    // 如果已经有搜索查询，执行搜索
+    if (searchDataSource.searchQuery.isNotEmpty) {
+      _performSearch(searchDataSource.searchQuery);
+    }
+  }
+
+  @override
+  void dispose() {
+    searchDataSource.removeListener(_handleSearchDataChange);
+    super.dispose();
+  }
+
+  void _handleSearchDataChange() {
+    // 当搜索数据源发生变化时执行搜索
+    if (searchDataSource.searchQuery.isNotEmpty) {
+      _performSearch(searchDataSource.searchQuery);
+    } else {
+      // 清空搜索结果
+      setState(() {
+        _mediaResults = [];
+        _hasSearched = false;
+      });
+    }
+  }
+
+  // 执行聚合搜索
   Future<void> _performSearch(String query) async {
     if (query.trim().isEmpty) {
       return;
@@ -29,108 +57,52 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _isLoading = true;
       _hasSearched = true;
+      _mediaResults = [];
     });
 
     try {
-      // 搜索电影和电视剧
-      final movieResults = await ApiService.getMovies(
-        type: 'movie',
-        tag: query.trim(),
-        pageLimit: 10,
-      );
-      
-      final tvResults = await ApiService.getMovies(
-        type: 'tv',
-        tag: query.trim(),
-        pageLimit: 10,
-      );
+      final results = await ApiService.aggregatedSearch(query.trim());
 
-      // 合并结果
-      final allResults = [...movieResults, ...tvResults];
-      
-      setState(() {
-        _searchResults = allResults;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      
       if (mounted) {
+        setState(() {
+          _mediaResults = results;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('搜索失败，请稍后重试')),
+          SnackBar(content: Text('搜索失败: $e')),
         );
       }
     }
   }
 
-  // 清空搜索
-  void _clearSearch() {
-    _searchController.clear();
-    setState(() {
-      _searchResults = [];
-      _mediaResults = [];
-      _hasSearched = false;
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            hintText: '搜索电影、电视剧...',
-            border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white70),
-          ),
-          style: const TextStyle(color: Colors.white),
-          onSubmitted: _performSearch,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: _clearSearch,
-          ),
-        ],
+        title: const Text('搜索结果'),
       ),
       body: Column(
         children: [
-          // 添加切换按钮
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_useMediaDetail ? '新模型' : '旧模型'),
-              Switch(
-                value: _useMediaDetail,
-                onChanged: (value) {
-                  setState(() {
-                    _useMediaDetail = value;
-                  });
-                },
-              ),
-            ],
-          ),
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: CircularProgressIndicator(),
             )
-          else if (_hasSearched && _searchResults.isEmpty && _mediaResults.isEmpty)
+          else if (_hasSearched && _mediaResults.isEmpty)
             const Expanded(
               child: Center(
                 child: Text('未找到相关结果'),
               ),
             )
-          else if (_searchResults.isNotEmpty || _mediaResults.isNotEmpty)
+          else if (_mediaResults.isNotEmpty)
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(16),
@@ -140,27 +112,16 @@ class _SearchPageState extends State<SearchPage> {
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                 ),
-                itemCount: _useMediaDetail ? _mediaResults.length : _searchResults.length,
+                itemCount: _mediaResults.length,
                 itemBuilder: (BuildContext context, int index) {
-                  if (_useMediaDetail) {
-                    // 使用新模型显示
-                    final media = _mediaResults[index];
-                    return _MediaResultItem(
-                      media: media,
-                      onTap: () {
-                        // TODO: 导航到新模型的详情页
-                      },
-                    );
-                  } else {
-                    // 使用旧模型显示
-                    final movie = _searchResults[index];
-                    return _SearchResultItem(
-                      movie: movie,
-                      onTap: () {
-                        context.go('/search/detail/${movie.id}');
-                      },
-                    );
-                  }
+                  final media = _mediaResults[index];
+                  return _MediaResultItem(
+                    media: media,
+                    onTap: () {
+                      // 导航到详情页
+                      context.go('/search/detail/${media.id}', extra: media);
+                    },
+                  );
                 },
               ),
             )
@@ -176,93 +137,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
-// 搜索结果项组件 (旧模型)
-class _SearchResultItem extends StatelessWidget {
-  final DoubanMovie movie;
-  final VoidCallback onTap;
-
-  const _SearchResultItem({
-    required this.movie,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final String imageUrl = ApiService.handleImageUrl(movie.cover);
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  // 使用 CachedNetworkImage 加载图片
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.movie,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // 评分
-                  Positioned(
-                    right: 5,
-                    bottom: 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        movie.rate,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                movie.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 媒体结果项组件 (新模型)
+// 媒体结果项组件
 class _MediaResultItem extends StatelessWidget {
   final MediaDetail media;
   final VoidCallback onTap;
@@ -276,7 +151,7 @@ class _MediaResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // 使用海报图片，如果没有则使用占位图
     final String? imageUrl = media.poster;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -302,10 +177,10 @@ class _MediaResultItem extends StatelessWidget {
                           child: Icon(
                             Icons.movie,
                             color: Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                  )
+                    )
                   else
                     Container(
                       color: Colors.grey[300],
@@ -338,6 +213,28 @@ class _MediaResultItem extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // 来源标签
+                  Positioned(
+                    left: 5,
+                    top: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: Text(
+                        media.sourceName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -354,7 +251,8 @@ class _MediaResultItem extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
+              padding:
+                  const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
               child: Text(
                 '${media.year ?? ''} ${media.area ?? ''}',
                 style: const TextStyle(

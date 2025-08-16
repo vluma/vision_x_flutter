@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vision_x_flutter/services/api_service.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
   final String currentPath;
@@ -19,9 +20,33 @@ class BottomNavigationBarWidget extends StatefulWidget {
 
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static const Duration _animationDuration = Duration(milliseconds: 200);
-  bool _isSearchExpanded = false;
   final bool _isMenuExpanded = false;
   final TextEditingController _searchController = TextEditingController();
+  String? _lastActivePath; // 保存上次激活的路径
+  @override
+  void initState() {
+    super.initState();
+    // 监听搜索数据源的变化
+    searchDataSource.addListener(_onSearchDataSourceChanged);
+    // 初始化搜索控制器的值
+    _searchController.text = searchDataSource.searchQuery;
+  }
+
+  @override
+  void dispose() {
+    searchDataSource.removeListener(_onSearchDataSourceChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchDataSourceChanged() {
+    // 当数据源中的搜索查询发生变化时，更新文本字段
+    if (_searchController.text != searchDataSource.searchQuery) {
+      setState(() {
+        _searchController.text = searchDataSource.searchQuery;
+      });
+    }
+  }
 
   bool _isActive(String path) {
     // 修复导航路径判断逻辑
@@ -33,8 +58,14 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   void _toggleSearch() {
     setState(() {
-      _isSearchExpanded = !_isSearchExpanded;
-      if (!_isSearchExpanded) {
+      if (widget.currentPath.startsWith('/')) {
+        _lastActivePath = widget.currentPath;
+      }
+      GoRouter.of(context).go('/search');
+
+      searchDataSource.setSearchExpanded(!searchDataSource.isSearchExpanded);
+      if (!searchDataSource.isSearchExpanded) {
+        searchDataSource.clearSearch();
         _searchController.clear();
       }
     });
@@ -42,7 +73,11 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   void _toggleMenu() {
     setState(() {
-      _isSearchExpanded = false;
+      if (_lastActivePath != null) {
+        GoRouter.of(context).go(_lastActivePath!);
+      }
+      searchDataSource.setSearchExpanded(false);
+      searchDataSource.clearSearch();
       _searchController.clear();
     });
   }
@@ -64,7 +99,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
           // 导航按钮区域 - 带有宽度动画
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: _isSearchExpanded ? 48.0 : maxColumnWidth,
+            width: searchDataSource.isSearchExpanded ? 48.0 : maxColumnWidth,
             height: 48, // 设置固定高度
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.8), // 修改背景颜色为白色，透明度80%
@@ -84,12 +119,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                   firstChild: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildNavButton(
-                          context, '/', '', Icons.home, _isSearchExpanded),
-                      _buildNavButton(context, '/history', '', Icons.history,
-                          _isSearchExpanded),
-                      _buildNavButton(context, '/settings', '', Icons.settings,
-                          _isSearchExpanded),
+                      _buildNavButton(context, '/', '', Icons.home),
+                      _buildNavButton(context, '/history', '', Icons.history),
+                      _buildNavButton(context, '/settings', '', Icons.settings),
                     ],
                   ),
                   secondChild: InkWell(
@@ -102,7 +134,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                       child: Center(
                         child: AnimatedOpacity(
                           duration: _animationDuration,
-                          opacity: _isSearchExpanded ? 1.0 : 0.0,
+                          opacity: searchDataSource.isSearchExpanded ? 1.0 : 0.0,
                           child: Icon(
                             Icons.menu,
                             color: Colors.blue, // 蓝色图标
@@ -112,7 +144,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                       ),
                     ),
                   ),
-                  crossFadeState: _isSearchExpanded
+                  crossFadeState: searchDataSource.isSearchExpanded
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
                 ),
@@ -123,13 +155,13 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
           // 搜索区域 - 使用AnimatedCrossFade避免形状插值
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: _isSearchExpanded ? maxColumnWidth : 48.0,
+            width: searchDataSource.isSearchExpanded ? maxColumnWidth : 48.0,
             height: 48, // 设置固定高度
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.8), // 修改背景颜色为白色，透明度80%
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.7), // 水反光颜色边框
+                color: Colors.white.withValues(alpha: 0.7), // 水反光颜色边框
                 width: 1.5,
               ),
             ),
@@ -147,7 +179,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                       child: Center(
                         child: AnimatedOpacity(
                           duration: _animationDuration,
-                          opacity: _isSearchExpanded ? 1.0 : 1.0,
+                          opacity: searchDataSource.isSearchExpanded ? 1.0 : 1.0,
                           child: Icon(
                             Icons.search,
                             color: Colors.grey[700],
@@ -169,16 +201,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                         border: InputBorder.none,
                         prefixIcon: Icon(Icons.search, color: Colors.grey[700]),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
+                            vertical: 0, horizontal: 0),
                       ),
                       onSubmitted: (value) {
                         if (value.trim().isNotEmpty) {
+                          searchDataSource.setSearchQuery(value);
                           context.go('/search');
                         }
                       },
                     ),
                   ),
-                  crossFadeState: _isSearchExpanded
+                  crossFadeState: searchDataSource.isSearchExpanded
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
                 ),
@@ -190,34 +223,41 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     );
   }
 
-  Widget _buildNavButton(BuildContext context, String path, String label,
-      IconData icon, bool isSearchExpanded) {
+  Widget _buildNavButton(
+      BuildContext context, String path, String label, IconData icon) {
     final isActive = _isActive(path);
     final theme = Theme.of(context);
+
+    // 当搜索展开时，检查是否应该保持某个按钮的激活状态
+    bool showAsActive = isActive;
+    if (searchDataSource.isSearchExpanded && _lastActivePath != null) {
+      showAsActive = _lastActivePath!.startsWith(path);
+    }
 
     return Expanded(
       child: InkWell(
         onTap: () {
+          // 点击导航按钮时更新最后激活的路径
+          setState(() {
+            _lastActivePath = path;
+          });
           GoRouter.of(context).go(path);
         },
         child: Container(
           decoration: BoxDecoration(
-            color:
-                isActive ? Colors.grey[300] : Colors.transparent, // 修改选中样式为灰色背景
+            color: showAsActive
+                ? Colors.grey[300]
+                : Colors.transparent, // 修改选中样式为灰色背景
             shape: BoxShape.rectangle,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Center(
-            child: AnimatedOpacity(
-              duration: _animationDuration,
-              opacity: isSearchExpanded ? 0.0 : 1.0,
-              child: Icon(
-                icon,
-                color: isActive
-                    ? Colors.blue // 修改选中样式为蓝色图标
-                    : Colors.grey[700], // 默认为灰色图标
-                size: 24,
-              ),
+            child: Icon(
+              icon,
+              color: showAsActive
+                  ? Colors.blue // 修改选中样式为蓝色图标
+                  : Colors.grey[700], // 默认为灰色图标
+              size: 24,
             ),
           ),
         ),

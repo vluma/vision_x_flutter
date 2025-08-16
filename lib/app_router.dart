@@ -10,20 +10,22 @@ import 'package:vision_x_flutter/pages/search_page.dart';
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
     StatefulShellRoute.indexedStack(
-      builder: (BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
+      builder: (BuildContext context, GoRouterState state,
+          StatefulNavigationShell navigationShell) {
         // 这里我们根据当前路径决定是否显示底部导航栏
         final currentPath = state.uri.toString();
-        final isMainTab = currentPath == '/' || 
-                         currentPath.startsWith('/history') || 
-                         currentPath.startsWith('/settings');
-        
+        final isMainTab = currentPath == '/' ||
+            currentPath.startsWith('/history') ||
+            currentPath.startsWith('/settings') ||
+            currentPath.startsWith('/search');
+
         if (isMainTab) {
           return MainPage(
             currentPath: currentPath,
             child: navigationShell,
           );
         }
-        
+
         // 对于非主标签页，直接返回导航壳
         return navigationShell;
       },
@@ -49,7 +51,7 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        
+
         // History branch
         StatefulShellBranch(
           routes: <RouteBase>[
@@ -71,7 +73,7 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        
+
         // Settings branch
         StatefulShellBranch(
           routes: <RouteBase>[
@@ -93,23 +95,26 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        
-  ],
-    ),
-    
-    // 搜索页面路由（作为一级页面，有自己的底部导航）
-    GoRoute(
-      path: '/search',
-      builder: (BuildContext context, GoRouterState state) {
-        return const SearchPage();
-      },
-      routes: <RouteBase>[
-        GoRoute(
-          path: 'detail/:id',
-          builder: (BuildContext context, GoRouterState state) {
-            final id = state.pathParameters['id'];
-            return DetailPage(id: id);
-          },
+
+        // Search branch
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: '/search',
+              builder: (BuildContext context, GoRouterState state) {
+                return const SearchPage();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'detail/:id',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final id = state.pathParameters['id'];
+                    return DetailPage(id: id);
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     ),
