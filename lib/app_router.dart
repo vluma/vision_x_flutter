@@ -6,6 +6,8 @@ import 'package:vision_x_flutter/pages/settings_page.dart';
 import 'package:vision_x_flutter/pages/main_page.dart';
 import 'package:vision_x_flutter/pages/detail_page.dart';
 import 'package:vision_x_flutter/pages/search_page.dart';
+import 'package:vision_x_flutter/pages/video_player_page.dart';
+import 'package:vision_x_flutter/models/media_detail.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -19,14 +21,19 @@ final GoRouter router = GoRouter(
             currentPath.startsWith('/settings') ||
             currentPath.startsWith('/search');
 
-        if (isMainTab) {
+        // 检查是否为二级页面（详情页或视频播放页）
+        final isSubPage = currentPath.contains('/detail/') || 
+            currentPath.contains('/video');
+
+        // 只有主页面才显示底部导航栏，二级页面不显示
+        if (isMainTab && !isSubPage) {
           return MainPage(
             currentPath: currentPath,
             child: navigationShell,
           );
         }
 
-        // 对于非主标签页，直接返回导航壳
+        // 对于非主标签页或二级页面，直接返回导航壳
         return navigationShell;
       },
       branches: <StatefulShellBranch>[
@@ -43,8 +50,31 @@ final GoRouter router = GoRouter(
                 GoRoute(
                   path: 'detail/:id',
                   builder: (BuildContext context, GoRouterState state) {
-                    final id = state.pathParameters['id'];
+                    final id = state.pathParameters['id']!;
+                    final extra = state.extra;
+                    if (extra is MediaDetail) {
+                      return DetailPage(id: id, media: extra);
+                    }
                     return DetailPage(id: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'video',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra;
+                    if (extra is Map &&
+                        extra['media'] is MediaDetail &&
+                        extra['episode'] is Episode) {
+                      return VideoPlayerPage(
+                        media: extra['media'] as MediaDetail,
+                        episode: extra['episode'] as Episode,
+                      );
+                    }
+                    return const Scaffold(
+                      body: Center(
+                        child: Text('视频信息不完整'),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -65,8 +95,31 @@ final GoRouter router = GoRouter(
                 GoRoute(
                   path: 'detail/:id',
                   builder: (BuildContext context, GoRouterState state) {
-                    final id = state.pathParameters['id'];
+                    final id = state.pathParameters['id']!;
+                    final extra = state.extra;
+                    if (extra is MediaDetail) {
+                      return DetailPage(id: id, media: extra);
+                    }
                     return DetailPage(id: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'video',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra;
+                    if (extra is Map &&
+                        extra['media'] is MediaDetail &&
+                        extra['episode'] is Episode) {
+                      return VideoPlayerPage(
+                        media: extra['media'] as MediaDetail,
+                        episode: extra['episode'] as Episode,
+                      );
+                    }
+                    return const Scaffold(
+                      body: Center(
+                        child: Text('视频信息不完整'),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -87,8 +140,31 @@ final GoRouter router = GoRouter(
                 GoRoute(
                   path: 'detail/:id',
                   builder: (BuildContext context, GoRouterState state) {
-                    final id = state.pathParameters['id'];
+                    final id = state.pathParameters['id']!;
+                    final extra = state.extra;
+                    if (extra is MediaDetail) {
+                      return DetailPage(id: id, media: extra);
+                    }
                     return DetailPage(id: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'video',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra;
+                    if (extra is Map &&
+                        extra['media'] is MediaDetail &&
+                        extra['episode'] is Episode) {
+                      return VideoPlayerPage(
+                        media: extra['media'] as MediaDetail,
+                        episode: extra['episode'] as Episode,
+                      );
+                    }
+                    return const Scaffold(
+                      body: Center(
+                        child: Text('视频信息不完整'),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -108,8 +184,31 @@ final GoRouter router = GoRouter(
                 GoRoute(
                   path: 'detail/:id',
                   builder: (BuildContext context, GoRouterState state) {
-                    final id = state.pathParameters['id'];
+                    final id = state.pathParameters['id']!;
+                    final extra = state.extra;
+                    if (extra is MediaDetail) {
+                      return DetailPage(id: id, media: extra);
+                    }
                     return DetailPage(id: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'video',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra;
+                    if (extra is Map &&
+                        extra['media'] is MediaDetail &&
+                        extra['episode'] is Episode) {
+                      return VideoPlayerPage(
+                        media: extra['media'] as MediaDetail,
+                        episode: extra['episode'] as Episode,
+                      );
+                    }
+                    return const Scaffold(
+                      body: Center(
+                        child: Text('视频信息不完整'),
+                      ),
+                    );
                   },
                 ),
               ],

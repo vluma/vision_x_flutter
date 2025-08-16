@@ -121,6 +121,10 @@ class _SearchPageState extends State<SearchPage> {
                       // 导航到详情页
                       context.go('/search/detail/${media.id}', extra: media);
                     },
+                    onPlayTap: () {
+                      // 直接导航到播放页面
+                      _navigateToPlayer(context, media);
+                    },
                   );
                 },
               ),
@@ -135,16 +139,35 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
+
+  // 导航到播放器页面
+  void _navigateToPlayer(BuildContext context, MediaDetail media) {
+    // 检查是否有可用的剧集
+    if (media.surces.isNotEmpty && media.surces.first.episodes.isNotEmpty) {
+      final firstEpisode = media.surces.first.episodes.first;
+      
+      context.go('/search/video', extra: {
+        'media': media,
+        'episode': firstEpisode,
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('该媒体没有可播放的剧集')),
+      );
+    }
+  }
 }
 
 // 媒体结果项组件
 class _MediaResultItem extends StatelessWidget {
   final MediaDetail media;
   final VoidCallback onTap;
+  final VoidCallback onPlayTap;
 
   const _MediaResultItem({
     required this.media,
     required this.onTap,
+    required this.onPlayTap,
   });
 
   @override
@@ -231,6 +254,26 @@ class _MediaResultItem extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 播放按钮
+                  Positioned(
+                    right: 5,
+                    top: 5,
+                    child: GestureDetector(
+                      onTap: onPlayTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 20,
                         ),
                       ),
                     ),

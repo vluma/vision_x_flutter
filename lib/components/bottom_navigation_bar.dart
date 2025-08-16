@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
@@ -134,7 +133,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                       child: Center(
                         child: AnimatedOpacity(
                           duration: _animationDuration,
-                          opacity: searchDataSource.isSearchExpanded ? 1.0 : 0.0,
+                          opacity:
+                              searchDataSource.isSearchExpanded ? 1.0 : 0.0,
                           child: Icon(
                             Icons.menu,
                             color: Colors.blue, // 蓝色图标
@@ -179,7 +179,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                       child: Center(
                         child: AnimatedOpacity(
                           duration: _animationDuration,
-                          opacity: searchDataSource.isSearchExpanded ? 1.0 : 1.0,
+                          opacity:
+                              searchDataSource.isSearchExpanded ? 1.0 : 1.0,
                           child: Icon(
                             Icons.search,
                             color: Colors.grey[700],

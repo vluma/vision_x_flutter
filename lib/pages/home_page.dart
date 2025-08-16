@@ -411,7 +411,10 @@ class _HomePageState extends State<HomePage> {
                               return _VideoItem(
                                 movie: movie,
                                 onTap: () {
-                                  context.go('/detail/${movie.id}');
+                                  // 跳转到搜索页面并传递视频名称进行搜索
+                                  searchDataSource.setSearchQuery(movie.title);
+                                  searchDataSource.setSearchExpanded(true);
+                                  context.go('/search');
                                 },
                               );
                             },
