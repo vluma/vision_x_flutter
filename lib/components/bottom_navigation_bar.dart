@@ -19,15 +19,13 @@ class BottomNavigationBarWidget extends StatefulWidget {
 
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static const Duration _animationDuration = Duration(milliseconds: 200);
-  final bool _isMenuExpanded = false;
   final TextEditingController _searchController = TextEditingController();
   String? _lastActivePath; // 保存上次激活的路径
+
   @override
   void initState() {
     super.initState();
-    // 监听搜索数据源的变化
     searchDataSource.addListener(_onSearchDataSourceChanged);
-    // 初始化搜索控制器的值
     _searchController.text = searchDataSource.searchQuery;
   }
 
@@ -39,7 +37,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   }
 
   void _onSearchDataSourceChanged() {
-    // 当数据源中的搜索查询发生变化时，更新文本字段
     if (_searchController.text != searchDataSource.searchQuery) {
       setState(() {
         _searchController.text = searchDataSource.searchQuery;
@@ -48,7 +45,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   }
 
   bool _isActive(String path) {
-    // 修复导航路径判断逻辑
     if (path == '/') {
       return widget.currentPath == '/' || widget.currentPath.startsWith('/?');
     }
@@ -89,7 +85,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         MediaQuery.of(context).size.width - 90; // 32 + 48 + 16 + 10 = 106
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0), // 修改背景颜色为完全透明
+        color: Colors.white.withValues(alpha: 0),
       ),
       padding: const EdgeInsets.only(bottom: 34, left: 16.0, right: 16.0),
       child: Row(
