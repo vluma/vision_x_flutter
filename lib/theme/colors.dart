@@ -28,4 +28,12 @@ class AppColors {
   static const Color warning = Color(0xFFFFC107);
   static const Color error = Color(0xFFF44336);
   static const Color info = Color(0xFF2196F3);
+  
+  // 底部导航栏颜色
+  static const Color bottomNavBackground = Color(0xFFe0e0e0);
+  static const Color bottomNavShadowInset1 = Color(0xFFbebebe);
+  static const Color bottomNavShadowInset2 = Color(0xFFFFFFFF);
+  static const Color bottomNavSelectedItem = Color(0xFF2196F3);
+  static const Color bottomNavUnselectedItem = Colors.black54;
+  static const Color bottomNavIndicator = Color(0xFFe0e0e0);
 }

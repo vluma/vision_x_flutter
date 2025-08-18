@@ -16,6 +16,7 @@ class _SearchPageState extends State<SearchPage> {
   List<MediaDetail> _mediaResults = [];
   bool _isLoading = false;
   bool _hasSearched = false;
+  String _lastSearchQuery = ''; // 添加这个变量来跟踪上次搜索的内容
 
   @override
   void initState() {
@@ -23,9 +24,10 @@ class _SearchPageState extends State<SearchPage> {
     // 监听搜索数据源的变化
     searchDataSource.addListener(_handleSearchDataChange);
 
-    // 如果已经有搜索查询，执行搜索
-    if (searchDataSource.searchQuery.isNotEmpty) {
+    // 只有当页面没有搜索过且有搜索查询时才执行搜索
+    if (searchDataSource.searchQuery.isNotEmpty && !_hasSearched) {
       _performSearch(searchDataSource.searchQuery);
+      _lastSearchQuery = searchDataSource.searchQuery;
     }
   }
 
@@ -36,15 +38,12 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _handleSearchDataChange() {
-    // 当搜索数据源发生变化时执行搜索
-    if (searchDataSource.searchQuery.isNotEmpty) {
+    // 当搜索数据源发生变化时更新搜索控制器
+    // 只有当搜索查询发生变化时才执行新搜索
+    if (searchDataSource.searchQuery.isNotEmpty && 
+        searchDataSource.searchQuery != _lastSearchQuery) {
       _performSearch(searchDataSource.searchQuery);
-    } else {
-      // 清空搜索结果
-      setState(() {
-        _mediaResults = [];
-        _hasSearched = false;
-      });
+      _lastSearchQuery = searchDataSource.searchQuery;
     }
   }
 
@@ -57,7 +56,6 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _isLoading = true;
       _hasSearched = true;
-      _mediaResults = [];
     });
 
     try {
@@ -67,6 +65,7 @@ class _SearchPageState extends State<SearchPage> {
         setState(() {
           _mediaResults = results;
           _isLoading = false;
+          _lastSearchQuery = query.trim(); // 更新最后搜索的查询
         });
       }
     } catch (e) {
@@ -91,6 +90,7 @@ class _SearchPageState extends State<SearchPage> {
       ),
       body: Column(
         children: [
+          // 搜索结果
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(16.0),
@@ -105,7 +105,7 @@ class _SearchPageState extends State<SearchPage> {
           else if (_mediaResults.isNotEmpty)
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // 在底部添加边距
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.7,

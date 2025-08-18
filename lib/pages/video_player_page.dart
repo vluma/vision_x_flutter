@@ -42,11 +42,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                   CustomVideoPlayer(
                     media: widget.media,
                     episode: widget.episode,
-                    onEpisodeChanged: (newEpisode) {
-                      setState(() {
-                        widget.episode = newEpisode;
-                      });
-                    },
                   ),
                   // 顶部返回按钮 (始终显示)
                   Positioned(

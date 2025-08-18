@@ -283,6 +283,46 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text(_isSearching ? '搜索结果: $_searchQuery' : '豆瓣热门'),
         actions: [
+          // 一级分类（电影、电视剧）
+          ..._categories.map((String category) {
+            final bool isSelected = _selectedCategory == category;
+            return Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: InkWell(
+                onTap: () {
+                  if (!isSelected) {
+                    _switchCategory(category);
+                  }
+                },
+                splashColor: Colors.transparent, // 去除点击时的水波纹效果
+                highlightColor: Colors.transparent, // 去除点击时的高亮颜色
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    // 选中时显示下划线指示器
+                    if (isSelected)
+                      Container(
+                        height: 3,
+                        width: 20,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
           if (_isSearching)
             IconButton(
               icon: const Icon(Icons.clear),
@@ -302,56 +342,62 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ],
+        // 在 AppBar 的底部添加二级分类导航
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(40),
+          child: SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: _sources.map((String source) {
+                final bool isSelected = _selectedSource == source;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: InkWell(
+                    onTap: () {
+                      if (!isSelected) {
+                        _switchSource(source);
+                      }
+                    },
+                    splashColor: Colors.transparent, // 去除点击时的水波纹效果
+                    highlightColor: Colors.transparent, // 去除点击时的高亮颜色
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          source,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        // 选中时显示下划线指示器
+                        if (isSelected)
+                          Container(
+                            height: 2,
+                            width: 16,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_isSearching) ...[
-            // 顶部一级分类
-            SizedBox(
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: _categories.map((String category) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: FilterChip(
-                      label: Text(category),
-                      selected: _selectedCategory == category,
-                      onSelected: (bool selected) {
-                        if (selected) {
-                          _switchCategory(category);
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            // 二级分类（视频源）
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: _sources.map((String source) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: FilterChip(
-                      label: Text(source, style: const TextStyle(fontSize: 12)),
-                      selected: _selectedSource == source,
-                      onSelected: (bool selected) {
-                        if (selected) {
-                          _switchSource(source);
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
+            // 移除原来的分类部分，因为已经移到顶部导航栏后面
             const SizedBox(height: 10),
           ],
           // 视频列表
@@ -376,7 +422,7 @@ class _HomePageState extends State<HomePage> {
                             child: Text('暂无数据'),
                           )
                         : GridView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // 添加底部边距
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
@@ -450,66 +496,111 @@ class _VideoItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 2,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Stack(
-                children: [
-                  // 使用 CachedNetworkImage 加载图片
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.movie,
-                          color: Colors.grey,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Stack(
+                  children: [
+                    // 使用 CachedNetworkImage 加载图片
+                    CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(
+                            Icons.movie,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  // 评分
-                  Positioned(
-                    right: 5,
-                    bottom: 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        movie.rate,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
+                    // 评分
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star, color: Colors.yellow, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              movie.rate,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                movie.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    movie.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  if (movie.rate.isNotEmpty && movie.rate != '0')
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.yellow, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          movie.rate,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 4),
+                  if (movie.episodesInfo.isNotEmpty)
+                    Text(
+                      movie.episodesInfo,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
             ),
           ],
