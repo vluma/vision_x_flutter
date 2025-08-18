@@ -65,9 +65,11 @@ final GoRouter router = GoRouter(
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
+                      final startPosition = extra['startPosition'] as int? ?? 0;
                       return VideoPlayerPage(
                         media: extra['media'] as MediaDetail,
                         episode: extra['episode'] as Episode,
+                        startPosition: startPosition,
                       );
                     }
                     return const Scaffold(
@@ -110,9 +112,11 @@ final GoRouter router = GoRouter(
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
+                      final startPosition = extra['startPosition'] as int? ?? 0;
                       return VideoPlayerPage(
                         media: extra['media'] as MediaDetail,
                         episode: extra['episode'] as Episode,
+                        startPosition: startPosition,
                       );
                     }
                     return const Scaffold(
@@ -155,9 +159,11 @@ final GoRouter router = GoRouter(
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
+                      final startPosition = extra['startPosition'] as int? ?? 0;
                       return VideoPlayerPage(
                         media: extra['media'] as MediaDetail,
                         episode: extra['episode'] as Episode,
+                        startPosition: startPosition,
                       );
                     }
                     return const Scaffold(
@@ -199,9 +205,11 @@ final GoRouter router = GoRouter(
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
+                      final startPosition = extra['startPosition'] as int? ?? 0;
                       return VideoPlayerPage(
                         media: extra['media'] as MediaDetail,
                         episode: extra['episode'] as Episode,
+                        startPosition: startPosition,
                       );
                     }
                     return const Scaffold(

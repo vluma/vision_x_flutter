@@ -29,6 +29,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     super.initState();
     searchDataSource.addListener(_onSearchDataSourceChanged);
     _searchController.text = searchDataSource.searchQuery;
+    
+    // 初始化时设置默认激活路径
+    if (_lastActivePath == null) {
+      if (widget.currentPath.startsWith('/history')) {
+        _lastActivePath = '/history';
+      } else if (widget.currentPath.startsWith('/settings')) {
+        _lastActivePath = '/settings';
+      } else {
+        _lastActivePath = '/'; // 默认为主页
+      }
+    }
   }
 
   @override
@@ -56,7 +67,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   void _toggleSearch() {
     setState(() {
-      if (widget.currentPath.startsWith('/')) {
+      if (_lastActivePath != null) {
         _lastActivePath = widget.currentPath;
       }
       GoRouter.of(context).go('/search');

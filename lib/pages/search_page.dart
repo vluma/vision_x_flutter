@@ -4,6 +4,7 @@ import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/components/bottom_navigation_bar.dart';
+import 'package:vision_x_flutter/pages/detail_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -104,26 +105,20 @@ class _SearchPageState extends State<SearchPage> {
             )
           else if (_mediaResults.isNotEmpty)
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // 在底部添加边距
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                 itemCount: _mediaResults.length,
                 itemBuilder: (BuildContext context, int index) {
                   final media = _mediaResults[index];
                   return _MediaResultItem(
                     media: media,
                     onTap: () {
-                      // 导航到详情页
-                      context.go('/search/detail/${media.id}', extra: media);
-                    },
-                    onPlayTap: () {
-                      // 直接导航到播放页面
+                      // 默认点击跳转到播放页面
                       _navigateToPlayer(context, media);
+                    },
+                    onDetailTap: () {
+                      // 导航到详情页（模态方式）
+                      _showDetailPage(context, media);
                     },
                   );
                 },
@@ -156,18 +151,26 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
   }
+
+  // 显示详情页面（模态方式）
+  void _showDetailPage(BuildContext context, MediaDetail media) {
+    context.push(
+      '/search/detail/${media.id}',
+      extra: media,
+    );
+  }
 }
 
 // 媒体结果项组件
 class _MediaResultItem extends StatelessWidget {
   final MediaDetail media;
   final VoidCallback onTap;
-  final VoidCallback onPlayTap;
+  final VoidCallback onDetailTap;
 
   const _MediaResultItem({
     required this.media,
     required this.onTap,
-    required this.onPlayTap,
+    required this.onDetailTap,
   });
 
   @override
@@ -178,23 +181,41 @@ class _MediaResultItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 2,
-        child: Column(
+        elevation: 4,
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  // 使用 CachedNetworkImage 加载图片
-                  if (imageUrl != null && imageUrl.isNotEmpty)
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      errorWidget: (context, url, error) => Container(
+            // 左侧海报图
+            Container(
+              width: 120,
+              height: 180,
+              margin: const EdgeInsets.all(8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.movie,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
                         color: Colors.grey[300],
                         child: const Center(
                           child: Icon(
@@ -203,107 +224,162 @@ class _MediaResultItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                    )
-                  else
-                    Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.movie,
+              ),
+            ),
+            
+            // 右侧信息
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 标题和年份
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            media.name ?? '未知片名',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // 评分
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                media.score ?? '暂无',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 6),
+                    
+                    // 年份和区域
+                    Text(
+                      '${media.year ?? ''} ${media.area ?? ''}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 6),
+                    
+                    // 类型
+                    if (media.type != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          media.type!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // 简介
+                    if (media.description != null)
+                      Text(
+                        media.description!,
+                        style: const TextStyle(
+                          fontSize: 13,
                           color: Colors.grey,
+                          height: 1.4,
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // 底部信息和按钮
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // 来源标签
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            media.sourceName,
+                            style: const TextStyle(
+                              color: Colors.blueAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        
+                        // 详情按钮
+                        OutlinedButton(
+                          onPressed: onDetailTap,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text(
+                            '查看详情',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  // 评分
-                  Positioned(
-                    right: 5,
-                    bottom: 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        media.score ?? '暂无评分',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // 来源标签
-                  Positioned(
-                    left: 5,
-                    top: 5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        media.sourceName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // 播放按钮
-                  Positioned(
-                    right: 5,
-                    top: 5,
-                    child: GestureDetector(
-                      onTap: onPlayTap,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                media.name ?? '未知片名',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
-              child: Text(
-                '${media.year ?? ''} ${media.area ?? ''}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -311,4 +387,5 @@ class _MediaResultItem extends StatelessWidget {
       ),
     );
   }
+  
 }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vision_x_flutter/theme/colors.dart';
 import 'dart:io' show HttpClient, HttpClientRequest, HttpClientResponse;
 import 'dart:typed_data' show Uint8List;
 
@@ -20,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   String _selectedSource = '热门';
   // 当前选中的排序方式
   String _selectedSort = 'recommend';
-  
+
   // 视频数据列表
   List<DoubanMovie> _movies = [];
   List<DoubanMovie> _searchResults = []; // 添加搜索结果列表
@@ -32,7 +33,8 @@ class _HomePageState extends State<HomePage> {
   bool _isSearching = false; // 是否正在显示搜索结果
   String _searchQuery = ''; // 当前搜索关键词
 
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   // 视频分类列表
   final List<String> _categories = [
@@ -72,7 +74,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _tagsLoading = true;
     });
-    
+
     try {
       List<String> tags;
       if (_selectedCategory == '电影') {
@@ -80,7 +82,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         tags = await ApiService.getTvTags();
       }
-      
+
       setState(() {
         _sources = tags;
         if (!_sources.contains(_selectedSource)) {
@@ -88,7 +90,7 @@ class _HomePageState extends State<HomePage> {
         }
         _tagsLoading = false;
       });
-      
+
       // 重新加载电影数据
       _loadMovies();
     } catch (e) {
@@ -120,7 +122,7 @@ class _HomePageState extends State<HomePage> {
               ];
         _tagsLoading = false;
       });
-      
+
       // 重新加载电影数据
       _loadMovies();
     }
@@ -140,7 +142,7 @@ class _HomePageState extends State<HomePage> {
         pageStart: 0,
         pageLimit: _pageLimit,
       );
-      
+
       setState(() {
         _movies = movies;
         _currentPageStart = 0;
@@ -171,7 +173,7 @@ class _HomePageState extends State<HomePage> {
         pageStart: nextPageStart,
         pageLimit: _pageLimit,
       );
-      
+
       setState(() {
         _movies.addAll(movies);
         _currentPageStart = nextPageStart;
@@ -241,7 +243,7 @@ class _HomePageState extends State<HomePage> {
         tag: query.trim(),
         pageLimit: 10,
       );
-      
+
       final tvResults = await ApiService.getMovies(
         type: 'tv',
         tag: query.trim(),
@@ -250,7 +252,7 @@ class _HomePageState extends State<HomePage> {
 
       // 合并结果
       final allResults = [...movieResults, ...tvResults];
-      
+
       setState(() {
         _searchResults = allResults;
         _isLoading = false;
@@ -259,7 +261,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('搜索失败，请稍后重试')),
@@ -303,8 +305,11 @@ class _HomePageState extends State<HomePage> {
                       category,
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? Theme.of(context).primaryColor
+                            : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -369,8 +374,12 @@ class _HomePageState extends State<HomePage> {
                           source,
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -407,9 +416,9 @@ class _HomePageState extends State<HomePage> {
               onRefresh: _refresh,
               child: NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification scrollInfo) {
-                  if (!_isSearching && 
-                      scrollInfo.metrics.pixels >= 
-                      scrollInfo.metrics.maxScrollExtent - 500) {
+                  if (!_isSearching &&
+                      scrollInfo.metrics.pixels >=
+                          scrollInfo.metrics.maxScrollExtent - 500) {
                     _loadMoreMovies();
                     return true;
                   }
@@ -422,7 +431,8 @@ class _HomePageState extends State<HomePage> {
                             child: Text('暂无数据'),
                           )
                         : GridView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // 添加底部边距
+                            padding: const EdgeInsets.fromLTRB(
+                                16, 16, 16, 80), // 添加底部边距
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
@@ -430,16 +440,20 @@ class _HomePageState extends State<HomePage> {
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
                             ),
-                            itemCount: _isSearching 
-                                ? _searchResults.length 
-                                : _movies.length + (_hasMoreData && !_isSearching ? 1 : 0), // 添加一个加载指示器的item
+                            itemCount: _isSearching
+                                ? _searchResults.length
+                                : _movies.length +
+                                    (_hasMoreData && !_isSearching
+                                        ? 1
+                                        : 0), // 添加一个加载指示器的item
                             itemBuilder: (BuildContext context, int index) {
                               // 如果是最后一个item且还有更多数据，显示加载指示器
-                              if (!_isSearching && 
-                                  index == _movies.length && 
+                              if (!_isSearching &&
+                                  index == _movies.length &&
                                   _hasMoreData) {
                                 // 延迟调用加载更多数据，避免在构建过程中调用 setState
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
                                   _loadMoreMovies();
                                 });
                                 return const Center(
@@ -449,10 +463,10 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 );
                               }
-                              
+
                               // 正常显示电影项
-                              final movie = _isSearching 
-                                  ? _searchResults[index] 
+                              final movie = _isSearching
+                                  ? _searchResults[index]
                                   : _movies[index];
                               return _VideoItem(
                                 movie: movie,
@@ -492,7 +506,7 @@ class _VideoItem extends StatelessWidget {
     }
 
     final String imageUrl = handleImageUrl(movie.cover);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -505,7 +519,8 @@ class _VideoItem extends StatelessWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Stack(
                   children: [
                     // 使用 CachedNetworkImage 加载图片
@@ -536,13 +551,14 @@ class _VideoItem extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
+                          color: AppColors.darkBackground.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.star, color: Colors.yellow, size: 14),
+                            const Icon(Icons.star,
+                                color: Colors.yellow, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               movie.rate,
@@ -561,7 +577,7 @@ class _VideoItem extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -569,32 +585,17 @@ class _VideoItem extends StatelessWidget {
                     movie.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  if (movie.rate.isNotEmpty && movie.rate != '0')
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.yellow, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          movie.rate,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 4),
                   if (movie.episodesInfo.isNotEmpty)
                     Text(
                       movie.episodesInfo,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey[600],
                         fontSize: 12,
                       ),
                       maxLines: 1,
