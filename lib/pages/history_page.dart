@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/components/history_item.dart';
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
-import 'package:vision_x_flutter/pages/video_player_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -12,7 +11,7 @@ class HistoryPage extends StatefulWidget {
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage> {
+class _HistoryPageState extends State<HistoryPage> with WidgetsBindingObserver {
   List<HistoryRecord> _history = [];
   bool _isLoading = true;
 
@@ -20,24 +19,69 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
     _loadHistory();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 当应用回到前台时刷新历史记录
+    if (state == AppLifecycleState.resumed) {
+      _refreshHistory();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 页面每次构建时都刷新历史记录（例如从其他页面返回时）
+    _refreshHistory();
+  }
+
+  Future<void> _refreshHistory() async {
+    try {
+      final history = await HistoryService().getHistory();
+      if (mounted) {
+        setState(() {
+          _history = history;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载历史记录失败')),
+        );
+      }
+    }
   }
 
   Future<void> _loadHistory() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final history = await HistoryService().getHistory();
-      setState(() {
-        _history = history;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          _history = history;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('加载历史记录失败')),
         );
@@ -47,8 +91,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void _deleteHistory(HistoryRecord record) async {
     await HistoryService().removeHistory(record);
-    _loadHistory(); // 重新加载数据
-    
+    _refreshHistory(); // 重新加载数据
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('已删除记录')),
@@ -81,7 +125,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           HistoryService().clearHistory();
-                          _loadHistory();
+                          _refreshHistory();
                         },
                         child: const Text('确定'),
                       ),

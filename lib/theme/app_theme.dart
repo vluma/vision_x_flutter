@@ -9,7 +9,7 @@ class AppThemes {
     primaryColor: AppColors.primaryButtonLight,
     scaffoldBackgroundColor: AppColors.lightBackground,
     cardColor: AppColors.lightCardBackground,
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       bodyLarge: TextStyle(color: AppColors.lightPrimaryText),
       bodyMedium: TextStyle(color: AppColors.lightPrimaryText),
       bodySmall: TextStyle(color: AppColors.lightSecondaryText),
@@ -31,7 +31,7 @@ class AppThemes {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primaryButtonLight,
-        side: BorderSide(color: AppColors.primaryButtonLight),
+        side: const BorderSide(color: AppColors.primaryButtonLight),
       ),
     ),
     colorScheme: ColorScheme.fromSeed(
@@ -43,17 +43,23 @@ class AppThemes {
     ),
   );
 
-  // Dark Theme
+  // Dark Theme - 优化为更适合影视类应用的深色主题
   static final darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     primaryColor: AppColors.primaryButtonDark,
-    scaffoldBackgroundColor: AppColors.darkBackground,
-    cardColor: AppColors.darkCardBackground,
-    textTheme: TextTheme(
+    scaffoldBackgroundColor: const Color(0xFF0A0A0A), // 更深的背景色
+    cardColor: const Color(0xFF1E1E1E), // 卡片背景色
+    textTheme: const TextTheme(
       bodyLarge: TextStyle(color: AppColors.darkPrimaryText),
       bodyMedium: TextStyle(color: AppColors.darkPrimaryText),
       bodySmall: TextStyle(color: AppColors.darkSecondaryText),
+      headlineLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      headlineMedium: TextStyle(color: Colors.white),
+      headlineSmall: TextStyle(color: Colors.white70),
+      titleLarge: TextStyle(color: Colors.white),
+      titleMedium: TextStyle(color: Colors.white70),
+      titleSmall: TextStyle(color: Colors.white60),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -62,6 +68,7 @@ class AppThemes {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.0),
         ),
+        elevation: 2,
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -72,7 +79,17 @@ class AppThemes {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primaryButtonDark,
-        side: BorderSide(color: AppColors.primaryButtonDark),
+        side: const BorderSide(color: AppColors.primaryButtonDark),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF121212),
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
       ),
     ),
     colorScheme: ColorScheme.fromSeed(
@@ -80,7 +97,9 @@ class AppThemes {
       brightness: Brightness.dark,
     ).copyWith(
       secondary: AppColors.secondaryButtonDark,
-      surface: AppColors.darkBackground,
+      surface: const Color(0xFF121212),
+      onSurface: Colors.white70,
+      outline: Colors.white24,
     ),
   );
 }

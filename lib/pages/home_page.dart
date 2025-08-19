@@ -309,7 +309,8 @@ class _HomePageState extends State<HomePage> {
                             isSelected ? FontWeight.bold : FontWeight.normal,
                         color: isSelected
                             ? Theme.of(context).primaryColor
-                            : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                            : Theme.of(context).textTheme.bodySmall?.color ??
+                                Colors.grey,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -327,7 +328,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             );
-          }).toList(),
+          }),
           if (_isSearching)
             IconButton(
               icon: const Icon(Icons.clear),
@@ -379,7 +380,11 @@ class _HomePageState extends State<HomePage> {
                                 : FontWeight.normal,
                             color: isSelected
                                 ? Theme.of(context).primaryColor
-                                : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                                : Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.color ??
+                                    Colors.grey,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -551,7 +556,8 @@ class _VideoItem extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.darkBackground.withValues(alpha: 0.5),
+                          color:
+                              AppColors.darkBackground.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -595,7 +601,8 @@ class _VideoItem extends StatelessWidget {
                     Text(
                       movie.episodesInfo,
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodySmall?.color ??
+                            Colors.grey[600],
                         fontSize: 12,
                       ),
                       maxLines: 1,

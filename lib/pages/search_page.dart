@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vision_x_flutter/components/bottom_navigation_bar.dart';
-import 'package:vision_x_flutter/pages/detail_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -18,6 +16,7 @@ class _SearchPageState extends State<SearchPage> {
   bool _isLoading = false;
   bool _hasSearched = false;
   String _lastSearchQuery = ''; // 添加这个变量来跟踪上次搜索的内容
+  int _searchId = 0; // 添加搜索ID以跟踪当前搜索
 
   @override
   void initState() {
@@ -41,7 +40,7 @@ class _SearchPageState extends State<SearchPage> {
   void _handleSearchDataChange() {
     // 当搜索数据源发生变化时更新搜索控制器
     // 只有当搜索查询发生变化时才执行新搜索
-    if (searchDataSource.searchQuery.isNotEmpty && 
+    if (searchDataSource.searchQuery.isNotEmpty &&
         searchDataSource.searchQuery != _lastSearchQuery) {
       _performSearch(searchDataSource.searchQuery);
       _lastSearchQuery = searchDataSource.searchQuery;
@@ -54,6 +53,9 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
+    // 增加搜索ID，取消之前的搜索
+    final int currentSearchId = ++_searchId;
+
     setState(() {
       _isLoading = true;
       _hasSearched = true;
@@ -62,7 +64,8 @@ class _SearchPageState extends State<SearchPage> {
     try {
       final results = await ApiService.aggregatedSearch(query.trim());
 
-      if (mounted) {
+      // 只有当这是最新的搜索时才更新UI
+      if (mounted && currentSearchId == _searchId) {
         setState(() {
           _mediaResults = results;
           _isLoading = false;
@@ -70,7 +73,8 @@ class _SearchPageState extends State<SearchPage> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      // 只有当这是最新的搜索时才显示错误
+      if (mounted && currentSearchId == _searchId) {
         setState(() {
           _isLoading = false;
         });
@@ -140,7 +144,7 @@ class _SearchPageState extends State<SearchPage> {
     // 检查是否有可用的剧集
     if (media.surces.isNotEmpty && media.surces.first.episodes.isNotEmpty) {
       final firstEpisode = media.surces.first.episodes.first;
-      
+
       context.go('/search/video', extra: {
         'media': media,
         'episode': firstEpisode,
@@ -226,7 +230,7 @@ class _MediaResultItem extends StatelessWidget {
                       ),
               ),
             ),
-            
+
             // 右侧信息
             Expanded(
               child: Padding(
@@ -280,9 +284,9 @@ class _MediaResultItem extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 6),
-                    
+
                     // 年份和区域
                     Text(
                       '${media.year ?? ''} ${media.area ?? ''}',
@@ -291,9 +295,9 @@ class _MediaResultItem extends StatelessWidget {
                         color: Colors.grey,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 6),
-                    
+
                     // 类型
                     if (media.type != null)
                       Container(
@@ -302,7 +306,8 @@ class _MediaResultItem extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -314,9 +319,9 @@ class _MediaResultItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // 简介
                     if (media.description != null)
                       Text(
@@ -329,9 +334,9 @@ class _MediaResultItem extends StatelessWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // 底部信息和按钮
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -355,7 +360,7 @@ class _MediaResultItem extends StatelessWidget {
                             ),
                           ),
                         ),
-                        
+
                         // 详情按钮
                         OutlinedButton(
                           onPressed: onDetailTap,
@@ -387,5 +392,4 @@ class _MediaResultItem extends StatelessWidget {
       ),
     );
   }
-  
 }
