@@ -3,7 +3,7 @@
 // 创建日期: 2023-11-07
 
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'dart:ui'; // 添加这个导入以支持 ImageFilter
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
@@ -18,7 +18,8 @@ class BottomNavigationBarWidget extends StatefulWidget {
       _BottomNavigationBarWidgetState();
 }
 
-class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
+class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
+    with WidgetsBindingObserver {
   static const Duration _animationDuration = Duration(milliseconds: 200);
   final TextEditingController _searchController = TextEditingController();
   String? _lastActivePath;
@@ -30,6 +31,28 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     _initializeSelectedIndex();
     searchDataSource.addListener(_onSearchDataSourceChanged);
     _searchController.text = searchDataSource.searchQuery;
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    searchDataSource.removeListener(_onSearchDataSourceChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // 当系统配置发生变化时刷新界面
+    setState(() {});
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // 当系统亮度发生变化时刷新界面
+    setState(() {});
   }
 
   void _initializeSelectedIndex() {
@@ -43,13 +66,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       _selectedIndex = 0;
       _lastActivePath = '/';
     }
-  }
-
-  @override
-  void dispose() {
-    searchDataSource.removeListener(_onSearchDataSourceChanged);
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _onSearchDataSourceChanged() {
@@ -96,8 +112,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   }
 
   Widget _buildNavButton(int index, IconData icon) {
-    final isActive = _selectedIndex == index;
     final theme = Theme.of(context);
+    final isActive = _selectedIndex == index;
 
     return Expanded(
       child: InkWell(
@@ -135,6 +151,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   }
 
   Widget _buildMenuButton() {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: _toggleMenu,
       child: Container(
@@ -144,7 +161,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         child: Center(
           child: Icon(
             Icons.menu,
-            color: Colors.white,
+            color: theme.primaryColor,
             size: 24,
           ),
         ),
@@ -170,8 +187,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   }
 
   Color _getIconColor() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? Colors.white60 : Colors.black54;
+    final theme = Theme.of(context);
+    return theme.brightness == Brightness.dark
+        ? Colors.white60
+        : Colors.black54;
   }
 
   Widget _buildSearchField() {
@@ -236,14 +255,15 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   Color _getBorderColor() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     // 使用更自然的边框颜色，与主题更协调
-    return isDarkMode 
-        ? theme.dividerColor.withOpacity(0.3) 
-        : theme.dividerColor.withOpacity(0.2);
+    return isDarkMode
+        ? theme.dividerColor.withValues(alpha: 0.3)
+        : theme.dividerColor.withValues(alpha: 0.2);
   }
 
   Widget _buildNavigationContainer(double maxWidth) {
+    final theme = Theme.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: searchDataSource.isSearchExpanded ? 48.0 : maxWidth,
@@ -257,7 +277,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: _getBorderColor().withOpacity(0.1),
+            color: _getBorderColor().withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2,
           ),
@@ -275,14 +295,14 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                   ? Alignment.centerRight
                   : Alignment((_selectedIndex - 1) * 1.0, 0),
               child: Container(
-                width:
-                    searchDataSource.isSearchExpanded ? 0 : (maxWidth / 3),
+                width: searchDataSource.isSearchExpanded ? 0 : (maxWidth / 3),
                 height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: Theme.of(context).brightness == Brightness.dark
+                  color: theme.brightness == Brightness.dark
                       ? AppColors.bottomNavIndicator
-                      : AppColors.lightCardBackground,
+                      : theme.primaryColor
+                          .withValues(alpha: 0.1), // 浅色模式下使用主色的淡色版本
                 ),
               ),
             ),
@@ -314,7 +334,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: _getBorderColor().withOpacity(0.1),
+            color: _getBorderColor().withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2,
           ),
@@ -338,10 +358,19 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   Widget build(BuildContext context) {
     final maxColumnWidth = MediaQuery.of(context).size.width - 90;
     final bottomPadding = MediaQuery.of(context).padding.bottom + 10.0;
+    final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0),
+        // 使用渐变背景替代纯色背景，透明度范围在0-0.4之间
+        gradient: LinearGradient(
+          colors: [
+            theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
+            theme.scaffoldBackgroundColor.withValues(alpha: 1.0),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
       ),
       padding: EdgeInsets.only(bottom: bottomPadding, left: 16.0, right: 16.0),
       child: Row(

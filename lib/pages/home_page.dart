@@ -4,8 +4,7 @@ import 'package:vision_x_flutter/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
-import 'dart:io' show HttpClient, HttpClientRequest, HttpClientResponse;
-import 'dart:typed_data' show Uint8List;
+import 'package:vision_x_flutter/components/loading_animation.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,17 +23,11 @@ class _HomePageState extends State<HomePage> {
 
   // 视频数据列表
   List<DoubanMovie> _movies = [];
-  List<DoubanMovie> _searchResults = []; // 添加搜索结果列表
   bool _isLoading = false;
   bool _tagsLoading = false;
-  bool _hasMoreData = true; // 是否还有更多数据
-  int _currentPageStart = 0; // 当前页起始位置
-  final int _pageLimit = 20; // 每页数据量
-  bool _isSearching = false; // 是否正在显示搜索结果
-  String _searchQuery = ''; // 当前搜索关键词
-
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-      GlobalKey<RefreshIndicatorState>();
+  bool _hasMoreData = true;
+  int _currentPageStart = 0;
+  final int _pageLimit = 20;
 
   // 视频分类列表
   final List<String> _categories = [
@@ -146,13 +139,18 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _movies = movies;
         _currentPageStart = 0;
-        _hasMoreData = movies.length == _pageLimit; // 如果返回数据少于限制数量，说明没有更多数据
+        _hasMoreData = movies.length == _pageLimit;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载失败，请稍后重试')),
+        );
+      }
     }
   }
 
@@ -177,30 +175,34 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _movies.addAll(movies);
         _currentPageStart = nextPageStart;
-        _hasMoreData = movies.length == _pageLimit; // 如果返回数据少于限制数量，说明没有更多数据
+        _hasMoreData = movies.length == _pageLimit;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载更多失败，请稍后重试')),
+        );
+      }
     }
   }
 
   // 下拉刷新
   Future<void> _refresh() async {
-    _loadTags(); // 重新加载标签
-    await _loadMovies(); // 重新加载第一页数据
+    _loadTags();
+    await _loadMovies();
   }
 
   // 切换分类
   void _switchCategory(String category) {
     setState(() {
       _selectedCategory = category;
-      _selectedSource = '热门'; // 重置为默认源
+      _selectedSource = '热门';
     });
     _loadTags();
-    // _loadMovies将在_loadTags中调用
   }
 
   // 切换排序方式
@@ -219,136 +221,128 @@ class _HomePageState extends State<HomePage> {
     _loadMovies();
   }
 
-  // 执行搜索
-  Future<void> _performSearch(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _searchQuery = '';
-        _searchResults = [];
-      });
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _isSearching = true;
-      _searchQuery = query;
-    });
-
-    try {
-      // 搜索电影和电视剧
-      final movieResults = await ApiService.getMovies(
-        type: 'movie',
-        tag: query.trim(),
-        pageLimit: 10,
-      );
-
-      final tvResults = await ApiService.getMovies(
-        type: 'tv',
-        tag: query.trim(),
-        pageLimit: 10,
-      );
-
-      // 合并结果
-      final allResults = [...movieResults, ...tvResults];
-
-      setState(() {
-        _searchResults = allResults;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('搜索失败，请稍后重试')),
-        );
-      }
-    }
+  // 构建分类导航项
+  List<Widget> _buildCategoryActions() {
+    return [
+      ..._categories.map((category) => _buildCategoryItem(category)),
+      _buildSortButton(),
+    ];
   }
 
-  // 清空搜索
-  void _clearSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchQuery = '';
-      _searchResults = [];
-    });
+  // 构建单个分类项
+  Widget _buildCategoryItem(String category) {
+    final bool isSelected = _selectedCategory == category;
+    return Padding(
+      padding: const EdgeInsets.only(right: 15),
+      child: InkWell(
+        onTap: () {
+          if (!isSelected) {
+            _switchCategory(category);
+          }
+        },
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              category,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).textTheme.bodySmall?.color ??
+                        Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 3),
+            if (isSelected) _buildIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 构建选中指示器
+  Widget _buildIndicator() {
+    return Container(
+      height: 3,
+      width: 20,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  // 构建排序按钮
+  Widget _buildSortButton() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.sort),
+      onSelected: _switchSort,
+      itemBuilder: (BuildContext context) {
+        return _sortOptions.map((option) {
+          return PopupMenuItem<String>(
+            value: option['value']!,
+            child: Text(option['label']!),
+          );
+        }).toList();
+      },
+    );
+  }
+
+  // 构建源标签列表
+  List<Widget> _buildSourceTags() {
+    return _sources.map((source) {
+      final bool isSelected = _selectedSource == source;
+      return Padding(
+        padding: const EdgeInsets.only(right: 20),
+        child: InkWell(
+          onTap: () {
+            if (!isSelected) {
+              _switchSource(source);
+            }
+          },
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                source,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).textTheme.bodySmall?.color ??
+                          Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 3),
+              if (isSelected)
+                Container(
+                  height: 2,
+                  width: 16,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSearching ? '搜索结果: $_searchQuery' : '豆瓣热门'),
-        actions: [
-          // 一级分类（电影、电视剧）
-          ..._categories.map((String category) {
-            final bool isSelected = _selectedCategory == category;
-            return Padding(
-              padding: const EdgeInsets.only(right: 15),
-              child: InkWell(
-                onTap: () {
-                  if (!isSelected) {
-                    _switchCategory(category);
-                  }
-                },
-                splashColor: Colors.transparent, // 去除点击时的水波纹效果
-                highlightColor: Colors.transparent, // 去除点击时的高亮颜色
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      category,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : Theme.of(context).textTheme.bodySmall?.color ??
-                                Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    // 选中时显示下划线指示器
-                    if (isSelected)
-                      Container(
-                        height: 3,
-                        width: 20,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            );
-          }),
-          if (_isSearching)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: _clearSearch,
-            ),
-          // 排序控制按钮
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            onSelected: _switchSort,
-            itemBuilder: (BuildContext context) {
-              return _sortOptions.map((option) {
-                return PopupMenuItem<String>(
-                  value: option['value']!,
-                  child: Text(option['label']!),
-                );
-              }).toList();
-            },
-          ),
-        ],
-        // 在 AppBar 的底部添加二级分类导航
+        title: const Text('豆瓣热门'),
+        actions: _buildCategoryActions(),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(40),
           child: SizedBox(
@@ -356,53 +350,7 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: _sources.map((String source) {
-                final bool isSelected = _selectedSource == source;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 20),
-                  child: InkWell(
-                    onTap: () {
-                      if (!isSelected) {
-                        _switchSource(source);
-                      }
-                    },
-                    splashColor: Colors.transparent, // 去除点击时的水波纹效果
-                    highlightColor: Colors.transparent, // 去除点击时的高亮颜色
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          source,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isSelected
-                                ? Theme.of(context).primaryColor
-                                : Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.color ??
-                                    Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        // 选中时显示下划线指示器
-                        if (isSelected)
-                          Container(
-                            height: 2,
-                            width: 16,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: _buildSourceTags(),
             ),
           ),
         ),
@@ -410,81 +358,141 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!_isSearching) ...[
-            // 移除原来的分类部分，因为已经移到顶部导航栏后面
-            const SizedBox(height: 10),
-          ],
-          // 视频列表
           Expanded(
             child: RefreshIndicator(
-              key: _refreshIndicatorKey,
               onRefresh: _refresh,
               child: NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification scrollInfo) {
-                  if (!_isSearching &&
-                      scrollInfo.metrics.pixels >=
-                          scrollInfo.metrics.maxScrollExtent - 500) {
+                  if (scrollInfo.metrics.pixels >=
+                      scrollInfo.metrics.maxScrollExtent - 500) {
                     _loadMoreMovies();
                     return true;
                   }
                   return false;
                 },
-                child: _isLoading && (_movies.isEmpty && _searchResults.isEmpty)
-                    ? const Center(child: CircularProgressIndicator())
-                    : (_isSearching ? _searchResults : _movies).isEmpty
-                        ? const Center(
-                            child: Text('暂无数据'),
-                          )
-                        : GridView.builder(
-                            padding: const EdgeInsets.fromLTRB(
-                                16, 16, 16, 80), // 添加底部边距
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.7,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
-                            itemCount: _isSearching
-                                ? _searchResults.length
-                                : _movies.length +
-                                    (_hasMoreData && !_isSearching
-                                        ? 1
-                                        : 0), // 添加一个加载指示器的item
-                            itemBuilder: (BuildContext context, int index) {
-                              // 如果是最后一个item且还有更多数据，显示加载指示器
-                              if (!_isSearching &&
-                                  index == _movies.length &&
-                                  _hasMoreData) {
-                                // 延迟调用加载更多数据，避免在构建过程中调用 setState
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  _loadMoreMovies();
-                                });
-                                return const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              }
-
-                              // 正常显示电影项
-                              final movie = _isSearching
-                                  ? _searchResults[index]
-                                  : _movies[index];
-                              return _VideoItem(
-                                movie: movie,
-                                onTap: () {
-                                  // 跳转到搜索页面并传递视频名称进行搜索
-                                  searchDataSource.setSearchQuery(movie.title);
-                                  searchDataSource.setSearchExpanded(true);
-                                  context.go('/search');
-                                },
-                              );
-                            },
-                          ),
+                child: _buildContent(),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 构建主要内容
+  Widget _buildContent() {
+    if (_isLoading && _movies.isEmpty) {
+      return _buildSkeletonList();
+    }
+
+    if (_movies.isEmpty) {
+      return const Center(
+        child: Text('暂无数据'),
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.7,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: _movies.length + (_hasMoreData ? 1 : 0),
+      itemBuilder: (BuildContext context, int index) {
+        if (index == _movies.length && _hasMoreData) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadMoreMovies();
+          });
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final movie = _movies[index];
+        return _VideoItem(
+          movie: movie,
+          onTap: () {
+            // 点击电影项时跳转到搜索页面
+            searchDataSource.setSearchQuery(movie.title);
+            searchDataSource.setSearchExpanded(true);
+            context.go('/search');
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.7,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: 8,
+      itemBuilder: (BuildContext context, int index) {
+        return _VideoItemSkeleton();
+      },
+    );
+  }
+}
+
+// 视频项骨架屏组件 - 带有VisionX文字和彩色渐变效果的自定义加载动画
+class _VideoItemSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Card(
+      elevation: 4,
+      color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Container(
+                width: double.infinity,
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Icon(
+                    Icons.movie,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 16,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 12,
+                  width: 80,
+                  color: Colors.grey[300],
+                ),
+              ],
             ),
           ),
         ],
@@ -505,17 +513,15 @@ class _VideoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 处理图片URL，确保其有效且可访问
-    String handleImageUrl(String url) {
-      return ApiService.handleImageUrl(url);
-    }
-
-    final String imageUrl = handleImageUrl(movie.cover);
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final String imageUrl = ApiService.handleImageUrl(movie.cover);
 
     return GestureDetector(
       onTap: onTap,
       child: Card(
         elevation: 4,
+        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -528,14 +534,11 @@ class _VideoItem extends StatelessWidget {
                     const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Stack(
                   children: [
-                    // 使用 CachedNetworkImage 加载图片
                     CachedNetworkImage(
                       imageUrl: imageUrl,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      placeholder: (context, url) => const LoadingAnimation(),
                       errorWidget: (context, url, error) => Container(
                         color: Colors.grey[300],
                         child: const Center(
@@ -546,38 +549,40 @@ class _VideoItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // 评分
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.darkBackground.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.yellow, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              movie.rate,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                    if (movie.rate.isNotEmpty &&
+                        double.tryParse(movie.rate) != null &&
+                        double.parse(movie.rate) > 0)
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.darkBackground.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star,
+                                  color: Colors.yellow, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                movie.rate,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -596,18 +601,6 @@ class _VideoItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  if (movie.episodesInfo.isNotEmpty)
-                    Text(
-                      movie.episodesInfo,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color ??
-                            Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                 ],
               ),
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // 主要背景色
-  static const Color lightBackground = Color(0xFFF5F5F5);
+  static const Color lightBackground = Color(0xFFe0e0e0); // 修改为#e0e0e0
   static const Color darkBackground = Color(0xFF0A0A0A); // 更深的背景色，适合影视应用
   
   // 卡片背景色
@@ -10,7 +10,7 @@ class AppColors {
   static const Color darkCardBackground = Color(0xFF1E1E1E); // 调整为更深的卡片背景色
   
   // 主要按钮颜色 - 使用更现代的蓝色
-  static const Color primaryButtonLight = Color(0xFF2196F3); // 保持现有颜色
+  static const Color primaryButtonLight = Color(0xFF1976D2); // 稍微加深以在新背景上提供更好的对比度
   static const Color primaryButtonDark = Color(0xFF1565C0); // 深色主题下使用更深的蓝色
   
   static const Color secondaryButtonLight = Color(0xFF757575);
@@ -30,12 +30,12 @@ class AppColors {
   static const Color info = Color(0xFF2196F3);
   
   // 底部导航栏颜色
-  static const Color bottomNavBackground = Color(0xFF1E1E1E); // 使用与卡片相同的背景色
-  static const Color bottomNavShadowInset1 = Color(0xFF121212);
-  static const Color bottomNavShadowInset2 = Color(0xFF2E2E2E);
-  static const Color bottomNavSelectedItem = Color(0xFF1565C0); // 与主按钮颜色一致
-  static const Color bottomNavUnselectedItem = Colors.white60;
-  static const Color bottomNavIndicator = Color(0xFF1E1E1E);
+  static const Color bottomNavBackground = Color(0xFFEEEEEE); // 调整为与新背景色协调的颜色
+  static const Color bottomNavShadowInset1 = Color(0xFFD5D5D5);
+  static const Color bottomNavShadowInset2 = Color(0xFFCCCCCC);
+  static const Color bottomNavSelectedItem = Color(0xFF1976D2); // 与主按钮颜色一致
+  static const Color bottomNavUnselectedItem = Colors.black54;
+  static const Color bottomNavIndicator = Color(0xFFE0E0E0);
   
   // 影视应用专用颜色
   static const Color movieRed = Color(0xFFE50914); // 经典电影红

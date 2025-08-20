@@ -34,6 +34,16 @@ class AppThemes {
         side: const BorderSide(color: AppColors.primaryButtonLight),
       ),
     ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFFEEEEEE), // 使用与底部导航栏一致的颜色
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.black87),
+      titleTextStyle: TextStyle(
+        color: Colors.black87,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primaryButtonLight,
       brightness: Brightness.light,

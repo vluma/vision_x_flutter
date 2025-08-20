@@ -82,31 +82,6 @@ class _SettingsPageState extends State<SettingsPage> {
     // 实际项目中应该从prefs中加载JSON格式的数据
   }
   
-  // 保存设置
-  Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // 保存选中的播放源
-    await prefs.setString('selected_sources', _selectedSources.join(','));
-    
-    // 保存功能开关设置
-    await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
-    await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
-    await prefs.setBool('douban_enabled', _doubanEnabled);
-    
-    // 保存主题设置
-    await prefs.setInt('selected_theme', _selectedTheme);
-    
-    // 保存自定义API（简化处理）
-    // 实际项目中应该保存为JSON格式
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('设置已保存')),
-      );
-    }
-  }
-  
   // 切换播放源选择
   void _toggleSource(String sourceKey) {
     setState(() {
@@ -116,6 +91,9 @@ class _SettingsPageState extends State<SettingsPage> {
         _selectedSources.add(sourceKey);
       }
     });
+    
+    // 自动保存设置
+    _saveSettingsAutomatically();
   }
   
   // 全选或全不选API
@@ -237,6 +215,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
@@ -247,31 +226,45 @@ class _SettingsPageState extends State<SettingsPage> {
             left: 16.0,
             right: 16.0,
             top: 16.0,
-            bottom: MediaQuery.of(context).padding.bottom + 80.0, // 添加底部边距避免被导航栏遮挡
+            bottom: MediaQuery.of(context).padding.bottom + 16.0, // 减少底部边距
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 数据源设置部分
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '数据源设置',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // 全选按钮
                       Row(
                         children: [
                           ElevatedButton(
                             onPressed: () => _selectAllAPIs(true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
                             child: const Text(
                               '全选',
                               style: TextStyle(fontSize: 12),
@@ -280,6 +273,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: () => _selectAllAPIs(false),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFEEEEEE),
+                              foregroundColor: isDark ? Colors.white70 : Colors.black54,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
                             child: const Text(
                               '全不选',
                               style: TextStyle(fontSize: 12),
@@ -288,6 +289,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: () => _selectAllAPIs(true, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
                             child: const Text(
                               '全选普通资源',
                               style: TextStyle(fontSize: 12),
@@ -295,12 +304,12 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // API复选框列表（只显示名称）
                       Container(
                         height: 160,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
+                          color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListView(
@@ -310,7 +319,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               title: Text(
                                 entry.value['name']!,
                                 style: TextStyle(
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  color: isDark ? Colors.white70 : Colors.black87,
                                   fontSize: 14,
                                 ),
                               ),
@@ -322,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           }).toList(),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       // 已选API数量
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -330,14 +339,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           Text(
                             '已选API数量：${_selectedSources.length}',
                             style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                              color: isDark ? Colors.white70 : Colors.black54,
                               fontSize: 12,
                             ),
                           ),
-                          const Text(
+                          Text(
                             '', // 站点状态信息
                             style: TextStyle(
-                              color: Colors.grey,
+                              color: isDark ? Colors.white38 : Colors.grey,
                               fontSize: 12,
                             ),
                           ),
@@ -351,26 +360,32 @@ class _SettingsPageState extends State<SettingsPage> {
               
               // 自定义API部分
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             '自定义API',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                           IconButton(
                             onPressed: _showAddCustomApiForm,
                             icon: Container(
-                              width: 24,
-                              height: 24,
+                              width: 32,
+                              height: 32,
                               decoration: BoxDecoration(
                                 color: Theme.of(context).primaryColor,
                                 shape: BoxShape.circle,
@@ -380,7 +395,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   '+',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -391,13 +406,13 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       // 自定义API列表
                       if (_customApis.isNotEmpty)
                         Container(
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
+                            color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: ListView.builder(
@@ -408,21 +423,21 @@ class _SettingsPageState extends State<SettingsPage> {
                                 title: Text(
                                   api['name']!,
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: isDark ? Colors.white70 : Colors.black87,
                                     fontSize: 14,
                                   ),
                                 ),
                                 subtitle: Text(
                                   api['api']!,
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: isDark ? Colors.white38 : Colors.black54,
                                     fontSize: 12,
                                   ),
                                 ),
                                 trailing: IconButton(
                                   icon: Icon(
                                     Icons.delete,
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: isDark ? Colors.white38 : Colors.grey,
                                     size: 20,
                                   ),
                                   onPressed: () => _removeCustomApi(index),
@@ -433,60 +448,60 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       // 添加自定义API表单
                       if (_showCustomApiForm) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
+                            color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
                             children: [
                               TextField(
                                 controller: _apiNameController,
-                                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                                 decoration: InputDecoration(
                                   labelText: 'API名称',
-                                  labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                                  labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                                    borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(color: Theme.of(context).primaryColor),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               TextField(
                                 controller: _apiUrlController,
-                                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                                 decoration: InputDecoration(
                                   labelText: 'https://abc.com',
-                                  labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                                  labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                                    borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(color: Theme.of(context).primaryColor),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               TextField(
                                 controller: _apiDetailController,
-                                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                                 decoration: InputDecoration(
                                   labelText: 'detail地址（可选）',
-                                  labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                                  labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                                    borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: BorderSide(color: Theme.of(context).primaryColor),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               // 黄色资源站复选框
                               Row(
                                 children: [
@@ -506,11 +521,19 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               Row(
                                 children: [
                                   ElevatedButton(
                                     onPressed: _addCustomApi,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).primaryColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    ),
                                     child: const Text(
                                       '添加',
                                       style: TextStyle(fontSize: 12),
@@ -520,7 +543,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ElevatedButton(
                                     onPressed: _cancelAddCustomApi,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(context).cardColor,
+                                      backgroundColor: isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE0E0E0),
+                                      foregroundColor: isDark ? Colors.white : Colors.black87,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     ),
                                     child: const Text(
                                       '取消',
@@ -541,35 +569,62 @@ class _SettingsPageState extends State<SettingsPage> {
               
               // 主题选择部分
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '主题设置',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       ListTile(
-                        title: const Text('主题选择'),
+                        title: Text(
+                          '主题选择',
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
                         trailing: DropdownButton<int>(
                           value: _selectedTheme,
-                          items: const [
+                          dropdownColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+                          items: [
                             DropdownMenuItem(
                               value: 0,
-                              child: Text('系统默认'),
+                              child: Text(
+                                '系统默认',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
                             ),
                             DropdownMenuItem(
                               value: 1,
-                              child: Text('浅色主题'),
+                              child: Text(
+                                '浅色主题',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
                             ),
                             DropdownMenuItem(
                               value: 2,
-                              child: Text('深色主题'),
+                              child: Text(
+                                '深色主题',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
                             ),
                           ],
                           onChanged: (int? value) {
@@ -597,25 +652,31 @@ class _SettingsPageState extends State<SettingsPage> {
               
               // 功能开关部分
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '功能开关',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // 黄色内容过滤
                       Container(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(color: Theme.of(context).dividerColor),
+                            bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                           ),
                         ),
                         child: Row(
@@ -628,7 +689,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Text(
                                     '黄色内容过滤',
                                     style: TextStyle(
-                                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                                      color: isDark ? Colors.white70 : Colors.black87,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -636,7 +697,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Text(
                                     '过滤"伦理片"等黄色内容',
                                     style: TextStyle(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                      color: isDark ? Colors.white38 : Colors.black54,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -655,13 +716,13 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // 分片广告过滤
                       Container(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(color: Theme.of(context).dividerColor),
+                            bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                           ),
                         ),
                         child: Row(
@@ -674,7 +735,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Text(
                                     '分片广告过滤',
                                     style: TextStyle(
-                                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                                      color: isDark ? Colors.white70 : Colors.black87,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -682,7 +743,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Text(
                                     '关闭可减少旧版浏览器卡顿',
                                     style: TextStyle(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                      color: isDark ? Colors.white38 : Colors.black54,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -701,7 +762,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // 豆瓣热门推荐
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -713,7 +774,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Text(
                                   '豆瓣热门推荐',
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: isDark ? Colors.white70 : Colors.black87,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -721,7 +782,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Text(
                                   '首页显示豆瓣热门影视内容',
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: isDark ? Colors.white38 : Colors.black54,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -747,28 +808,38 @@ class _SettingsPageState extends State<SettingsPage> {
               
               // 一般功能部分
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '一般功能',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // 导入配置
                       Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ElevatedButton(
                           onPressed: _importConfig,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           child: const Text('导入配置'),
                         ),
@@ -776,12 +847,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       // 导出配置
                       Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ElevatedButton(
                           onPressed: _exportConfig,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           child: const Text('导出配置'),
                         ),
@@ -792,8 +867,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: ElevatedButton(
                           onPressed: _clearLocalStorage,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
+                            backgroundColor: isDark ? const Color(0xFFCF6679) : const Color(0xFFB00020),
                             foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           child: const Text('清除Cookie'),
                         ),
@@ -803,25 +882,31 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              
-              // 保存按钮
-              Center(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveSettings,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('保存设置'),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+  
+  // 自动保存设置
+  Future<void> _saveSettingsAutomatically() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // 保存选中的播放源
+    await prefs.setString('selected_sources', _selectedSources.join(','));
+    
+    // 保存功能开关设置
+    await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
+    await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
+    await prefs.setBool('douban_enabled', _doubanEnabled);
+    
+    // 保存主题设置
+    await prefs.setInt('selected_theme', _selectedTheme);
+    
+    // 显示保存提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('设置已自动保存')),
     );
   }
 }

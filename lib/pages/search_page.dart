@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vision_x_flutter/components/loading_animation.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -179,217 +180,286 @@ class _MediaResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 使用海报图片，如果没有则使用占位图
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final String? imageUrl = media.poster;
 
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 4,
-        margin: const EdgeInsets.only(bottom: 16),
+        elevation: 1,
+        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 左侧海报图
-            Container(
-              width: 120,
-              height: 180,
-              margin: const EdgeInsets.all(8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(
-                              Icons.movie,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(
-                            Icons.movie,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-              ),
-            ),
+            // 海报图片
+            _buildImageContainer(imageUrl, isDarkMode),
 
-            // 右侧信息
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 标题和年份
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            media.name ?? '未知片名',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // 评分
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                media.score ?? '暂无',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // 年份和区域
-                    Text(
-                      '${media.year ?? ''} ${media.area ?? ''}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // 类型
-                    if (media.type != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              Theme.of(context).primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          media.type!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 8),
-
-                    // 简介
-                    if (media.description != null)
-                      Text(
-                        media.description!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
-                          height: 1.4,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                    const SizedBox(height: 12),
-
-                    // 底部信息和按钮
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // 来源标签
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            media.sourceName,
-                            style: const TextStyle(
-                              color: Colors.blueAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-
-                        // 详情按钮
-                        OutlinedButton(
-                          onPressed: onDetailTap,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: const Text(
-                            '查看详情',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // 内容信息
+            _buildContent(context, theme, isDarkMode),
           ],
         ),
       ),
+    );
+  }
+
+  // 构建图片容器
+  Widget _buildImageContainer(String? imageUrl, bool isDarkMode) {
+    return Container(
+      width: 80,
+      height: 120,
+      margin: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: imageUrl != null && imageUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const LoadingAnimation(),
+                errorWidget: (context, url, error) => Container(
+                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                  child: const Center(
+                    child: Icon(
+                      Icons.movie,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              )
+            : Container(
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                child: const Center(
+                  child: Icon(
+                    Icons.movie,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  // 构建内容区域
+  Widget _buildContent(BuildContext context, ThemeData theme, bool isDarkMode) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // 标题和基本信息
+            _buildTitleAndInfo(theme, isDarkMode),
+
+            // 简介
+            _buildDescription(isDarkMode),
+
+            const SizedBox(height: 4),
+
+            // 底部信息
+            _buildBottomInfo(theme, isDarkMode),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 构建标题和基本信息
+  Widget _buildTitleAndInfo(ThemeData theme, bool isDarkMode) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          media.name ?? '未知片名',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+
+        const SizedBox(height: 4),
+
+        // 年份、区域和类型信息
+        _buildYearAreaType(theme, isDarkMode),
+
+        const SizedBox(height: 4),
+
+        // 评分和来源
+        _buildRatingAndSource(theme, isDarkMode),
+      ],
+    );
+  }
+
+  // 构建年份、区域和类型信息
+  Widget _buildYearAreaType(ThemeData theme, bool isDarkMode) {
+    return Row(
+      children: [
+        if (media.year != null && media.year!.isNotEmpty)
+          Text(
+            media.year!,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        if (media.year != null &&
+            media.year!.isNotEmpty &&
+            media.area != null &&
+            media.area!.isNotEmpty)
+          Text(
+            ' · ',
+            style: TextStyle(
+              fontSize: 11,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        if (media.area != null && media.area!.isNotEmpty)
+          Text(
+            media.area!,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        if (media.type != null && media.type!.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 5,
+              vertical: 1,
+            ),
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              media.type!,
+              style: TextStyle(
+                fontSize: 9,
+                color: theme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // 构建评分和来源信息
+  Widget _buildRatingAndSource(ThemeData theme, bool isDarkMode) {
+    return Row(
+      children: [
+        // 评分
+        if (media.score != null && media.score!.isNotEmpty)
+          Row(
+            children: [
+              Icon(
+                Icons.star,
+                size: 14,
+                color: Colors.amber,
+              ),
+              const SizedBox(width: 3),
+              Text(
+                media.score!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        // 来源信息
+        if (media.sourceName.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(left: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              media.sourceName,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // 构建简介
+  Widget _buildDescription(bool isDarkMode) {
+    if (media.description == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Text(
+      media.description!,
+      style: TextStyle(
+        fontSize: 11,
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        height: 1.3,
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  // 构建底部信息
+  Widget _buildBottomInfo(ThemeData theme, bool isDarkMode) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // 演员信息
+        if (media.actors != null && media.actors!.isNotEmpty)
+          Expanded(
+            child: Text(
+              media.actors!,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        // 详情按钮
+        TextButton(
+          onPressed: onDetailTap,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+            minimumSize: const Size(0, 0),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            '详情',
+            style: TextStyle(
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

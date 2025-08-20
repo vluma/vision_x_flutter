@@ -19,11 +19,15 @@ class HistoryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 2,
       child: ListTile(
         contentPadding: const EdgeInsets.all(8),
         onTap: onTap,
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           child: CachedNetworkImage(
             imageUrl: record.media.poster ?? '',
             width: 60,
@@ -32,14 +36,26 @@ class HistoryItem extends StatelessWidget {
             placeholder: (context, url) => Container(
               width: 60,
               height: 80,
-              color: Colors.grey[300],
-              child: const Icon(Icons.movie, color: Colors.grey),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.movie, 
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             errorWidget: (context, url, error) => Container(
               width: 60,
               height: 80,
-              color: Colors.grey[300],
-              child: const Icon(Icons.movie, color: Colors.grey),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.movie, 
+                color: Theme.of(context).disabledColor,
+              ),
             ),
           ),
         ),
@@ -47,6 +63,10 @@ class HistoryItem extends StatelessWidget {
           record.media.name ?? '未知影片',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleMedium?.color,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,29 +74,35 @@ class HistoryItem extends StatelessWidget {
           children: [
             Text(
               record.episode.title,
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
               DateFormat('yyyy-MM-dd HH:mm').format(record.watchedAt),
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             ),
             if (record.progress > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   '观看至 ${Duration(seconds: record.progress).toString().split('.').first}',
-                  style: const TextStyle(fontSize: 12, color: Colors.blue),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, size: 20),
-          onPressed: onDelete,
-        ),
+        // 移除删除按钮，改用右滑删除
       ),
     );
   }
