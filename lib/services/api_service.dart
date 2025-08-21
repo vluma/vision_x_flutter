@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/douban_movie.dart';
 import '../models/media_detail.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:convert'; // 添加dart:convert用于JSON解析
 
 class SearchDataSource extends ChangeNotifier {
   String _searchQuery = '';
@@ -295,23 +296,56 @@ class ApiService {
 
       final searchUrl =
           '$apiUrl?ac=videolist&wd=${Uri.encodeQueryComponent(query)}';
+      print('正在搜索 $apiName: $searchUrl');
       final response = await apiDio.get(searchUrl);
 
-      if (response.statusCode == 200) {
-        final data = response.data;
+      print('收到 $apiName 的响应，状态码: ${response.statusCode}');
+      print('$apiName 返回的原始数据类型: ${response.data.runtimeType}');
+      if (response.data is Map) {
+        print('$apiName 返回的数据键: ${(response.data as Map).keys.toList()}');
+      } else if (response.data is List) {
+        print('$apiName 返回的列表长度: ${(response.data as List).length}');
+      } else {
+        print('$apiName 返回的数据: ${response.data}');
+      }
 
-        if (data is Map<String, dynamic> &&
-            data.containsKey('list') &&
-            data['list'] is List) {
-          final List<dynamic> list = data['list'];
-          return list.map((item) {
-            return _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl);
-          }).toList();
+      if (response.statusCode == 200) {
+        dynamic data = response.data;
+        
+        // 如果返回的是字符串，则尝试解析为JSON
+        if (data is String) {
+          print('$apiName 返回的是字符串，尝试解析为JSON');
+          try {
+            data = json.decode(data);
+            print('$apiName JSON解析成功');
+          } catch (e) {
+            print('$apiName JSON解析失败: $e');
+            return [];
+          }
+        }
+        
+        if (data is Map) {
+          print('$apiName 返回的数据键: ${data.keys.toList()}');
+          
+          if (data.containsKey('list') && data['list'] is List) {
+            final List<dynamic> list = data['list'];
+            print('$apiName 找到 ${list.length} 个结果');
+            return list.map((item) {
+              return _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl);
+            }).toList();
+          } else {
+            print('$apiName 数据格式不正确或没有list字段');
+            print('$apiName 数据字段: ${data.keys.toList()}');
+          }
+        } else {
+          print('$apiName 返回的数据不是Map类型: ${data.runtimeType}');
         }
       }
 
       return [];
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('搜索 $apiName 时出错: $e');
+      print('错误堆栈: $stackTrace');
       // 出错时返回空列表而不是抛出异常
       return [];
     }
