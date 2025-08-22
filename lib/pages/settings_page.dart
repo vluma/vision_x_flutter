@@ -111,6 +111,9 @@ class _SettingsPageState extends State<SettingsPage> {
         _selectedSources.clear();
       }
     });
+    
+    // 添加保存设置的调用，但不显示提示
+    _saveSettingsWithoutNotification();
   }
   
   // 添加自定义API
@@ -908,5 +911,21 @@ class _SettingsPageState extends State<SettingsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('设置已自动保存')),
     );
+  }
+  
+  // 保存设置但不显示提示
+  Future<void> _saveSettingsWithoutNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // 保存选中的播放源
+    await prefs.setString('selected_sources', _selectedSources.join(','));
+    
+    // 保存功能开关设置
+    await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
+    await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
+    await prefs.setBool('douban_enabled', _doubanEnabled);
+    
+    // 保存主题设置
+    await prefs.setInt('selected_theme', _selectedTheme);
   }
 }

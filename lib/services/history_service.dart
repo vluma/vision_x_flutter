@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 
-class HistoryService {
+class HistoryService extends ChangeNotifier {
   static const String _historyKey = 'watch_history';
   static const int _maxHistoryCount = 100; // 最大历史记录数
 
@@ -18,9 +19,8 @@ class HistoryService {
     final prefs = await SharedPreferences.getInstance();
     final history = await getHistory();
 
-    // 检查是否已存在相同记录，如果存在则更新
-    final existingIndex = history.indexWhere((record) =>
-        record.media.id == media.id && record.episode.title == episode.title);
+    // 检查是否已存在相同媒体的记录，如果存在则更新
+    final existingIndex = history.indexWhere((record) => record.media.id == media.id);
 
     final newRecord = HistoryRecord(
       media: media,
@@ -46,6 +46,9 @@ class HistoryService {
     final historyJson = history.map((record) => record.toJson()).toList();
     await prefs.setStringList(
         _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
+    
+    // 通知监听者数据已更新
+    notifyListeners();
   }
 
   // 获取历史记录
@@ -71,20 +74,23 @@ class HistoryService {
   Future<void> removeHistory(HistoryRecord record) async {
     final prefs = await SharedPreferences.getInstance();
     final history = await getHistory();
-    history.removeWhere((item) =>
-        item.media.id == record.media.id &&
-        item.episode.title == record.episode.title &&
-        item.watchedAt == record.watchedAt);
+    history.removeWhere((item) => item.media.id == record.media.id);
 
     final historyJson = history.map((record) => record.toJson()).toList();
     await prefs.setStringList(
         _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
+    
+    // 通知监听者数据已更新
+    notifyListeners();
   }
 
   // 清空所有历史记录
   Future<void> clearHistory() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_historyKey);
+    
+    // 通知监听者数据已更新
+    notifyListeners();
   }
 
   // 更新观看进度
@@ -93,14 +99,13 @@ class HistoryService {
     final prefs = await SharedPreferences.getInstance();
     final history = await getHistory();
 
-    final index = history.indexWhere((record) =>
-        record.media.id == media.id && record.episode.title == episode.title);
+    final index = history.indexWhere((record) => record.media.id == media.id);
 
     if (index >= 0) {
       // 更新观看时间和进度
       history[index] = HistoryRecord(
         media: history[index].media,
-        episode: history[index].episode,
+        episode: episode, // 更新为当前观看的剧集
         watchedAt: DateTime.now(), // 更新观看时间
         progress: progress, // 更新观看进度
       );
@@ -109,6 +114,9 @@ class HistoryService {
       final historyJson = history.map((record) => record.toJson()).toList();
       await prefs.setStringList(
           _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
+      
+      // 通知监听者数据已更新
+      notifyListeners();
     }
   }
 }

@@ -299,7 +299,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: theme.brightness == Brightness.dark
-                      ? AppColors.bottomNavIndicator
+                      ? AppColors.bottomNavSelectedItem.withValues(alpha: 0.2) // 暗色模式下使用选中项颜色的半透明版本
                       : theme.primaryColor
                           .withValues(alpha: 0.1), // 浅色模式下使用主色的淡色版本
                 ),

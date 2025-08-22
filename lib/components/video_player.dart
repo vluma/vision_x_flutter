@@ -9,6 +9,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final MediaDetail media;
   final Episode episode;
   final Function(int)? onProgressUpdate;
+  final Function()? onPlaybackCompleted; // 添加播放完成回调
   final int startPosition; // 添加起始位置参数
 
   const CustomVideoPlayer({
@@ -16,6 +17,7 @@ class CustomVideoPlayer extends StatefulWidget {
     required this.media,
     required this.episode,
     this.onProgressUpdate,
+    this.onPlaybackCompleted, // 添加播放完成回调参数
     this.startPosition = 0, // 默认从头开始
   });
 
@@ -29,6 +31,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _isPlayerInitialized = false;
   Timer? _progressTimer;
   bool _isDisposing = false;
+  bool _hasCompleted = false; // 添加播放完成标志
 
   @override
   void initState() {
@@ -51,6 +54,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       await _videoPlayerController.seekTo(Duration(seconds: widget.startPosition));
     }
     
+    // 监听播放完成事件
+    _videoPlayerController.addListener(_videoPlayerListener);
+    
     // 启动进度更新定时器
     _startProgressTracking();
 
@@ -67,6 +73,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       setState(() {
         _isPlayerInitialized = true;
       });
+    }
+  }
+  
+  void _videoPlayerListener() {
+    // 检查视频是否播放完成
+    if (_videoPlayerController.value.position >= _videoPlayerController.value.duration && 
+        !_isDisposing && !_hasCompleted) {
+      _hasCompleted = true; // 标记为已完成，防止重复触发
+      widget.onPlaybackCompleted?.call();
     }
   }
   
@@ -91,6 +106,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   void dispose() {
     _isDisposing = true;
     _progressTimer?.cancel();
+    _videoPlayerController.removeListener(_videoPlayerListener);
     
     // 异步销毁控制器，避免在构建过程中销毁
     Future.microtask(() async {

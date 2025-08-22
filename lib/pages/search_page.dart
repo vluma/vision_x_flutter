@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 class _SearchController extends ChangeNotifier {
   List<MediaDetail> _mediaResults = [];
   List<MediaDetail> _filteredResults = [];
-  List<MediaDetail> _aggregatedResults = []; // 添加聚合结果列表
+  List<MediaDetail> _aggregatedResults = [];
   String _selectedCategory = '全部';
   String _sortBy = 'default';
   bool _isLoading = false;
@@ -20,7 +20,7 @@ class _SearchController extends ChangeNotifier {
 
   List<MediaDetail> get mediaResults => _mediaResults;
   List<MediaDetail> get filteredResults => _filteredResults;
-  List<MediaDetail> get aggregatedResults => _aggregatedResults; // 添加getter
+  List<MediaDetail> get aggregatedResults => _aggregatedResults;
   String get selectedCategory => _selectedCategory;
   bool get isLoading => _isLoading;
   bool get hasSearched => _hasSearched;
@@ -39,19 +39,33 @@ class _SearchController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final results = await ApiService.aggregatedSearch(query.trim());
+      // 使用流式搜索方法，每个API返回结果后立即显示
+      List<MediaDetail> tempResults = [];
 
-      if (currentSearchId == _searchId) {
-        _mediaResults = results;
-        _filteredResults = List.from(results);
-        _aggregatedResults = _aggregateMedia(results); // 聚合结果
-        _isLoading = false;
-        _lastSearchQuery = query.trim();
-        notifyListeners();
-        
-        // 更新分类
-        _updateCategories();
-      }
+      await ApiService.streamAggregatedSearchWithSelectedSources(
+        query.trim(),
+        (List<MediaDetail> results) {
+          // 当收到部分结果时更新UI
+          if (currentSearchId == _searchId) {
+            tempResults.addAll(results);
+            _mediaResults = List.from(tempResults);
+            _filteredResults = List.from(tempResults);
+            _aggregatedResults = _aggregateMedia(tempResults);
+            notifyListeners();
+          }
+        },
+        () {
+          // 当所有搜索完成时
+          if (currentSearchId == _searchId) {
+            _isLoading = false;
+            _lastSearchQuery = query.trim();
+            notifyListeners();
+
+            // 更新分类
+            _updateCategories();
+          }
+        },
+      );
     } catch (e) {
       if (currentSearchId == _searchId) {
         _isLoading = false;
@@ -63,11 +77,11 @@ class _SearchController extends ChangeNotifier {
   // 聚合结果，将名称、年份、分类相同的媒体聚合在一起
   List<MediaDetail> _aggregateMedia(List<MediaDetail> mediaList) {
     final Map<String, MediaDetail> aggregatedMap = {};
-    
+
     for (var media in mediaList) {
       // 创建唯一标识符，基于名称、年份和分类
       final key = '${media.name ?? ''}_${media.year ?? ''}_${media.type ?? ''}';
-      
+
       if (aggregatedMap.containsKey(key)) {
         // 如果已存在，合并来源和剧集信息
         final existingMedia = aggregatedMap[key]!;
@@ -132,7 +146,7 @@ class _SearchController extends ChangeNotifier {
         );
       }
     }
-    
+
     return aggregatedMap.values.toList();
   }
 
@@ -144,12 +158,12 @@ class _SearchController extends ChangeNotifier {
         categories.add(media.type!);
       }
     }
-    
+
     // 如果当前选中的分类不在新分类列表中，则重置为"全部"
     if (_selectedCategory != '全部' && !categories.contains(_selectedCategory)) {
       _selectedCategory = '全部';
       _filteredResults = List.from(_mediaResults);
-      _aggregatedResults = _aggregateMedia(_filteredResults); // 重新聚合
+      _aggregatedResults = _aggregateMedia(_filteredResults);
       notifyListeners();
     }
   }
@@ -160,12 +174,13 @@ class _SearchController extends ChangeNotifier {
     if (category == '全部') {
       _filteredResults = List.from(_mediaResults);
     } else {
-      _filteredResults = _mediaResults.where((media) => media.type == category).toList();
+      _filteredResults =
+          _mediaResults.where((media) => media.type == category).toList();
     }
-    
+
     // 应用当前排序
     _sortResults();
-    _aggregatedResults = _aggregateMedia(_filteredResults); // 重新聚合
+    _aggregatedResults = _aggregateMedia(_filteredResults);
     notifyListeners();
   }
 
@@ -194,7 +209,7 @@ class _SearchController extends ChangeNotifier {
   void updateSortBy(String sortBy) {
     _sortBy = sortBy;
     _sortResults();
-    _aggregatedResults = _aggregateMedia(_filteredResults); // 重新聚合
+    _aggregatedResults = _aggregateMedia(_filteredResults);
     notifyListeners();
   }
 }
@@ -218,7 +233,8 @@ class _SearchPageState extends State<SearchPage> {
     searchDataSource.addListener(_handleSearchDataChange);
 
     // 只有当页面没有搜索过且有搜索查询时才执行搜索
-    if (searchDataSource.searchQuery.isNotEmpty && !_searchController.hasSearched) {
+    if (searchDataSource.searchQuery.isNotEmpty &&
+        !_searchController.hasSearched) {
       _searchController.performSearch(searchDataSource.searchQuery);
     }
   }
@@ -281,134 +297,215 @@ class _SearchPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<_SearchController>(
-      builder: (context, searchController, child) {
-        // 获取所有分类，确保"全部"在最前面
-        List<String> sortedCategories = ['全部'];
-        Set<String> otherCategories = Set<String>();
-        
-        for (var media in searchController.mediaResults) {
-          if (media.type != null && media.type!.isNotEmpty) {
-            otherCategories.add(media.type!);
-          }
-        }
-        
-        // 对其他分类进行排序并添加到列表中
-        List<String> sortedOtherCategories = otherCategories.toList()..sort();
-        sortedCategories.addAll(sortedOtherCategories);
+        builder: (context, searchController, child) {
+      // 获取所有分类，确保"全部"在最前面
+      List<String> sortedCategories = ['全部'];
+      Set<String> otherCategories = Set<String>();
 
-        // 按来源分组结果（用于分组视图）
-        Map<String, List<MediaDetail>> groupedResults = {};
-        for (var media in searchController.filteredResults) {
-          final sourceName = media.sourceName;
-          if (!groupedResults.containsKey(sourceName)) {
-            groupedResults[sourceName] = [];
-          }
-          groupedResults[sourceName]!.add(media);
+      for (var media in searchController.mediaResults) {
+        if (media.type != null && media.type!.isNotEmpty) {
+          otherCategories.add(media.type!);
         }
+      }
 
-        // 如果是分组视图但没有分组数据，使用原始媒体结果创建分组
-        if (isGroupedView && groupedResults.isEmpty && searchController.filteredResults.isNotEmpty) {
-          final defaultGroupName = '默认分组';
-          groupedResults[defaultGroupName] = searchController.filteredResults;
+      // 对其他分类进行排序并添加到列表中
+      List<String> sortedOtherCategories = otherCategories.toList()..sort();
+      sortedCategories.addAll(sortedOtherCategories);
+
+      // 按来源分组结果（用于分组视图）
+      Map<String, List<MediaDetail>> groupedResults = {};
+      for (var media in searchController.filteredResults) {
+        final sourceName = media.sourceName;
+        if (!groupedResults.containsKey(sourceName)) {
+          groupedResults[sourceName] = [];
         }
+        groupedResults[sourceName]!.add(media);
+      }
 
-        return Scaffold(
-          extendBody: true,
-          appBar: AppBar(
-            title: const Text('搜索结果'),
-            actions: [
-              // 视图切换按钮
-              IconButton(
-                icon: Icon(isGroupedView ? Icons.view_list : Icons.view_module),
-                onPressed: onToggleViewMode,
-                tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
+      // 如果是分组视图但没有分组数据，使用原始媒体结果创建分组
+      if (isGroupedView &&
+          groupedResults.isEmpty &&
+          searchController.filteredResults.isNotEmpty) {
+        final defaultGroupName = '默认分组';
+        groupedResults[defaultGroupName] = searchController.filteredResults;
+      }
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('搜索结果(${searchController.filteredResults.length})'),
+          actions: [
+            // 视图切换按钮
+            IconButton(
+              icon: Icon(isGroupedView ? Icons.view_list : Icons.view_module),
+              onPressed: onToggleViewMode,
+              tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
+            ),
+            // 排序按钮
+            _SortPopupMenu(onSortChanged: searchController.updateSortBy),
+          ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(
+                searchController.isLoading || (sortedCategories.length - 1) <= 1
+                    ? 0.0
+                    : 40.0),
+            child: Container(
+              height: searchController.isLoading ||
+                      (sortedCategories.length - 1) <= 1
+                  ? 0.0
+                  : 40.0,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                boxShadow: isScrolledDown
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                        ),
+                      ]
+                    : [],
               ),
-              // 排序按钮
-              _SortPopupMenu(onSortChanged: searchController.updateSortBy),
-            ],
-          ),
-          body: NotificationListener<ScrollNotification>(
-            onNotification: (ScrollNotification scrollInfo) {
-              if (scrollInfo.metrics.pixels > 0 && !isScrolledDown) {
-                onScrollStateChanged(true);
-                return true;
-              } else if (scrollInfo.metrics.pixels <= 0 && isScrolledDown) {
-                onScrollStateChanged(false);
-                return true;
-              }
-              return false;
-            },
-            child: Column(
-              children: [
-                // 分类筛选标签（使用主页样式并添加背景，搜索过程中隐藏）
-                if (sortedCategories.length > 1 && !searchController.isLoading)
-                  _CategoryFilter(
-                    categories: sortedCategories,
-                    selectedCategory: searchController.selectedCategory,
-                    onCategorySelected: searchController.filterResults,
-                    isScrolledDown: isScrolledDown,
-                  ),
-
-                // 搜索结果
-                if (searchController.isLoading)
-                  const Expanded(
-                    child: Center(
-                      child: CircularProgressIndicator(),
+              child: searchController.isLoading ||
+                      (sortedCategories.length - 1) <= 1
+                  ? const SizedBox()
+                  : ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: sortedCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = sortedCategories[index];
+                        final isSelected =
+                            category == searchController.selectedCategory;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 15),
+                          child: InkWell(
+                            onTap: () {
+                              if (!isSelected) {
+                                searchController.filterResults(category);
+                              }
+                            },
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  category,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? Theme.of(context).primaryColor
+                                        : (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white70
+                                            : Colors.black54),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                if (isSelected)
+                                  Container(
+                                    height: 2,
+                                    width: 15,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  )
-                else if (searchController.hasSearched && searchController.filteredResults.isEmpty)
-                  const Expanded(
-                    child: Center(
-                      child: Text('未找到相关结果'),
-                    ),
-                  )
-                else if (searchController.filteredResults.isNotEmpty)
-                  Expanded(
-                    child: isGroupedView 
-                      ? _buildGroupedView(groupedResults, context) // 分组视图
-                      : _buildListView(context), // 列表视图
-                  )
-                else
-                  const Expanded(
-                    child: Center(
-                      child: Text('请输入关键词搜索'),
-                    ),
-                  ),
-                  
-                // 当显示分组视图时添加分组说明
-                if (isGroupedView && searchController.filteredResults.isNotEmpty && !searchController.isLoading)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      '按资源分组显示',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).textTheme.bodySmall?.color ??
-                            (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white70
-                                : Colors.black54),
-                      ),
-                    ),
-                  ),
-              ],
             ),
           ),
-          // 在搜索时隐藏底部导航栏
-          bottomNavigationBar: searchDataSource.isSearchExpanded ? null : null,
-        );
-      }
-    );
+        ),
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification scrollInfo) {
+            if (scrollInfo.metrics.pixels > 0 && !isScrolledDown) {
+              onScrollStateChanged(true);
+              return true;
+            } else if (scrollInfo.metrics.pixels <= 0 && isScrolledDown) {
+              onScrollStateChanged(false);
+              return true;
+            }
+            return false;
+          },
+          child: Column(
+            children: [
+              // 搜索结果
+              if (searchController.isLoading &&
+                  searchController.filteredResults.isEmpty)
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                    itemCount: 8,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: const _MediaGridItemSkeleton(),
+                      );
+                    },
+                  ),
+                )
+              else if (searchController.hasSearched &&
+                  searchController.filteredResults.isEmpty)
+                const Expanded(
+                  child: Center(
+                    child: Text('未找到相关结果'),
+                  ),
+                )
+              else if (searchController.filteredResults.isNotEmpty)
+                Expanded(
+                  child: isGroupedView
+                      ? _buildGroupedView(groupedResults, context)
+                      : _buildListView(context),
+                )
+              else
+                const Expanded(
+                  child: Center(
+                    child: Text('请输入关键词搜索'),
+                  ),
+                ),
+
+              // 当显示分组视图时添加分组说明
+              if (isGroupedView &&
+                  searchController.filteredResults.isNotEmpty &&
+                  !searchController.isLoading)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                    '按资源分组显示',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodySmall?.color ??
+                          (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: searchDataSource.isSearchExpanded ? null : null,
+      );
+    });
   }
 
   // 构建分组视图
-  Widget _buildGroupedView(Map<String, List<MediaDetail>> groupedResults, BuildContext context) {
+  Widget _buildGroupedView(
+      Map<String, List<MediaDetail>> groupedResults, BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       itemCount: groupedResults.keys.length,
       itemBuilder: (BuildContext context, int index) {
         final sourceName = groupedResults.keys.elementAt(index);
         final mediaList = groupedResults[sourceName]!;
-        
+
         return _SourceGroup(
           sourceName: sourceName,
           mediaList: mediaList,
@@ -426,28 +523,27 @@ class _SearchPageContent extends StatelessWidget {
   // 构建列表视图（聚合视图）
   Widget _buildListView(BuildContext context) {
     return Consumer<_SearchController>(
-      builder: (context, searchController, child) {
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // 将padding移到ListView上
-          itemCount: searchController.aggregatedResults.length,
-          itemBuilder: (BuildContext context, int index) {
-            final media = searchController.aggregatedResults[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: _MediaGridItem(
-                media: media,
-                onTap: () {
-                  _navigateToPlayer(context, media);
-                },
-                onDetailTap: () {
-                  _showDetailPage(context, media);
-                },
-              ),
-            );
-          },
-        );
-      }
-    );
+        builder: (context, searchController, child) {
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        itemCount: searchController.aggregatedResults.length,
+        itemBuilder: (BuildContext context, int index) {
+          final media = searchController.aggregatedResults[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: _MediaGridItem(
+              media: media,
+              onTap: () {
+                _navigateToPlayer(context, media);
+              },
+              onDetailTap: () {
+                _showDetailPage(context, media);
+              },
+            ),
+          );
+        },
+      );
+    });
   }
 
   // 导航到播放器页面
@@ -503,96 +599,6 @@ class _SortPopupMenu extends StatelessWidget {
           ),
         ];
       },
-    );
-  }
-}
-
-// 分类筛选器
-class _CategoryFilter extends StatelessWidget {
-  final List<String> categories;
-  final String selectedCategory;
-  final Function(String) onCategorySelected;
-  final bool isScrolledDown;
-
-  const _CategoryFilter({
-    required this.categories,
-    required this.selectedCategory,
-    required this.onCategorySelected,
-    required this.isScrolledDown,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(40),
-      child: Container(
-        height: 40,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: isScrolledDown 
-            ? (Theme.of(context).appBarTheme.backgroundColor ?? 
-               (Theme.of(context).brightness == Brightness.dark 
-                ? const Color(0xFF121212) 
-                : const Color(0xFFEEEEEE)))
-            : (Theme.of(context).brightness == Brightness.dark 
-                ? const Color(0xFF121212) 
-                : const Color(0xFFEEEEEE)),
-          boxShadow: isScrolledDown ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 4,
-            ),
-          ] : [],
-        ),
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            final isSelected = category == selectedCategory;
-            return Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: InkWell(
-                onTap: () {
-                  if (!isSelected) {
-                    onCategorySelected(category);
-                  }
-                },
-                splashColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      category,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white70
-                                : Colors.black54),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    if (isSelected)
-                      Container(
-                        height: 3,
-                        width: 20,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 }
@@ -1031,25 +1037,29 @@ class _VerticalMediaItem extends StatelessWidget {
           children: [
             // 海报图片
             _buildImageContainer(context, imageUrl, isDarkMode),
-            
+
             // 标题
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
               child: Text(
                 media.name ?? '未知片名',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: 10,
                   color: isDarkMode ? Colors.white : Colors.black87,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            
+
+            // 添加撑开布局的控件
+            const Expanded(child: SizedBox.shrink()),
+
             // 年份、地区、分类信息
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: _buildYearAreaType(theme, isDarkMode),
             ),
           ],
@@ -1059,9 +1069,10 @@ class _VerticalMediaItem extends StatelessWidget {
   }
 
   // 构建图片容器（带评分和详情按钮）
-  Widget _buildImageContainer(BuildContext context, String? imageUrl, bool isDarkMode) {
+  Widget _buildImageContainer(
+      BuildContext context, String? imageUrl, bool isDarkMode) {
     final theme = Theme.of(context);
-    
+
     return Container(
       height: 100,
       width: double.infinity,
@@ -1106,7 +1117,7 @@ class _VerticalMediaItem extends StatelessWidget {
                     ),
                   ),
           ),
-          
+
           // 黑色半透明渐变蒙版
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
@@ -1126,7 +1137,7 @@ class _VerticalMediaItem extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // 评分（左下角）
           if (media.score != null && media.score!.isNotEmpty)
             Positioned(
@@ -1158,7 +1169,7 @@ class _VerticalMediaItem extends StatelessWidget {
                 ),
               ),
             ),
-          
+
           // 详情按钮（右下角）
           Positioned(
             bottom: 4,
@@ -1206,7 +1217,7 @@ class _VerticalMediaItem extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        
+
         // 类型标签
         if (media.type != null && media.type!.isNotEmpty)
           Container(
@@ -1531,6 +1542,223 @@ class _MediaGridItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// 骨架屏组件（模仿_MediaGridItem样式）
+class _MediaGridItemSkeleton extends StatefulWidget {
+  const _MediaGridItemSkeleton();
+
+  @override
+  State<_MediaGridItemSkeleton> createState() => _MediaGridItemSkeletonState();
+}
+
+class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.3, end: 0.6).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Card(
+      elevation: 1,
+      color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 骨架屏图片占位
+          Container(
+            width: 80,
+            height: 120,
+            margin: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+
+          // 骨架屏内容信息
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 标题占位
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 15,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 14,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+
+                  // 年份、区域占位
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 11,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+
+                  // 评分占位
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 12,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+
+                  // 简介占位
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 11,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 11,
+                        width: double.infinity * 0.7,
+                        decoration: BoxDecoration(
+                          color:
+                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 4),
+
+                  // 底部信息占位
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _animation,
+                        builder: (context, child) {
+                          return Container(
+                            height: 10,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: (isDarkMode
+                                      ? Colors.grey[700]
+                                      : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        },
+                      ),
+                      AnimatedBuilder(
+                        animation: _animation,
+                        builder: (context, child) {
+                          return Container(
+                            height: 11,
+                            width: 25,
+                            decoration: BoxDecoration(
+                              color: (isDarkMode
+                                      ? Colors.grey[700]
+                                      : Colors.grey[300])
+                                  ?.withValues(alpha: _animation.value),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

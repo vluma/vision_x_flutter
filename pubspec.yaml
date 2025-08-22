@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   go_router: ^14.2.3
-  cached_network_image: ^3.3.1
+  cached_network_image: ^3.4.1
   video_player: ^2.9.1
   chewie: ^1.8.1
   shared_preferences: ^2.3.2

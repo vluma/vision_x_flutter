@@ -3,6 +3,7 @@ import '../models/douban_movie.dart';
 import '../models/media_detail.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert'; // 添加dart:convert用于JSON解析
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchDataSource extends ChangeNotifier {
   String _searchQuery = '';
@@ -277,6 +278,97 @@ class ApiService {
       return allResults;
     } catch (e) {
       return [];
+    }
+  }
+
+  // 获取选中的数据源
+  static Future<Map<String, Map<String, String>>> getSelectedApiSites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedSourcesString = prefs.getString('selected_sources') ?? '';
+    
+    if (selectedSourcesString.isNotEmpty) {
+      Set<String> selectedSources = selectedSourcesString.split(',').toSet();
+      Map<String, Map<String, String>> selectedSites = {};
+      
+      apiSites.forEach((key, value) {
+        if (selectedSources.contains(key)) {
+          selectedSites[key] = value;
+        }
+      });
+      
+      return selectedSites;
+    } else {
+      // 如果没有保存的设置，默认使用所有源
+      return apiSites;
+    }
+  }
+
+  // 聚合搜索（只使用选中的数据源）
+  static Future<List<MediaDetail>> aggregatedSearchWithSelectedSources(String query) async {
+    try {
+      // 获取选中的数据源
+      final selectedSites = await getSelectedApiSites();
+      
+      // 创建选中API的请求
+      List<Future<List<MediaDetail>>> futures = [];
+
+      selectedSites.forEach((key, value) {
+        futures.add(_searchByAPI(key, value['api']!, value['name']!, query));
+      });
+
+      // 并发执行所有请求
+      final results = await Future.wait(futures, eagerError: false);
+
+      // 合并结果
+      List<MediaDetail> allResults = [];
+      for (var result in results) {
+        allResults.addAll(result);
+      }
+
+      return allResults;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // 流式聚合搜索（只使用选中的数据源）- 每个API返回结果后立即回调
+  static Future<void> streamAggregatedSearchWithSelectedSources(
+    String query, 
+    Function(List<MediaDetail>) onResultsReceived,
+    Function() onSearchCompleted,
+  ) async {
+    try {
+      // 获取选中的数据源
+      final selectedSites = await getSelectedApiSites();
+      
+      // 创建计数器跟踪完成的请求数量
+      int completedRequests = 0;
+      final totalRequests = selectedSites.length;
+
+      // 为每个API创建单独的请求
+      selectedSites.forEach((key, value) {
+        _searchByAPI(key, value['api']!, value['name']!, query).then((results) {
+          // 当一个API返回结果时，立即回调
+          onResultsReceived(results);
+          
+          // 增加完成计数
+          completedRequests++;
+          
+          // 如果所有请求都完成了，调用完成回调
+          if (completedRequests == totalRequests) {
+            onSearchCompleted();
+          }
+        }).catchError((error) {
+          // 即使某个请求出错，也要增加计数器，确保能触发完成回调
+          completedRequests++;
+          if (completedRequests == totalRequests) {
+            onSearchCompleted();
+          }
+        });
+      });
+    } catch (e) {
+      // 如果获取选中数据源时出错，直接调用完成回调
+      onSearchCompleted();
     }
   }
 

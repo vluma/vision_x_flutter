@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_x_flutter/app_router.dart';
+import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/theme/app_theme.dart';
 import 'package:vision_x_flutter/theme/theme_provider.dart';
 
@@ -44,15 +46,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ThemeProvider(
-      selectedTheme: _selectedTheme,
-      updateTheme: _updateTheme,
-      child: MaterialApp.router(
-        title: 'Vision X',
-        theme: AppThemes.lightTheme,
-        darkTheme: AppThemes.darkTheme,
-        themeMode: _getThemeMode(),
-        routerConfig: router,
+    return ChangeNotifierProvider(
+      create: (context) => HistoryService(),
+      child: ThemeProvider(
+        selectedTheme: _selectedTheme,
+        updateTheme: _updateTheme,
+        child: MaterialApp.router(
+          title: 'Vision X',
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: _getThemeMode(),
+          routerConfig: router,
+        ),
       ),
     );
   }
@@ -67,4 +72,5 @@ class _MyAppState extends State<MyApp> {
         return ThemeMode.system;
     }
   }
+
 }

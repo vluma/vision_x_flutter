@@ -9,7 +9,11 @@ import 'package:vision_x_flutter/pages/search_page.dart';
 import 'package:vision_x_flutter/pages/video_player_page.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 
+// 创建全局RouteObserver实例
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 final GoRouter router = GoRouter(
+  observers: [routeObserver], // 添加RouteObserver
   routes: <RouteBase>[
     StatefulShellRoute.indexedStack(
       builder: (BuildContext context, GoRouterState state,
@@ -187,6 +191,7 @@ final GoRouter router = GoRouter(
                 return const SearchPage();
               },
               routes: <RouteBase>[
+                // Search页面的子路由
                 GoRoute(
                   path: 'detail/:id',
                   builder: (BuildContext context, GoRouterState state) {
