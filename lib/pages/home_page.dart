@@ -5,6 +5,7 @@ import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/components/custom_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -442,6 +443,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
 }
 
 // 视频项骨架屏组件 - 带有VisionX文字和彩色渐变效果的自定义加载动画
@@ -451,12 +453,7 @@ class _VideoItemSkeleton extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 4,
-      color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -466,7 +463,7 @@ class _VideoItemSkeleton extends StatelessWidget {
                   const BorderRadius.vertical(top: Radius.circular(12)),
               child: Container(
                 width: double.infinity,
-                color: Colors.grey[300],
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                 child: const Center(
                   child: Icon(
                     Icons.movie,
@@ -477,20 +474,20 @@ class _VideoItemSkeleton extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(6.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 16,
+                  height: 14,
                   width: double.infinity,
-                  color: Colors.grey[300],
+                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Container(
-                  height: 12,
-                  width: 80,
-                  color: Colors.grey[300],
+                  height: 10,
+                  width: 60,
+                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                 ),
               ],
             ),
@@ -519,12 +516,7 @@ class _VideoItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        elevation: 4,
-        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+      child: CustomCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -540,7 +532,7 @@ class _VideoItem extends StatelessWidget {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const LoadingAnimation(),
                       errorWidget: (context, url, error) => Container(
-                        color: Colors.grey[300],
+                        color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                         child: const Center(
                           child: Icon(
                             Icons.movie,
@@ -553,29 +545,29 @@ class _VideoItem extends StatelessWidget {
                         double.tryParse(movie.rate) != null &&
                         double.parse(movie.rate) > 0)
                       Positioned(
-                        right: 8,
-                        bottom: 8,
+                        right: 6,
+                        bottom: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
+                            horizontal: 5,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
                             color:
                                 AppColors.darkBackground.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.star,
-                                  color: Colors.yellow, size: 14),
-                              const SizedBox(width: 4),
+                                  color: Colors.yellow, size: 12),
+                              const SizedBox(width: 3),
                               Text(
                                 movie.rate,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -588,7 +580,7 @@ class _VideoItem extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(6.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -596,7 +588,7 @@ class _VideoItem extends StatelessWidget {
                     movie.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 12,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

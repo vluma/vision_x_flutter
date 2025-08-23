@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:intl/intl.dart';
+import 'package:vision_x_flutter/components/custom_card.dart';
 
 class HistoryItem extends StatelessWidget {
   final HistoryRecord record;
@@ -17,28 +18,24 @@ class HistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      elevation: 2,
+    return CustomCard(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(8),
+        contentPadding: const EdgeInsets.all(6),
         onTap: onTap,
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           child: CachedNetworkImage(
             imageUrl: record.media.poster ?? '',
-            width: 60,
-            height: 80,
+            width: 50,
+            height: 70,
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
-              width: 60,
-              height: 80,
+              width: 50,
+              height: 70,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.movie, 
@@ -46,11 +43,11 @@ class HistoryItem extends StatelessWidget {
               ),
             ),
             errorWidget: (context, url, error) => Container(
-              width: 60,
-              height: 80,
+              width: 50,
+              height: 70,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.movie, 
@@ -66,6 +63,7 @@ class HistoryItem extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).textTheme.titleMedium?.color,
+            fontSize: 14,
           ),
         ),
         subtitle: Column(
@@ -75,27 +73,27 @@ class HistoryItem extends StatelessWidget {
             Text(
               record.episode.title,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               DateFormat('yyyy-MM-dd HH:mm').format(record.watchedAt),
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
             if (record.progress > 0)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   '观看至 ${Duration(seconds: record.progress).toString().split('.').first}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),

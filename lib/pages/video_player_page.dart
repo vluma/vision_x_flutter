@@ -28,6 +28,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   bool _hasRecordedInitialHistory = false;
   int _currentEpisodeIndex = 0;
   late PageController _pageController;
+  Key _videoPlayerKey = UniqueKey(); // 移除late，直接初始化
 
   final List<Widget> _tabs = const [
     Tab(text: '简介'),
@@ -145,6 +146,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           _currentEpisodeIndex = index;
           widget.episode = currentSource.episodes[index];
           _currentProgress = 0; // 重置进度
+          _videoPlayerKey = UniqueKey(); // 更换key以重新创建视频播放器
         });
         
         // 记录新剧集的历史
@@ -185,6 +187,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                 child: Stack(
                   children: [
                     CustomVideoPlayer(
+                      key: _videoPlayerKey, // 添加key参数
                       media: widget.media,
                       episode: widget.episode,
                       onProgressUpdate: _updateProgress, // 传递进度更新回调
@@ -278,6 +281,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                 child: Stack(
                   children: [
                     CustomVideoPlayer(
+                      key: _videoPlayerKey, // 添加key参数
                       media: widget.media,
                       episode: episode,
                       onProgressUpdate: _updateProgress, // 传递进度更新回调

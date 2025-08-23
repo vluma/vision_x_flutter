@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
+import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/components/custom_card.dart';
 
 class DetailPage extends StatelessWidget {
   final String? id;
@@ -61,19 +63,17 @@ class DetailPage extends StatelessWidget {
         children: [
           // 海报
           ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
             child: CachedNetworkImage(
               imageUrl: ApiService.handleImageUrl(media!.poster ?? ''),
               width: 120,
               height: 160,
               fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              placeholder: (context, url) => const LoadingAnimation(),
               errorWidget: (context, url, error) => Container(
                 width: 120,
                 height: 160,
-                color: Colors.grey[300],
+                color: Theme.of(context).cardColor,
                 child: const Icon(
                   Icons.movie,
                   color: Colors.grey,
@@ -203,41 +203,39 @@ class DetailPage extends StatelessWidget {
   }
 
   Widget _buildSourceSection(BuildContext context, Source source, int sourceIndex) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${source.name} (${source.episodes.length}个视频)',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            
-            // 显示剧集列表
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: source.episodes.map((episode) {
-                return ElevatedButton(
-                  onPressed: () {
-                    // 跳转到视频播放页面
-                    context.push(
-                      '/search/video',
-                      extra: {
-                        'media': media,
-                        'episode': episode,
-                      },
-                    );
-                  },
-                  child: Text(episode.title),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${source.name} (${source.episodes.length}个视频)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          
+          // 显示剧集列表
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: source.episodes.map((episode) {
+              return ElevatedButton(
+                onPressed: () {
+                  // 跳转到视频播放页面
+                  context.push(
+                    '/search/video',
+                    extra: {
+                      'media': media,
+                      'episode': episode,
+                    },
+                  );
+                },
+                child: Text(episode.title, style: const TextStyle(fontSize: 12)),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
