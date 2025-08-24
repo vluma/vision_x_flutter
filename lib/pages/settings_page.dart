@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/theme_provider.dart';
+import '../theme/spacing.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -225,11 +226,9 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            top: 16.0,
-            bottom: MediaQuery.of(context).padding.bottom + 16.0, // 减少底部边距
+          padding: AppSpacing.pageMargin.copyWith(
+            top: AppSpacing.md,
+            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: AppSpacing.cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -359,7 +358,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               
               // 自定义API部分
               Card(
@@ -369,7 +368,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: AppSpacing.cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -568,7 +567,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               
               // 主题选择部分
               Card(
@@ -578,7 +577,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: AppSpacing.cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -629,6 +628,15 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                             ),
+                            DropdownMenuItem(
+                              value: 3,
+                              child: Text(
+                                '跟随系统',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                            ),
                           ],
                           onChanged: (int? value) {
                             if (value != null) {
@@ -651,7 +659,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               
               // 功能开关部分
               Card(
@@ -661,7 +669,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: AppSpacing.cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -807,7 +815,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               
               // 一般功能部分
               Card(
@@ -817,7 +825,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 elevation: isDark ? 1 : 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: AppSpacing.cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -884,7 +892,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),

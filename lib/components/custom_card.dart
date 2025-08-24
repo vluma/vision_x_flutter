@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vision_x_flutter/theme/colors.dart';
 
 class CustomCard extends StatelessWidget {
   final Widget child;
@@ -7,6 +8,7 @@ class CustomCard extends StatelessWidget {
   final double? elevation;
   final Color? color;
   final BorderRadius? borderRadius;
+  final Color? borderColor;
 
   const CustomCard({
     super.key,
@@ -16,6 +18,7 @@ class CustomCard extends StatelessWidget {
     this.elevation,
     this.color,
     this.borderRadius,
+    this.borderColor,
   });
 
   @override
@@ -25,12 +28,17 @@ class CustomCard extends StatelessWidget {
     return Card(
       margin: margin ?? const EdgeInsets.all(8.0),
       elevation: elevation ?? 2,
-      color: color ?? (isDarkMode ? const Color(0xFF1E1E1E) : Colors.white),
+      color: color ?? (isDarkMode ? AppColors.darkCardBackground : AppColors.lightCardBackground),
+      shadowColor: isDarkMode ? AppColors.darkShadow : AppColors.lightShadow,
       shape: RoundedRectangleBorder(
-        borderRadius: borderRadius ?? BorderRadius.circular(12),
+        borderRadius: borderRadius ?? BorderRadius.circular(20),
+        side: BorderSide(
+          color: borderColor ?? (isDarkMode ? AppColors.darkBorder : AppColors.lightBorder),
+          width: 0.5,
+        ),
       ),
       child: Container(
-        padding: padding,
+        padding: padding ?? const EdgeInsets.all(12.0),
         child: child,
       ),
     );

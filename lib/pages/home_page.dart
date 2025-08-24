@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/theme/spacing.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,17 +45,7 @@ class _HomePageState extends State<HomePage> {
   ];
 
   // 视频源列表 (将根据选中的分类动态变化)
-  List<String> _sources = [
-    "热门",
-    "最新",
-    "经典",
-    "豆瓣高分",
-    "冷门佳片",
-    "华语",
-    "欧美",
-    "韩国",
-    "日本",
-  ];
+  List<String> _sources = ApiService.defaultMovieTags;
 
   @override
   void initState() {
@@ -91,29 +82,8 @@ class _HomePageState extends State<HomePage> {
       // 使用默认标签
       setState(() {
         _sources = _selectedCategory == '电影'
-            ? [
-                "热门",
-                "最新",
-                "经典",
-                "豆瓣高分",
-                "冷门佳片",
-                "华语",
-                "欧美",
-                "韩国",
-                "日本",
-              ]
-            : [
-                "热门",
-                "美剧",
-                "英剧",
-                "韩剧",
-                "日剧",
-                "国产剧",
-                "港剧",
-                "日本动画",
-                "综艺",
-                "纪录片",
-              ];
+            ? ApiService.defaultMovieTags
+            : ApiService.defaultTvTags;
         _tagsLoading = false;
       });
 
@@ -393,12 +363,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      padding: AppSpacing.pageMargin.copyWith(
+        top: AppSpacing.md,
+        bottom: AppSpacing.bottomNavigationBarMargin,
+      ),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+        crossAxisSpacing: 0,
+        mainAxisSpacing: 0,
       ),
       itemCount: _movies.length + (_hasMoreData ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
@@ -430,7 +403,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSkeletonList() {
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      padding: AppSpacing.pageMargin.copyWith(
+        top: AppSpacing.md,
+        bottom: AppSpacing.xl * 2,
+      ),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
@@ -443,7 +419,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 }
 
 // 视频项骨架屏组件 - 带有VisionX文字和彩色渐变效果的自定义加载动画
@@ -522,8 +497,7 @@ class _VideoItem extends StatelessWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                 child: Stack(
                   children: [
                     CachedNetworkImage(
@@ -580,7 +554,7 @@ class _VideoItem extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(6.0),
+              padding: const EdgeInsets.only(top: 6.0, left: 6.0, right: 6.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -590,8 +564,6 @@ class _VideoItem extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

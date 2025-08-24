@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/douban_movie.dart';
 import '../models/media_detail.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:convert'; // 添加dart:convert用于JSON解析
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchDataSource extends ChangeNotifier {
@@ -33,6 +33,44 @@ final searchDataSource = SearchDataSource();
 
 class ApiService {
   static const String baseUrl = 'https://movie.douban.com/j';
+
+  // 默认电影标签
+  static const List<String> _defaultMovieTags = [
+    "热门",
+    "最新",
+    "经典",
+    "豆瓣高分",
+    "冷门佳片",
+    "华语",
+    "欧美",
+    "韩国",
+    "日本",
+    "动作",
+    "喜剧",
+    "爱情",
+    "科幻",
+    "悬疑",
+    "恐怖",
+    "治愈",
+  ];
+
+  // 默认电视标签
+  static const List<String> _defaultTvTags = [
+    "热门",
+    "美剧",
+    "英剧",
+    "韩剧",
+    "日剧",
+    "国产剧",
+    "港剧",
+    "日本动画",
+    "综艺",
+    "纪录片",
+  ];
+
+  // 提供公共访问方法获取默认标签
+  static List<String> get defaultMovieTags => _defaultMovieTags;
+  static List<String> get defaultTvTags => _defaultTvTags;
 
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -129,61 +167,18 @@ class ApiService {
 
   // 获取电影标签
   static Future<List<String>> getMovieTags() async {
-    try {
-      final response = await _dio.get('/search_tags?type=movie');
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['tags'] is List) {
-          return List<String>.from(data['tags']);
-        }
-      }
-      // 如果请求失败，返回默认标签
-      return [
-        "热门",
-        "最新",
-        "经典",
-        "豆瓣高分",
-        "冷门佳片",
-        "华语",
-        "欧美",
-        "韩国",
-        "日本",
-        "动作",
-        "喜剧",
-        "爱情",
-        "科幻",
-        "悬疑",
-        "恐怖",
-        "治愈",
-      ];
-    } catch (e) {
-      // 出错时返回默认标签
-      return [
-        "热门",
-        "最新",
-        "经典",
-        "豆瓣高分",
-        "冷门佳片",
-        "华语",
-        "欧美",
-        "韩国",
-        "日本",
-        "动作",
-        "喜剧",
-        "爱情",
-        "科幻",
-        "悬疑",
-        "恐怖",
-        "治愈",
-      ];
-    }
+    return _getTags('movie', _defaultMovieTags);
   }
 
   // 获取电视剧标签
   static Future<List<String>> getTvTags() async {
+    return _getTags('tv', _defaultTvTags);
+  }
+
+  // 私有方法：获取标签的通用实现
+  static Future<List<String>> _getTags(String type, List<String> defaultTags) async {
     try {
-      final response = await _dio.get('/search_tags?type=tv');
+      final response = await _dio.get('/search_tags', queryParameters: {'type': type});
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -191,33 +186,10 @@ class ApiService {
           return List<String>.from(data['tags']);
         }
       }
-      // 如果请求失败，返回默认标签
-      return [
-        "热门",
-        "美剧",
-        "英剧",
-        "韩剧",
-        "日剧",
-        "国产剧",
-        "港剧",
-        "日本动画",
-        "综艺",
-        "纪录片",
-      ];
+      return defaultTags;
     } catch (e) {
       // 出错时返回默认标签
-      return [
-        "热门",
-        "美剧",
-        "英剧",
-        "韩剧",
-        "日剧",
-        "国产剧",
-        "港剧",
-        "日本动画",
-        "综艺",
-        "纪录片",
-      ];
+      return defaultTags;
     }
   }
 
@@ -225,7 +197,7 @@ class ApiService {
   static Future<List<DoubanMovie>> getMovies({
     required String type,
     required String tag,
-    String sort = 'recommend', // 默认推荐排序
+    String sort = 'recommend',
     int pageStart = 0,
     int pageLimit = 20,
   }) async {
@@ -388,56 +360,30 @@ class ApiService {
 
       final searchUrl =
           '$apiUrl?ac=videolist&wd=${Uri.encodeQueryComponent(query)}';
-      print('正在搜索 $apiName: $searchUrl');
       final response = await apiDio.get(searchUrl);
-
-      print('收到 $apiName 的响应，状态码: ${response.statusCode}');
-      print('$apiName 返回的原始数据类型: ${response.data.runtimeType}');
-      if (response.data is Map) {
-        print('$apiName 返回的数据键: ${(response.data as Map).keys.toList()}');
-      } else if (response.data is List) {
-        print('$apiName 返回的列表长度: ${(response.data as List).length}');
-      } else {
-        print('$apiName 返回的数据: ${response.data}');
-      }
 
       if (response.statusCode == 200) {
         dynamic data = response.data;
         
         // 如果返回的是字符串，则尝试解析为JSON
         if (data is String) {
-          print('$apiName 返回的是字符串，尝试解析为JSON');
           try {
             data = json.decode(data);
-            print('$apiName JSON解析成功');
           } catch (e) {
-            print('$apiName JSON解析失败: $e');
             return [];
           }
         }
         
-        if (data is Map) {
-          print('$apiName 返回的数据键: ${data.keys.toList()}');
-          
-          if (data.containsKey('list') && data['list'] is List) {
-            final List<dynamic> list = data['list'];
-            print('$apiName 找到 ${list.length} 个结果');
-            return list.map((item) {
-              return _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl);
-            }).toList();
-          } else {
-            print('$apiName 数据格式不正确或没有list字段');
-            print('$apiName 数据字段: ${data.keys.toList()}');
-          }
-        } else {
-          print('$apiName 返回的数据不是Map类型: ${data.runtimeType}');
+        if (data is Map && data.containsKey('list') && data['list'] is List) {
+          final List<dynamic> list = data['list'];
+          return list.map((item) {
+            return _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl);
+          }).toList();
         }
       }
 
       return [];
-    } catch (e, stackTrace) {
-      print('搜索 $apiName 时出错: $e');
-      print('错误堆栈: $stackTrace');
+    } catch (e) {
       // 出错时返回空列表而不是抛出异常
       return [];
     }
@@ -615,7 +561,7 @@ class ApiService {
   // 处理图片URL，使用代理服务解决防盗链问题
   static String handleImageUrl(String url) {
     if (url.isEmpty) {
-      return ''; // 确保返回空字符串而不是null
+      return '';
     }
 
     // 如果URL已经是完整格式，使用代理服务处理
@@ -631,6 +577,6 @@ class ApiService {
     }
 
     // 其他情况返回原URL，确保不为null
-    return url ?? '';
+    return url;
   }
 }

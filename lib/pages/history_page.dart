@@ -5,6 +5,7 @@ import 'package:vision_x_flutter/components/history_item.dart' hide Dismissible;
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/app_router.dart'; // 导入app_router.dart以访问routeObserver
+import 'package:vision_x_flutter/theme/spacing.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -13,7 +14,8 @@ class HistoryPage extends StatefulWidget {
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage> with WidgetsBindingObserver, RouteAware {
+class _HistoryPageState extends State<HistoryPage>
+    with WidgetsBindingObserver, RouteAware {
   List<HistoryRecord> _history = [];
   bool _isLoading = true;
 
@@ -114,6 +116,39 @@ class _HistoryPageState extends State<HistoryPage> with WidgetsBindingObserver, 
     }
   }
 
+  Future<void> _confirmClearAll() async {
+    if (_history.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认清空'),
+        content: const Text('确定要清空所有观看历史吗？此操作无法撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('清空'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await HistoryService().clearHistory();
+      _refreshHistory();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已清空所有观看历史')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 监听HistoryService的变化
@@ -122,92 +157,131 @@ class _HistoryPageState extends State<HistoryPage> with WidgetsBindingObserver, 
         return Scaffold(
           appBar: AppBar(
             title: const Text('观看历史'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.delete_sweep),
+                onPressed: _confirmClearAll,
+                tooltip: '清空历史记录',
+              ),
+            ],
           ),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _history.isEmpty
-                  ? const Center(
-                      child: Text('暂无观看历史'),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.history_toggle_off,
+                            size: 64,
+                            color: Theme.of(context).disabledColor,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            '暂无观看历史',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '观看的影片会显示在这里',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
                     )
-                  : ListView.builder(
-                      itemCount: _history.length,
-                      itemBuilder: (context, index) {
-                        final record = _history[index];
-                        return Dismissible(
-                          key: ValueKey('${record.media.id}_${record.episode.title}_${record.watchedAt.millisecondsSinceEpoch}'),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.error,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Icon(
-                              Icons.delete,
-                              color: Theme.of(context).colorScheme.onError,
-                            ),
-                          ),
-                          // 添加次要背景，模仿iOS风格
-                          secondaryBackground: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.error,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Icon(
-                              Icons.delete,
-                              color: Theme.of(context).colorScheme.onError,
-                            ),
-                          ),
-                          // 添加移动时的动画效果
-                          movementDuration: const Duration(milliseconds: 200),
-                          dismissThresholds: const {
-                            DismissDirection.endToStart: 0.3,
-                          },
-                          confirmDismiss: (direction) async {
-                            return await showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('确认删除'),
-                                content: Text('确定要删除"${record.media.name}"的观看记录吗？'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(false),
-                                    child: const Text('取消'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('删除'),
-                                  ),
-                                ],
+                  : RefreshIndicator(
+                      onRefresh: _refreshHistory,
+                      child: ListView.builder(
+                        itemCount: _history.length,
+                        itemBuilder: (context, index) {
+                          final record = _history[index];
+                          return Dismissible(
+                            key: ValueKey(
+                                '${record.media.id}_${record.episode.title}_${record.watchedAt.millisecondsSinceEpoch}'),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 5,
                               ),
-                            );
-                          },
-                          onDismissed: (direction) {
-                            _deleteHistory(record);
-                          },
-                          child: HistoryItem(
-                            record: record,
-                            onTap: () {
-                              // 跳转到视频播放页面，传递起始位置
-                              context.push('/history/video', extra: {
-                                'media': record.media,
-                                'episode': record.episode,
-                                'startPosition': record.progress, // 传递观看进度作为起始位置
-                              });
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.error,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: Icon(
+                                Icons.delete,
+                                color: Theme.of(context).colorScheme.onError,
+                              ),
+                            ),
+                            // 添加次要背景，模仿iOS风格
+                            secondaryBackground: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.error,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: Icon(
+                                Icons.delete,
+                                color: Theme.of(context).colorScheme.onError,
+                              ),
+                            ),
+                            // 添加移动时的动画效果
+                            movementDuration: const Duration(milliseconds: 200),
+                            dismissThresholds: const {
+                              DismissDirection.endToStart: 0.3,
                             },
-                            onDelete: () => _deleteHistory(record),
-                          ),
-                        );
-                      },
+                            confirmDismiss: (direction) async {
+                              return await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('确认删除'),
+                                  content: Text(
+                                      '确定要删除"${record.media.name}"的观看记录吗？'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('取消'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('删除'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            onDismissed: (direction) {
+                              _deleteHistory(record);
+                            },
+                            child: HistoryItem(
+                              record: record,
+                              onTap: () {
+                                // 跳转到视频播放页面，传递起始位置
+                                context.push('/history/video', extra: {
+                                  'media': record.media,
+                                  'episode': record.episode,
+                                  'startPosition':
+                                      record.progress, // 传递观看进度作为起始位置
+                                });
+                              },
+                              onDelete: () => _deleteHistory(record),
+                            ),
+                          );
+                        },
+                      ),
                     ),
         );
       },
     );
   }
-
 }

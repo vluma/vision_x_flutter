@@ -13,6 +13,7 @@ class AppThemes {
       bodyLarge: TextStyle(color: AppColors.lightPrimaryText),
       bodyMedium: TextStyle(color: AppColors.lightPrimaryText),
       bodySmall: TextStyle(color: AppColors.lightSecondaryText),
+      labelSmall: TextStyle(color: AppColors.lightTertiaryText), // 三级文字样式
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -35,13 +36,22 @@ class AppThemes {
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFFEEEEEE), // 使用与底部导航栏一致的颜色
+      backgroundColor: Colors.white, // 使用纯白色背景
       elevation: 0,
       iconTheme: IconThemeData(color: Colors.black87),
       titleTextStyle: TextStyle(
         color: Colors.black87,
         fontSize: 20,
         fontWeight: FontWeight.bold,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.lightCardBackground,
+      shadowColor: AppColors.lightShadow,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: const BorderSide(color: AppColors.lightBorder, width: 0.5),
       ),
     ),
     colorScheme: ColorScheme.fromSeed(
@@ -64,6 +74,7 @@ class AppThemes {
       bodyLarge: TextStyle(color: AppColors.darkPrimaryText),
       bodyMedium: TextStyle(color: AppColors.darkPrimaryText),
       bodySmall: TextStyle(color: AppColors.darkSecondaryText),
+      labelSmall: TextStyle(color: AppColors.darkTertiaryText), // 三级文字样式
       headlineLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       headlineMedium: TextStyle(color: Colors.white),
       headlineSmall: TextStyle(color: Colors.white70),
@@ -93,13 +104,22 @@ class AppThemes {
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF121212),
+      backgroundColor: Color(0xFF1E1E1E),
       elevation: 0,
       iconTheme: IconThemeData(color: Colors.white),
       titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.bold,
+      ),
+    ),
+    cardTheme: const CardThemeData(
+      color: Color(0xFF1E1E1E),
+      shadowColor: Color(0x4D000000),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12.0)),
+        side: BorderSide(color: Color(0xFF333333), width: 0.5),
       ),
     ),
     colorScheme: ColorScheme.fromSeed(

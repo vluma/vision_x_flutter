@@ -19,7 +19,29 @@ class BottomNavigationBarWidget extends StatefulWidget {
 
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     with WidgetsBindingObserver {
+  // 常量定义
+  static const double _containerHeight = 56.0;
+  static const double _containerBorderRadius = 28.0;
+  static const double _selectedContainerHeight = 48.0;
+  static const double _selectedContainerBorderRadius = 24.0;
+  static const double _prefixIconMinSize = 48.0;
+  static const double _iconSize = 24.0;
+  static const double _paddingAll = 4.0;
+  static const double _borderWidth = 0.5;
+  static const double _boxShadowBlurRadius = 2.0;
+  static const double _boxShadowOffset = 1.0;
+  static const double _contentPaddingVertical = 8.0;
+  static const double _contentPaddingHorizontal = 0.0;
+  static const double _bottomPaddingOffset = 16.0;
+  static const double _maxColumnWidthOffset = 90.0;
+  static const double _horizontalPadding = 16.0;
+  static const double _borderAlphaDark = 0.3;
+  static const double _borderAlphaLight = 0.2;
+  static const double _commonAlpha = 0.1;
+  static const double _selectedItemAlphaDark = 0.2;
+
   static const Duration _animationDuration = Duration(milliseconds: 200);
+
   final TextEditingController _searchController = TextEditingController();
   String? _lastActivePath;
   int _selectedIndex = 0;
@@ -120,7 +142,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(_containerBorderRadius),
           ),
           child: Center(
             child: Icon(
@@ -130,7 +152,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
                   : theme.brightness == Brightness.dark
                       ? Colors.white60
                       : Colors.black54,
-              size: 24,
+              size: _iconSize,
             ),
           ),
         ),
@@ -161,7 +183,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
           child: Icon(
             Icons.menu,
             color: theme.primaryColor,
-            size: 24,
+            size: _iconSize,
           ),
         ),
       ),
@@ -177,7 +199,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
           child: Icon(
             Icons.search,
             color: _getIconColor(),
-            size: 24,
+            size: _iconSize,
             semanticLabel: '搜索',
           ),
         ),
@@ -212,13 +234,16 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         border: InputBorder.none,
         prefixIcon: Icon(Icons.search, color: _getIconColor()),
         prefixIconConstraints: const BoxConstraints(
-          minWidth: 40,
-          minHeight: 40,
+          minWidth: _prefixIconMinSize,
+          minHeight: _prefixIconMinSize,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        contentPadding: const EdgeInsets.symmetric(
+            vertical: _contentPaddingVertical,
+            horizontal: _contentPaddingHorizontal),
         isDense: true,
       ),
       textAlignVertical: TextAlignVertical.center,
+      textInputAction: TextInputAction.search,
       onSubmitted: (value) {
         if (value.trim().isNotEmpty) {
           searchDataSource.setSearchQuery(value);
@@ -226,21 +251,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         }
       },
     );
-  }
-
-  List<Color> _getGradientColors() {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return isDarkMode
-        ? [
-            theme.cardColor,
-            theme.scaffoldBackgroundColor,
-          ]
-        : [
-            theme.cardColor,
-            theme.scaffoldBackgroundColor,
-          ];
   }
 
   Color _getBackgroundColor() {
@@ -257,51 +267,52 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
 
     // 使用更自然的边框颜色，与主题更协调
     return isDarkMode
-        ? theme.dividerColor.withValues(alpha: 0.3)
-        : theme.dividerColor.withValues(alpha: 0.2);
+        ? theme.dividerColor.withValues(alpha: _borderAlphaDark)
+        : theme.dividerColor.withValues(alpha: _borderAlphaLight);
   }
 
   Widget _buildNavigationContainer(double maxWidth) {
     final theme = Theme.of(context);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: searchDataSource.isSearchExpanded ? 48.0 : maxWidth,
-      height: 48,
+      duration: _animationDuration,
+      width: searchDataSource.isSearchExpanded ? _containerHeight : maxWidth,
+      height: _containerHeight,
       decoration: BoxDecoration(
         color: _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(_containerBorderRadius),
         border: Border.all(
           color: _getBorderColor(),
-          width: 0.5, // 更细的边框
+          width: _borderWidth, // 更细的边框
         ),
         boxShadow: [
           BoxShadow(
-            color: _getBorderColor().withValues(alpha: 0.1),
-            offset: const Offset(0, 1),
-            blurRadius: 2,
+            color: _getBorderColor().withValues(alpha: _commonAlpha),
+            offset: const Offset(0, _boxShadowOffset),
+            blurRadius: _boxShadowBlurRadius,
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: const EdgeInsets.all(_paddingAll),
         child: Stack(
           children: [
             // 滑动的选中背景
             AnimatedAlign(
-              duration: const Duration(milliseconds: 250),
+              duration: _animationDuration,
               curve: Curves.easeInOut,
               alignment: searchDataSource.isSearchExpanded
                   ? Alignment.centerRight
                   : Alignment((_selectedIndex - 1) * 1.0, 0),
               child: Container(
                 width: searchDataSource.isSearchExpanded ? 0 : (maxWidth / 3),
-                height: 40,
+                height: _selectedContainerHeight,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius:
+                      BorderRadius.circular(_selectedContainerBorderRadius),
                   color: theme.brightness == Brightness.dark
-                      ? AppColors.bottomNavSelectedItem.withValues(alpha: 0.2) // 暗色模式下使用选中项颜色的半透明版本
-                      : theme.primaryColor
-                          .withValues(alpha: 0.1), // 浅色模式下使用主色的淡色版本
+                      ? AppColors.bottomNavSelectedItem
+                          .withValues(alpha: _selectedItemAlphaDark)
+                      : theme.primaryColor.withValues(alpha: _commonAlpha),
                 ),
               ),
             ),
@@ -321,26 +332,26 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
 
   Widget _buildSearchContainer(double maxWidth) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: searchDataSource.isSearchExpanded ? maxWidth : 48.0,
-      height: 48,
+      duration: _animationDuration,
+      width: searchDataSource.isSearchExpanded ? maxWidth : _containerHeight,
+      height: _containerHeight,
       decoration: BoxDecoration(
         color: _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(_containerBorderRadius),
         border: Border.all(
           color: _getBorderColor(),
-          width: 0.5, // 更细的边框
+          width: _borderWidth, // 更细的边框
         ),
         boxShadow: [
           BoxShadow(
-            color: _getBorderColor().withValues(alpha: 0.1),
-            offset: const Offset(0, 1),
-            blurRadius: 2,
+            color: _getBorderColor().withValues(alpha: _commonAlpha),
+            offset: const Offset(0, _boxShadowOffset),
+            blurRadius: _boxShadowBlurRadius,
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: const EdgeInsets.all(_paddingAll),
         child: AnimatedCrossFade(
           duration: _animationDuration,
           firstChild: _buildSearchButton(),
@@ -355,8 +366,12 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
 
   @override
   Widget build(BuildContext context) {
-    final maxColumnWidth = MediaQuery.of(context).size.width - 90;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 10.0;
+    final maxColumnWidth =
+        MediaQuery.of(context).size.width - _maxColumnWidthOffset;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final bottomPadding = MediaQuery.of(context).padding.bottom +
+        viewInsets.bottom +
+        _bottomPaddingOffset;
     final theme = Theme.of(context);
 
     return Container(
@@ -371,7 +386,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
           end: Alignment.bottomCenter,
         ),
       ),
-      padding: EdgeInsets.only(bottom: bottomPadding, left: 16.0, right: 16.0),
+      padding: EdgeInsets.only(
+          bottom: bottomPadding,
+          left: _horizontalPadding,
+          right: _horizontalPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

@@ -15,7 +15,7 @@ class HistoryService extends ChangeNotifier {
   HistoryService._internal();
 
   // 添加观看记录
-  Future<void> addHistory(MediaDetail media, Episode episode, int progress) async {
+  Future<void> addHistory(MediaDetail media, Episode episode, int progress, [int? duration]) async {
     final prefs = await SharedPreferences.getInstance();
     final history = await getHistory();
 
@@ -27,6 +27,7 @@ class HistoryService extends ChangeNotifier {
       episode: episode,
       watchedAt: DateTime.now(),
       progress: progress,
+      duration: duration,
     );
 
     if (existingIndex >= 0) {
@@ -67,6 +68,9 @@ class HistoryService extends ChangeNotifier {
       }
     }
 
+    // 按观看时间排序，最新的在最上面
+    historyList.sort((a, b) => b.watchedAt.compareTo(a.watchedAt));
+    
     return historyList;
   }
 
@@ -95,7 +99,7 @@ class HistoryService extends ChangeNotifier {
 
   // 更新观看进度
   Future<void> updateHistoryProgress(
-      MediaDetail media, Episode episode, int progress) async {
+      MediaDetail media, Episode episode, int progress, [int? duration]) async {
     final prefs = await SharedPreferences.getInstance();
     final history = await getHistory();
 
@@ -108,6 +112,7 @@ class HistoryService extends ChangeNotifier {
         episode: episode, // 更新为当前观看的剧集
         watchedAt: DateTime.now(), // 更新观看时间
         progress: progress, // 更新观看进度
+        duration: duration ?? history[index].duration, // 更新视频总时长
       );
 
       // 保存更新后的数据

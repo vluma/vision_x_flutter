@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart'; // 添加对widgets库的导入
 import 'package:flutter/services.dart';
 import 'package:vision_x_flutter/components/video_player.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vision_x_flutter/theme/theme_provider.dart';
 import 'dart:async'; // 添加dart:async包用于Future
 
 class VideoPlayerPage extends StatefulWidget {
@@ -29,6 +31,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   int _currentEpisodeIndex = 0;
   late PageController _pageController;
   Key _videoPlayerKey = UniqueKey(); // 移除late，直接初始化
+  int? _videoDuration; // 添加视频总时长变量
 
   final List<Widget> _tabs = const [
     Tab(text: '简介'),
@@ -68,7 +71,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (_hasRecordedInitialHistory) return;
 
     await HistoryService()
-        .addHistory(widget.media, widget.episode, widget.startPosition);
+        .addHistory(widget.media, widget.episode, widget.startPosition, _videoDuration);
     _hasRecordedInitialHistory = true;
   }
 
@@ -79,13 +82,27 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     });
     // 更新历史记录中的进度
     HistoryService()
-        .updateHistoryProgress(widget.media, widget.episode, progress);
+        .updateHistoryProgress(widget.media, widget.episode, progress, _videoDuration);
   }
 
   // 处理播放完成事件
   void _onPlaybackCompleted() {
     // 自动播放下一集
     _playNextEpisode();
+  }
+
+  // 添加获取视频时长的回调函数
+  void _onVideoDurationReceived(int duration) {
+    if (_videoDuration == null) {
+      setState(() {
+        _videoDuration = duration;
+      });
+      // 更新历史记录包含视频总时长
+      if (_hasRecordedInitialHistory) {
+        HistoryService().updateHistoryProgress(
+          widget.media, widget.episode, _currentProgress, _videoDuration);
+      }
+    }
   }
 
   // 播放下一集
@@ -145,12 +162,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         setState(() {
           _currentEpisodeIndex = index;
           widget.episode = currentSource.episodes[index];
-          _currentProgress = 0; // 重置进度
-          _videoPlayerKey = UniqueKey(); // 更换key以重新创建视频播放器
+          _currentProgress = 0;
         });
         
-        // 记录新剧集的历史
-        HistoryService().addHistory(widget.media, widget.episode, 0);
+        HistoryService().addHistory(widget.media, widget.episode, 0, _videoDuration);
       }
     } catch (e) {
       if (mounted) {
@@ -163,20 +178,25 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeProvider = ThemeProvider.of(context);
+    
     // 检查是否是短剧类型（包含"短剧"关键词）
-    bool isShortDrama = widget.media.category != null && 
-        (widget.media.category!.contains('短剧') || widget.media.category == '短剧');
+    bool isShortDrama = (widget.media.category != null && 
+        (widget.media.category!.contains('短剧') || widget.media.category == '短剧')) ||
+        (widget.media.type != null && 
+        (widget.media.type!.contains('短剧') || widget.media.type == '短剧'));
     
     if (isShortDrama) {
       // 竖屏抖音风格播放器 - 全屏显示
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: _buildShortDramaPlayer(),
       );
     } else {
       // 普通横屏播放器
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: null, // 移除AppBar
         body: Column(
           children: [
@@ -184,27 +204,31 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             SafeArea(
               child: AspectRatio(
                 aspectRatio: 16 / 9, // 设置标准16:9宽高比
-                child: Stack(
-                  children: [
-                    CustomVideoPlayer(
-                      key: _videoPlayerKey, // 添加key参数
-                      media: widget.media,
-                      episode: widget.episode,
-                      onProgressUpdate: _updateProgress, // 传递进度更新回调
-                      onPlaybackCompleted: _onPlaybackCompleted, // 传递播放完成回调
-                      startPosition: _currentProgress, // 传递当前位置
-                    ),
-                    // 顶部返回按钮 (始终显示)
-                    Positioned(
-                      top: 10,
-                      left: 20,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back,
-                            color: Colors.white, size: 24),
-                        onPressed: _onBackButtonPressed,
+                child: Container(
+                  color: Colors.black, // 设置背景颜色为黑色
+                  child: Stack(
+                    children: [
+                      CustomVideoPlayer(
+                        key: _videoPlayerKey, // 添加key参数
+                        media: widget.media,
+                        episode: widget.episode,
+                        onProgressUpdate: _updateProgress, // 传递进度更新回调
+                        onPlaybackCompleted: _onPlaybackCompleted, // 传递播放完成回调
+                        onVideoDurationReceived: _onVideoDurationReceived, // 传递视频时长回调
+                        startPosition: _currentProgress, // 传递当前位置
                       ),
-                    ),
-                  ],
+                      // 顶部返回按钮 (始终显示)
+                      Positioned(
+                        top: 10,
+                        left: 20,
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_back,
+                              color: theme.iconTheme.color, size: 24),
+                          onPressed: _onBackButtonPressed,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -216,12 +240,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                 child: Column(
                   children: [
                     Container(
-                      color: Colors.black,
+                      color: theme.scaffoldBackgroundColor,
                       child: TabBar(
                         tabs: _tabs,
-                        indicatorColor: Colors.white,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.grey,
+                        indicatorColor: theme.colorScheme.primary,
+                        labelColor: theme.colorScheme.primary,
+                        unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
                         onTap: (index) {
                           setState(() {
                             _currentIndex = index;
@@ -231,7 +255,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                     ),
                     Expanded(
                       child: Container(
-                        color: Colors.black,
+                        color: theme.scaffoldBackgroundColor,
                         child: TabBarView(
                           children: [
                             // 简介内容
@@ -273,85 +297,89 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           _changeEpisode(index);
         },
         itemBuilder: (context, index) {
+          final theme = Theme.of(context);
           final episode = currentSource.episodes[index];
-          return Stack(
-            children: [
-              // 视频播放器部分（全屏）
-              SizedBox.expand(
-                child: Stack(
-                  children: [
-                    CustomVideoPlayer(
-                      key: _videoPlayerKey, // 添加key参数
-                      media: widget.media,
-                      episode: episode,
-                      onProgressUpdate: _updateProgress, // 传递进度更新回调
-                      onPlaybackCompleted: _onPlaybackCompleted, // 传递播放完成回调
-                      startPosition: index == _currentEpisodeIndex ? _currentProgress : 0, // 传递当前位置
-                    ),
-                    // 顶部返回按钮 (始终显示)
-                    Positioned(
-                      top: 50,
-                      left: 20,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back,
-                            color: Colors.white, size: 28),
-                        onPressed: _onBackButtonPressed,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            
-              // 底部信息部分（类似抖音）
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 200,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black87,
-                      ],
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
+          return Container(
+            color: Colors.black, // 设置背景颜色为黑色
+            child: Stack(
+              children: [
+                // 视频播放器部分（全屏）
+                SizedBox.expand(
+                  child: Stack(
                     children: [
-                      // 视频标题
-                      Text(
-                        '${widget.media.name ?? '未知影片'} - ${episode.title}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      CustomVideoPlayer(
+                        key: ValueKey(episode.url), // 为每个episode使用独立的key，确保播放器正确重建
+                        media: widget.media,
+                        episode: episode,
+                        onProgressUpdate: _updateProgress,
+                        onPlaybackCompleted: _onPlaybackCompleted,
+                        startPosition: index == _currentEpisodeIndex ? _currentProgress : 0,
+                      ),
+                      // 顶部返回按钮 (始终显示)
+                      Positioned(
+                        top: 50,
+                        left: 20,
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_back,
+                              color: theme.iconTheme.color, size: 28),
+                          onPressed: _onBackButtonPressed,
                         ),
                       ),
-                    
-                      const SizedBox(height: 8),
-                    
-                      // 视频描述
-                      if (widget.media.description != null)
-                        Text(
-                          widget.media.description!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                     ],
                   ),
                 ),
-              ),
-            ],
+              
+                // 底部信息部分（类似抖音）
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          theme.scaffoldBackgroundColor.withOpacity(0.87),
+                        ],
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // 视频标题
+                        Text(
+                          '${widget.media.name ?? '未知影片'} - ${episode.title}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: theme.textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 8),
+                      
+                        // 视频描述
+                        if (widget.media.description != null)
+                          Text(
+                            widget.media.description!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -379,6 +407,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Widget _buildDescriptionTab() {
+    final theme = Theme.of(context);
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -386,46 +416,46 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         children: [
           Text(
             widget.media.name ?? '未知影片',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: theme.textTheme.bodyLarge?.color,
             ),
           ),
           const SizedBox(height: 10),
           if (widget.media.year != null || widget.media.area != null)
             Text(
               '${widget.media.year ?? ''} ${widget.media.area ?? ''}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               ),
             ),
           const SizedBox(height: 10),
           if (widget.media.actors != null)
             Text(
               '主演: ${widget.media.actors}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.white,
+                color: theme.textTheme.bodyMedium?.color,
               ),
             ),
           const SizedBox(height: 10),
           if (widget.media.director != null)
             Text(
               '导演: ${widget.media.director}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.white,
+                color: theme.textTheme.bodyMedium?.color,
               ),
             ),
           const SizedBox(height: 10),
           if (widget.media.description != null)
             Text(
               widget.media.description!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.white70,
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
               ),
             ),
           // 显示起始播放位置信息
@@ -434,9 +464,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               padding: const EdgeInsets.only(top: 10),
               child: Text(
                 '当前播放位置: ${Duration(seconds: _currentProgress).toString().split('.').first}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),
@@ -449,6 +479,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   // 构建剧集选择器
   Widget _buildEpisodeSelector() {
+    final theme = Theme.of(context);
+    
     try {
       final currentSource = widget.media.surces.firstWhere(
         (source) => source.name == widget.media.sourceName,
@@ -465,7 +497,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
             ),
           ),
@@ -482,7 +513,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                   padding: const EdgeInsets.all(4.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected ? Colors.blue : Colors.grey,
+                      backgroundColor: isSelected ? theme.colorScheme.primary : theme.colorScheme.secondary.withOpacity(0.3),
+                      foregroundColor: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       minimumSize: const Size(0, 0),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -505,12 +537,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Widget _buildCommentsTab() {
-    return const Center(
+    final theme = Theme.of(context);
+    
+    return Center(
       child: Text(
         '评论功能正在开发中...',
         style: TextStyle(
           fontSize: 16,
-          color: Colors.white,
+          color: theme.textTheme.bodyMedium?.color,
         ),
       ),
     );
@@ -518,12 +552,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
-    // 恢复系统UI模式
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pageController.dispose();
 
-    // 页面销毁时无条件更新最终进度
-    HistoryService().updateHistoryProgress(widget.media, widget.episode, _currentProgress);
+    if (_hasRecordedInitialHistory) {
+      HistoryService().updateHistoryProgress(
+          widget.media, widget.episode, _currentProgress, _videoDuration);
+    }
 
     super.dispose();
   }

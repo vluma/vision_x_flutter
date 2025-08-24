@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:provider/provider.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/theme/spacing.dart';
 
 // 搜索状态管理类
 class _SearchController extends ChangeNotifier {
@@ -225,7 +226,6 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late _SearchController _searchController;
   bool _isGroupedView = true;
-  bool _isScrolledDown = false;
 
   @override
   void initState() {
@@ -269,13 +269,7 @@ class _SearchPageState extends State<SearchPage> {
       value: _searchController,
       child: _SearchPageContent(
         isGroupedView: _isGroupedView,
-        isScrolledDown: _isScrolledDown,
         onToggleViewMode: _toggleViewMode,
-        onScrollStateChanged: (isScrolled) {
-          setState(() {
-            _isScrolledDown = isScrolled;
-          });
-        },
       ),
     );
   }
@@ -284,15 +278,11 @@ class _SearchPageState extends State<SearchPage> {
 // 搜索页面内容组件
 class _SearchPageContent extends StatelessWidget {
   final bool isGroupedView;
-  final bool isScrolledDown;
   final VoidCallback onToggleViewMode;
-  final Function(bool) onScrollStateChanged;
 
   const _SearchPageContent({
     required this.isGroupedView,
-    required this.isScrolledDown,
     required this.onToggleViewMode,
-    required this.onScrollStateChanged,
   });
 
   @override
@@ -331,117 +321,104 @@ class _SearchPageContent extends StatelessWidget {
         groupedResults[defaultGroupName] = searchController.filteredResults;
       }
 
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('搜索结果(${searchController.filteredResults.length})'),
-          actions: [
-            // 视图切换按钮
-            IconButton(
-              icon: Icon(isGroupedView ? Icons.view_list : Icons.view_module),
-              onPressed: onToggleViewMode,
-              tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
-            ),
-            // 排序按钮
-            _SortPopupMenu(onSortChanged: searchController.updateSortBy),
-          ],
-          bottom: PreferredSize(
-            preferredSize: Size.fromHeight(
-                searchController.isLoading || (sortedCategories.length - 1) <= 1
-                    ? 0.0
-                    : 40.0),
-            child: Container(
-              height: searchController.isLoading ||
+      return GestureDetector(
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        behavior: HitTestBehavior.opaque, // 确保整个区域都可点击
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('搜索结果(${searchController.filteredResults.length})'),
+            actions: [
+              // 视图切换按钮
+              IconButton(
+                icon: Icon(isGroupedView ? Icons.view_list : Icons.view_module),
+                onPressed: onToggleViewMode,
+                tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
+              ),
+              // 排序按钮
+              _SortPopupMenu(onSortChanged: searchController.updateSortBy),
+            ],
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(searchController.isLoading ||
                       (sortedCategories.length - 1) <= 1
                   ? 0.0
-                  : 40.0,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                boxShadow: isScrolledDown
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: searchController.isLoading ||
-                      (sortedCategories.length - 1) <= 1
-                  ? const SizedBox()
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: sortedCategories.length,
-                      itemBuilder: (context, index) {
-                        final category = sortedCategories[index];
-                        final isSelected =
-                            category == searchController.selectedCategory;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 15),
-                          child: InkWell(
-                            onTap: () {
-                              if (!isSelected) {
-                                searchController.filterResults(category);
-                              }
-                            },
-                            splashColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  category,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: isSelected
-                                        ? Theme.of(context).primaryColor
-                                        : (Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.white70
-                                            : Colors.black54),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                if (isSelected)
-                                  Container(
-                                    height: 2,
-                                    width: 15,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      borderRadius: BorderRadius.circular(2),
+                  : 40.0),
+              child: Container(
+                height: searchController.isLoading ||
+                        (sortedCategories.length - 1) <= 1
+                    ? 0.0
+                    : 40.0,
+                width: double.infinity,
+                child: searchController.isLoading ||
+                        (sortedCategories.length - 1) <= 1
+                    ? const SizedBox()
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: sortedCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = sortedCategories[index];
+                          final isSelected =
+                              category == searchController.selectedCategory;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: InkWell(
+                              onTap: () {
+                                if (!isSelected) {
+                                  searchController.filterResults(category);
+                                }
+                              },
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    category,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? Theme.of(context).primaryColor
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white70
+                                              : Colors.black54),
                                     ),
                                   ),
-                              ],
+                                  const SizedBox(height: 3),
+                                  if (isSelected)
+                                    Container(
+                                      height: 2,
+                                      width: 15,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ),
-        ),
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification scrollInfo) {
-            if (scrollInfo.metrics.pixels > 0 && !isScrolledDown) {
-              onScrollStateChanged(true);
-              return true;
-            } else if (scrollInfo.metrics.pixels <= 0 && isScrolledDown) {
-              onScrollStateChanged(false);
-              return true;
-            }
-            return false;
-          },
-          child: Column(
+          body: Column(
             children: [
               // 搜索结果
               if (searchController.isLoading &&
                   searchController.filteredResults.isEmpty)
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                    padding: AppSpacing.pageMargin.copyWith(
+                      top: AppSpacing.md,
+                      bottom: AppSpacing.xl * 2,
+                    ),
                     itemCount: 8,
                     itemBuilder: (context, index) {
                       return Container(
@@ -476,8 +453,10 @@ class _SearchPageContent extends StatelessWidget {
                   searchController.filteredResults.isNotEmpty &&
                   !searchController.isLoading)
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
                   child: Text(
                     '按资源分组显示',
                     style: TextStyle(
@@ -491,8 +470,8 @@ class _SearchPageContent extends StatelessWidget {
                 ),
             ],
           ),
+          bottomNavigationBar: searchDataSource.isSearchExpanded ? null : null,
         ),
-        bottomNavigationBar: searchDataSource.isSearchExpanded ? null : null,
       );
     });
   }
@@ -501,7 +480,10 @@ class _SearchPageContent extends StatelessWidget {
   Widget _buildGroupedView(
       Map<String, List<MediaDetail>> groupedResults, BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+      padding: AppSpacing.pageMargin.copyWith(
+        top: AppSpacing.md,
+        bottom: AppSpacing.bottomNavigationBarMargin,
+      ),
       itemCount: groupedResults.keys.length,
       itemBuilder: (BuildContext context, int index) {
         final sourceName = groupedResults.keys.elementAt(index);
@@ -526,7 +508,10 @@ class _SearchPageContent extends StatelessWidget {
     return Consumer<_SearchController>(
         builder: (context, searchController, child) {
       return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        padding: AppSpacing.pageMargin.copyWith(
+          top: AppSpacing.md,
+          bottom: AppSpacing.bottomNavigationBarMargin,
+        ),
         itemCount: searchController.aggregatedResults.length,
         itemBuilder: (BuildContext context, int index) {
           final media = searchController.aggregatedResults[index];
@@ -625,7 +610,8 @@ class _SourceGroup extends StatelessWidget {
       children: [
         // 来源标题
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.only(
+              left: AppSpacing.md, top: AppSpacing.md, bottom: AppSpacing.sm),
           child: Text(
             sourceName,
             style: const TextStyle(
@@ -643,14 +629,11 @@ class _SourceGroup extends StatelessWidget {
 
   Widget _buildMediaLayout() {
     if (mediaList.length == 1) {
-      // 只有一个媒体项，使用图片在左侧的布局
-      return Container(
-        height: 140,
-        child: _MediaResultItem(
-          media: mediaList[0],
-          onTap: () => onMediaTap(mediaList[0]),
-          onDetailTap: () => onDetailTap(mediaList[0]),
-        ),
+      // 只有一个媒体项，使用与聚合视图相同的布局
+      return _MediaGridItem(
+        media: mediaList[0],
+        onTap: () => onMediaTap(mediaList[0]),
+        onDetailTap: () => onDetailTap(mediaList[0]),
       );
     } else if (mediaList.length == 2) {
       // 两个媒体项，使用Row布局，固定高度180
@@ -659,7 +642,7 @@ class _SourceGroup extends StatelessWidget {
           Expanded(
             child: Container(
               height: 180, // 固定卡片高度
-              margin: const EdgeInsets.only(right: 4),
+              margin: const EdgeInsets.only(right: 0),
               child: _VerticalMediaItem(
                 media: mediaList[0],
                 onTap: () => onMediaTap(mediaList[0]),
@@ -670,7 +653,7 @@ class _SourceGroup extends StatelessWidget {
           Expanded(
             child: Container(
               height: 180, // 固定卡片高度
-              margin: const EdgeInsets.only(left: 4),
+              margin: const EdgeInsets.only(left: 0),
               child: _VerticalMediaItem(
                 media: mediaList[1],
                 onTap: () => onMediaTap(mediaList[1]),
@@ -691,7 +674,7 @@ class _SourceGroup extends StatelessWidget {
             final media = mediaList[index];
             return Container(
               width: 120,
-              margin: const EdgeInsets.only(right: 8),
+              margin: const EdgeInsets.only(right: 0),
               child: _VerticalMediaItem(
                 media: media,
                 onTap: () => onMediaTap(media),
@@ -705,307 +688,7 @@ class _SourceGroup extends StatelessWidget {
   }
 }
 
-// 媒体结果项组件（图片在左侧的布局）
-class _MediaResultItem extends StatelessWidget {
-  final MediaDetail media;
-  final VoidCallback onTap;
-  final VoidCallback onDetailTap;
-
-  const _MediaResultItem({
-    required this.media,
-    required this.onTap,
-    required this.onDetailTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final String? imageUrl = media.poster;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: CustomCard(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 海报图片
-            _buildImageContainer(imageUrl, isDarkMode),
-
-            // 内容信息
-            _buildContent(context, theme, isDarkMode),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 构建图片容器
-  Widget _buildImageContainer(String? imageUrl, bool isDarkMode) {
-    return Container(
-      width: 80,
-      height: 120,
-      margin: const EdgeInsets.fromLTRB(8, 8, 16, 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: imageUrl != null && imageUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: imageUrl,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => const LoadingAnimation(),
-                errorWidget: (context, url, error) => Container(
-                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                  child: const Center(
-                    child: Icon(
-                      Icons.movie,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              )
-            : Container(
-                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                child: const Center(
-                  child: Icon(
-                    Icons.movie,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-
-  // 构建内容区域
-  Widget _buildContent(BuildContext context, ThemeData theme, bool isDarkMode) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 标题和基本信息
-            _buildTitleAndInfo(theme, isDarkMode),
-
-            // 简介
-            _buildDescription(context, isDarkMode),
-
-            const SizedBox(height: 4),
-
-            // 底部信息
-            Flexible(
-              child: _buildBottomInfo(theme, isDarkMode),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 构建标题和基本信息
-  Widget _buildTitleAndInfo(ThemeData theme, bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          media.name ?? '未知片名',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: isDarkMode ? Colors.white : Colors.black87,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-
-        const SizedBox(height: 4),
-
-        // 年份、区域和类型信息
-        _buildYearAreaType(theme, isDarkMode),
-
-        const SizedBox(height: 4),
-
-        // 评分和来源
-        _buildRatingAndSource(theme, isDarkMode),
-      ],
-    );
-  }
-
-  // 构建年份、区域和类型信息
-  Widget _buildYearAreaType(ThemeData theme, bool isDarkMode) {
-    return Row(
-      children: [
-        if (media.year != null && media.year!.isNotEmpty)
-          Text(
-            media.year!,
-            style: TextStyle(
-              fontSize: 11,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-        if (media.year != null &&
-            media.year!.isNotEmpty &&
-            media.area != null &&
-            media.area!.isNotEmpty)
-          Text(
-            ' · ',
-            style: TextStyle(
-              fontSize: 11,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-        if (media.area != null && media.area!.isNotEmpty)
-          Flexible(
-            child: Text(
-              media.area!,
-              style: TextStyle(
-                fontSize: 11,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        if (media.type != null && media.type!.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.only(left: 8),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 5,
-              vertical: 1,
-            ),
-            decoration: BoxDecoration(
-              color: theme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: Text(
-              media.type!,
-              style: TextStyle(
-                fontSize: 9,
-                color: theme.primaryColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // 构建评分和来源信息
-  Widget _buildRatingAndSource(ThemeData theme, bool isDarkMode) {
-    return Row(
-      children: [
-        // 评分
-        if (media.score != null && media.score!.isNotEmpty)
-          Row(
-            children: [
-              Icon(
-                Icons.star,
-                size: 14,
-                color: Colors.amber,
-              ),
-              const SizedBox(width: 3),
-              Text(
-                media.score!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        // 来源信息
-        if (media.sourceName.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.only(left: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              media.sourceName,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // 构建简介
-  Widget _buildDescription(BuildContext context, bool isDarkMode) {
-    if (media.description == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Text(
-      media.description!,
-      style: TextStyle(
-        fontSize: 11,
-        color: Theme.of(context).textTheme.bodySmall?.color ??
-            (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-        height: 1.3,
-      ),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  // 构建底部信息
-  Widget _buildBottomInfo(ThemeData theme, bool isDarkMode) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // 演员信息
-        if (media.actors != null && media.actors!.isNotEmpty)
-          Expanded(
-            child: Text(
-              media.actors!,
-              style: TextStyle(
-                fontSize: 10,
-                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        // 详情按钮
-        TextButton(
-          onPressed: onDetailTap,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-            minimumSize: const Size(0, 0),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: const Text(
-            '详情',
-            style: TextStyle(
-              fontSize: 11,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// 媒体结果项组件（图片在上方的布局）
+// 媒体结果项组件 - 分组模式（图片在上方的布局）
 class _VerticalMediaItem extends StatelessWidget {
   final MediaDetail media;
   final VoidCallback onTap;
@@ -1026,6 +709,7 @@ class _VerticalMediaItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: CustomCard(
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1036,13 +720,13 @@ class _VerticalMediaItem extends StatelessWidget {
 
             // 标题 - 高度根据行数自适应
             Padding(
-              padding: const EdgeInsets.only(left: 6.0, top: 6.0, right: 6.0),
+              padding: const EdgeInsets.only(top: 6.0),
               child: Text(
                 media.name ?? '未知片名',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 9,
-                  color: isDarkMode ? Colors.white : Colors.black87,
+                  color: theme.textTheme.bodyLarge?.color,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1052,7 +736,7 @@ class _VerticalMediaItem extends StatelessWidget {
             // 年份、地区、分类信息 - 固定高度
             Container(
               height: 20, // 固定底部时间行高度
-              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+              padding: const EdgeInsets.only(top: 4),
               child: _buildYearAreaType(theme, isDarkMode),
             ),
           ],
@@ -1069,10 +753,11 @@ class _VerticalMediaItem extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: theme.shadowColor?.withValues(alpha: 0.1) ??
+                Colors.black.withValues(alpha: 0.1),
             blurRadius: 2,
           ),
         ],
@@ -1081,7 +766,7 @@ class _VerticalMediaItem extends StatelessWidget {
         children: [
           // 图片
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             child: imageUrl != null && imageUrl.isNotEmpty
                 ? CachedNetworkImage(
                     imageUrl: imageUrl,
@@ -1090,7 +775,7 @@ class _VerticalMediaItem extends StatelessWidget {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => const LoadingAnimation(),
                     errorWidget: (context, url, error) => Container(
-                      color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                      color: theme.cardTheme.color?.withValues(alpha: 0.7),
                       child: const Center(
                         child: Icon(
                           Icons.movie,
@@ -1100,7 +785,7 @@ class _VerticalMediaItem extends StatelessWidget {
                     ),
                   )
                 : Container(
-                    color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                    color: theme.cardTheme.color?.withValues(alpha: 0.7),
                     child: const Center(
                       child: Icon(
                         Icons.movie,
@@ -1108,26 +793,6 @@ class _VerticalMediaItem extends StatelessWidget {
                       ),
                     ),
                   ),
-          ),
-
-          // 黑色半透明渐变蒙版
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.1),
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.black.withValues(alpha: 0.5),
-                  ],
-                  stops: [0.0, 0.5, 0.8, 1.0],
-                ),
-              ),
-            ),
           ),
 
           // 评分（左下角）
@@ -1214,10 +879,6 @@ class _VerticalMediaItem extends StatelessWidget {
         if (media.type != null && media.type!.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(left: 6),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 1,
-            ),
             decoration: BoxDecoration(
               color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(2),
@@ -1236,7 +897,7 @@ class _VerticalMediaItem extends StatelessWidget {
   }
 }
 
-// 媒体网格项组件（用于列表视图）
+// 媒体结果项组件 - 聚合模式（用于列表视图）
 class _MediaGridItem extends StatelessWidget {
   final MediaDetail media;
   final VoidCallback onTap;
@@ -1261,7 +922,7 @@ class _MediaGridItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 海报图片
-            _buildImageContainer(imageUrl, isDarkMode),
+            _buildImageContainer(context, imageUrl, isDarkMode),
 
             // 内容信息
             _buildContent(context, theme, isDarkMode),
@@ -1272,7 +933,9 @@ class _MediaGridItem extends StatelessWidget {
   }
 
   // 构建图片容器
-  Widget _buildImageContainer(String? imageUrl, bool isDarkMode) {
+  Widget _buildImageContainer(
+      BuildContext context, String? imageUrl, bool isDarkMode) {
+    final theme = Theme.of(context);
     return Container(
       width: 70,
       height: 100,
@@ -1281,7 +944,8 @@ class _MediaGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: theme.shadowColor?.withValues(alpha: 0.1) ??
+                Colors.black.withValues(alpha: 0.1),
             blurRadius: 2,
           ),
         ],
@@ -1296,7 +960,7 @@ class _MediaGridItem extends StatelessWidget {
                 fit: BoxFit.cover,
                 placeholder: (context, url) => const LoadingAnimation(),
                 errorWidget: (context, url, error) => Container(
-                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                  color: theme.cardTheme.color?.withValues(alpha: 0.7),
                   child: const Center(
                     child: Icon(
                       Icons.movie,
@@ -1306,7 +970,7 @@ class _MediaGridItem extends StatelessWidget {
                 ),
               )
             : Container(
-                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                color: theme.cardTheme.color?.withValues(alpha: 0.7),
                 child: const Center(
                   child: Icon(
                     Icons.movie,
@@ -1355,19 +1019,19 @@ class _MediaGridItem extends StatelessWidget {
           media.name ?? '未知片名',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: isDarkMode ? Colors.white : Colors.black87,
+            fontSize: 9,
+            color: theme.textTheme.bodyLarge?.color,
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
 
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
 
         // 年份、区域和类型信息
         _buildYearAreaType(theme, isDarkMode),
 
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
 
         // 评分和来源
         _buildRatingAndSource(theme, isDarkMode),
@@ -1383,8 +1047,8 @@ class _MediaGridItem extends StatelessWidget {
           Text(
             media.year!,
             style: TextStyle(
-              fontSize: 10,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 11,
+              color: theme.textTheme.bodySmall?.color,
             ),
           ),
         if (media.year != null &&
@@ -1394,33 +1058,36 @@ class _MediaGridItem extends StatelessWidget {
           Text(
             ' · ',
             style: TextStyle(
-              fontSize: 10,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 11,
+              color: theme.textTheme.bodySmall?.color,
             ),
           ),
         if (media.area != null && media.area!.isNotEmpty)
-          Text(
-            media.area!,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          Flexible(
+            child: Text(
+              media.area!,
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.textTheme.bodySmall?.color,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         if (media.type != null && media.type!.isNotEmpty)
           Container(
-            margin: const EdgeInsets.only(left: 6),
+            margin: const EdgeInsets.only(left: 8),
             padding: const EdgeInsets.symmetric(
-              horizontal: 4,
+              horizontal: 5,
               vertical: 1,
             ),
             decoration: BoxDecoration(
               color: theme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(3),
             ),
             child: Text(
               media.type!,
               style: TextStyle(
-                fontSize: 8,
+                fontSize: 9,
                 color: theme.primaryColor,
                 fontWeight: FontWeight.w500,
               ),
@@ -1440,16 +1107,16 @@ class _MediaGridItem extends StatelessWidget {
             children: [
               Icon(
                 Icons.star,
-                size: 12,
+                size: 14,
                 color: Colors.amber,
               ),
-              const SizedBox(width: 2),
+              const SizedBox(width: 3),
               Text(
                 media.score!,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                  color: theme.textTheme.bodyMedium?.color,
                 ),
               ),
             ],
@@ -1457,18 +1124,18 @@ class _MediaGridItem extends StatelessWidget {
         // 来源信息
         if (media.sourceName.isNotEmpty)
           Container(
-            margin: const EdgeInsets.only(left: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            margin: const EdgeInsets.only(left: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
-              borderRadius: BorderRadius.circular(3),
+              color: theme.cardTheme.color?.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               media.sourceName,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                color: theme.textTheme.bodySmall?.color,
               ),
             ),
           ),
@@ -1482,13 +1149,13 @@ class _MediaGridItem extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
     return Text(
       media.description!,
       style: TextStyle(
-        fontSize: 10,
-        color: Theme.of(context).textTheme.bodySmall?.color ??
-            (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-        height: 1.2,
+        fontSize: 11,
+        color: theme.textTheme.bodySmall?.color,
+        height: 1.3,
       ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
@@ -1506,8 +1173,8 @@ class _MediaGridItem extends StatelessWidget {
             child: Text(
               media.actors!,
               style: TextStyle(
-                fontSize: 9,
-                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                fontSize: 10,
+                color: theme.textTheme.labelSmall?.color,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1517,14 +1184,16 @@ class _MediaGridItem extends StatelessWidget {
         TextButton(
           onPressed: onDetailTap,
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
             minimumSize: const Size(0, 0),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor:
+                theme.textButtonTheme.style?.foregroundColor?.resolve({}),
           ),
           child: const Text(
             '详情',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 11,
             ),
           ),
         ),
@@ -1567,7 +1236,6 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return CustomCard(
       child: Row(
@@ -1579,7 +1247,7 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
             height: 100,
             margin: const EdgeInsets.fromLTRB(6, 6, 12, 6),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+              color: theme.cardTheme.color?.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -1601,9 +1269,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 14,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1617,9 +1284,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 12,
                         width: 100,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1635,9 +1301,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 10,
                         width: 70,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1653,9 +1318,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 10,
                         width: 40,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1671,9 +1335,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 10,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1687,9 +1350,8 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                         height: 10,
                         width: double.infinity * 0.6,
                         decoration: BoxDecoration(
-                          color:
-                              (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                                  ?.withValues(alpha: _animation.value),
+                          color: theme.cardTheme.color
+                              ?.withValues(alpha: _animation.value),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -1708,9 +1370,7 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                             height: 9,
                             width: 50,
                             decoration: BoxDecoration(
-                              color: (isDarkMode
-                                      ? Colors.grey[700]
-                                      : Colors.grey[300])
+                              color: theme.cardTheme.color
                                   ?.withValues(alpha: _animation.value),
                               borderRadius: BorderRadius.circular(3),
                             ),
@@ -1724,9 +1384,7 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                             height: 10,
                             width: 20,
                             decoration: BoxDecoration(
-                              color: (isDarkMode
-                                      ? Colors.grey[700]
-                                      : Colors.grey[300])
+                              color: theme.cardTheme.color
                                   ?.withValues(alpha: _animation.value),
                               borderRadius: BorderRadius.circular(3),
                             ),
