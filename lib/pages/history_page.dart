@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:vision_x_flutter/components/history_item.dart' hide Dismissible;
+import 'package:vision_x_flutter/components/history_item.dart';
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/app_router.dart'; // 导入app_router.dart以访问routeObserver
-import 'package:vision_x_flutter/theme/spacing.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});

@@ -35,6 +35,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
   static const double _bottomPaddingOffset = 16.0;
   static const double _maxColumnWidthOffset = 90.0;
   static const double _horizontalPadding = 16.0;
+  static const double _minColumnWidth = 100.0; // 添加最小宽度限制
   static const double _borderAlphaDark = 0.3;
   static const double _borderAlphaLight = 0.2;
   static const double _commonAlpha = 0.1;
@@ -366,8 +367,12 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
 
   @override
   Widget build(BuildContext context) {
-    final maxColumnWidth =
-        MediaQuery.of(context).size.width - _maxColumnWidthOffset;
+    final screenWidth = MediaQuery.of(context).size.width;
+    // 确保maxColumnWidth不会是负数，设置一个最小值
+    final maxColumnWidth = 
+        screenWidth > _maxColumnWidthOffset 
+            ? screenWidth - _maxColumnWidthOffset 
+            : _minColumnWidth;
     final viewInsets = MediaQuery.of(context).viewInsets;
     final bottomPadding = MediaQuery.of(context).padding.bottom +
         viewInsets.bottom +

@@ -1,63 +1,162 @@
-# vision_x_flutter
+# Vision X Flutter
 
-A new Flutter project.
+一个功能完善的视频播放应用，支持竖屏短剧和横屏传统视频播放。
 
-## Getting Started
+## 功能特性
 
-This project is a starting point for a Flutter application.
+### 视频播放功能
 
-A few resources to get you started if this is your first Flutter project:
+#### 竖屏短剧模式
+- **抖音风格播放**：全屏竖屏播放，上下滑动切换剧集
+- **智能控制**：
+  - 左上角返回按钮
+  - 底部进度条显示
+  - 可展开的导航信息栏，显示剧集信息和选集功能
+  - 长按右侧2倍速快进
+- **自动播放**：播放结束后自动切换下一集
+- **预加载**：本集快结束时提前加载下一集缓存
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+#### 横屏传统模式
+- **非全屏模式**：
+  - 左上角返回按钮
+  - 左下方播放/暂停按钮
+  - 进度条和时间显示
+  - 全屏切换按钮
+- **全屏模式**：
+  - 左上角返回按钮 + 剧集信息
+  - 进度条
+  - 播放/暂停、上一集/下一集按钮
+  - 倍速控制、选集功能
+  - 锁定屏幕功能
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 核心组件
 
-## Project Structure
+#### CustomVideoPlayer
+主要的视频播放器组件，支持：
+- 自动播放和循环控制
+- 进度跟踪和历史记录
+- 播放完成回调
+- 视频时长获取
+- 起始位置设置
+- 短剧模式识别
 
+#### CustomControls
+自定义视频控制组件，提供：
+- 返回按钮处理
+- 剧集切换控制
+- 播放速度调节
+- 全屏切换
+- 竖屏模式导航栏
+- 长按快进快退
+
+#### VideoPlayerPage
+视频播放页面，实现：
+- 竖屏/横屏模式自动识别
+- PageView滑动切换（短剧模式）
+- 历史记录管理
+- 预加载功能
+- 剧集选择器
+
+## 使用方法
+
+### 基本使用
+
+```dart
+// 创建视频播放页面
+VideoPlayerPage(
+  media: mediaDetail,
+  episode: episode,
+  startPosition: 0, // 起始播放位置（秒）
+)
 ```
-// 项目目录结构 (仅展示关键开发相关文件和文件夹)
-├── .gitignore               // Git忽略文件配置
-├── .vscode\                 // VSCode编辑器配置
-│   ├── launch.json          // 调试启动配置
-│   └── tasks.json           // 任务配置
-├── README.md                // 项目说明文档
-├── analysis_options.yaml    // Dart代码分析配置
-├── android\                 // Android平台相关代码
-│   ├── app\                 // Android应用模块
-│   │   ├── build.gradle.kts // Android模块构建配置
-│   │   └── src\             // Android源代码
-│   ├── build.gradle.kts     // Android项目构建配置
-│   ├── gradle.properties    // Gradle属性配置
-│   ├── gradlew              // Gradle构建脚本(UNIX)
-│   ├── gradlew.bat          // Gradle构建脚本(Windows)
-│   └── settings.gradle.kts  // Gradle设置
-├── ios\                     // iOS平台相关代码
-│   ├── Flutter\            // Flutter iOS集成文件
-│   ├── Runner\             // iOS应用代码
-│   ├── Runner.xcodeproj\   // Xcode项目文件
-│   └── Runner.xcworkspace\ // Xcode工作区文件
-├── lib\                     // Flutter源代码 (核心开发目录)
-│   ├── app_router.dart      // 应用路由配置
-│   ├── components\         // 通用组件
-│   │   └── bottom_navigation_bar.dart // 底部导航栏组件
-│   ├── main.dart            // 应用入口文件
-│   └── pages\              // 页面组件
-│       ├── history_page.dart // 历史记录页面
-│       ├── home_page.dart   // 首页
-│       └── settings_page.dart // 设置页面
-├── linux\                   // Linux平台相关代码
-├── macos\                   // macOS平台相关代码
-├── pubspec.lock             // 依赖版本锁定文件
-├── pubspec.yaml             // 项目依赖配置文件
-├── test\                    // 测试代码
-│   └── widget_test.dart     // 组件测试示例
-├── web\                     // Web平台相关代码
-│   ├── favicon.png          // 网站图标
-│   ├── icons\              // Web应用图标
-│   ├── index.html           // Web入口HTML文件
-│   └── manifest.json        // Web应用清单
-└── windows\                // Windows平台相关代码
+
+### 自定义播放器
+
+```dart
+CustomVideoPlayer(
+  media: mediaDetail,
+  episode: episode,
+  isShortDramaMode: true, // 是否为短剧模式
+  onProgressUpdate: (progress) {
+    // 进度更新回调
+  },
+  onPlaybackCompleted: () {
+    // 播放完成回调
+  },
+  onBackPressed: () {
+    // 返回按钮回调
+  },
+  onNextEpisode: () {
+    // 下一集回调
+  },
+  onPrevEpisode: () {
+    // 上一集回调
+  },
+  onEpisodeChanged: (index) {
+    // 剧集切换回调
+  },
+)
 ```
+
+### 自定义控制组件
+
+```dart
+CustomControls(
+  isShortDramaMode: true,
+  onBackPressed: () => Navigator.pop(context),
+  onNextEpisode: () => playNext(),
+  onPrevEpisode: () => playPrev(),
+  onEpisodeChanged: (index) => changeEpisode(index),
+  mediaTitle: "剧集标题",
+  currentEpisodeIndex: 0,
+  totalEpisodes: 10,
+)
+```
+
+## 模式识别
+
+应用会自动识别视频类型：
+
+### 短剧模式
+- 通过 `media.category` 或 `media.type` 字段判断
+- 包含"短剧"关键词的视频自动启用竖屏模式
+- 支持上下滑动切换剧集
+
+### 传统模式
+- 其他类型的视频使用横屏模式
+- 支持全屏切换
+- 提供完整的播放控制功能
+
+## 技术特性
+
+- **响应式设计**：适配不同屏幕尺寸
+- **性能优化**：预加载机制提升播放体验
+- **历史记录**：自动保存播放进度
+- **手势控制**：支持长按快进快退
+- **主题适配**：支持深色/浅色主题切换
+
+## 依赖项
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  video_player: ^2.8.1
+  chewie: ^1.7.4
+  cached_network_image: ^3.3.0
+```
+
+## 注意事项
+
+1. 确保视频URL可访问且格式支持
+2. 短剧模式需要正确的分类信息
+3. 预加载功能需要网络连接
+4. 历史记录功能需要配置存储服务
+
+## 更新日志
+
+### v1.0.0
+- 初始版本发布
+- 支持竖屏和横屏两种播放模式
+- 实现自动播放和剧集切换
+- 添加预加载和历史记录功能
