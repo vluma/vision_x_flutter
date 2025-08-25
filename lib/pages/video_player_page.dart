@@ -861,9 +861,11 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
   }
 
   Widget _buildExpandedContent(ThemeData theme) {
+    // 打印所有可用数据用于调试
+    _printMediaData();
+    
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       decoration: const BoxDecoration(
         color: Color(0xFF1E1E1E),
         borderRadius: BorderRadius.only(
@@ -874,86 +876,249 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 标题和关闭按钮
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.media.name ?? '未知剧集',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                  ),
+          // 顶部卡片 - 标题和基本信息
+          Container(
+            margin: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A2A2A),
+              borderRadius: BorderRadius.circular(16.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 8.0,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 24.0,
-                ),
-                onPressed: _toggleExpanded,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8.0),
-          // 分类信息
-          if (widget.media.category != null)
-            Text(
-              '分类: ${widget.media.category}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14.0,
-              ),
+              ],
             ),
-          const SizedBox(height: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 标题和关闭按钮
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.media.name ?? '未知剧集',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (widget.media.subtitle != null) ...[
+                            const SizedBox(height: 6.0),
+                            Text(
+                              widget.media.subtitle!,
+                              style: const TextStyle(
+                                color: Colors.white60,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20.0,
+                        ),
+                        onPressed: _toggleExpanded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16.0),
+                // 基本信息行
+                _buildBasicInfoRow(),
+              ],
+            ),
+          ),
+          
           // Tab栏
-          _buildTabBar(theme),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: _buildTabBar(theme),
+          ),
+          
           const SizedBox(height: 16.0),
+          
           // Tab内容
           Expanded(
-            child: _buildTabContent(theme),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildTabContent(theme),
+            ),
           ),
+          
+          const SizedBox(height: 16.0),
         ],
       ),
     );
   }
 
+  Widget _buildBasicInfoRow() {
+    final List<String> infoItems = [];
+    
+    if (widget.media.year != null) infoItems.add(widget.media.year!);
+    if (widget.media.area != null) infoItems.add(widget.media.area!);
+    if (widget.media.language != null) infoItems.add(widget.media.language!);
+    if (widget.media.duration != null) infoItems.add(widget.media.duration!);
+    if (widget.media.state != null) infoItems.add(widget.media.state!);
+    
+    if (infoItems.isEmpty) return const SizedBox();
+    
+    return Wrap(
+      spacing: 10.0,
+      runSpacing: 8.0,
+      children: infoItems.map((item) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withOpacity(0.15),
+              Colors.white.withOpacity(0.08),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.0,
+          ),
+        ),
+        child: Text(
+          item,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12.0,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      )).toList(),
+    );
+  }
+
+  void _printMediaData() {
+    print('=== 媒体数据调试信息 ===');
+    print('ID: ${widget.media.id}');
+    print('名称: ${widget.media.name}');
+    print('副标题: ${widget.media.subtitle}');
+    print('类型: ${widget.media.type}');
+    print('分类: ${widget.media.category}');
+    print('年份: ${widget.media.year}');
+    print('地区: ${widget.media.area}');
+    print('语言: ${widget.media.language}');
+    print('时长: ${widget.media.duration}');
+    print('状态: ${widget.media.state}');
+    print('备注: ${widget.media.remarks}');
+    print('版本: ${widget.media.version}');
+    print('演员: ${widget.media.actors}');
+    print('导演: ${widget.media.director}');
+    print('编剧: ${widget.media.writer}');
+    print('描述: ${widget.media.description}');
+    print('内容: ${widget.media.content}');
+    print('评分: ${widget.media.score}');
+    print('豆瓣评分: ${widget.media.doubanScore}');
+    print('播放量: ${widget.media.hits}');
+    print('日播放量: ${widget.media.hitsDay}');
+    print('周播放量: ${widget.media.hitsWeek}');
+    print('月播放量: ${widget.media.hitsMonth}');
+    print('点赞数: ${widget.media.up}');
+    print('点踩数: ${widget.media.down}');
+    print('标签: ${widget.media.tag}');
+    print('剧集总数: ${widget.media.total}');
+    print('是否完结: ${widget.media.isEnd}');
+    print('来源名称: ${widget.media.sourceName}');
+    print('来源代码: ${widget.media.sourceCode}');
+    print('=== 数据源信息 ===');
+    for (int i = 0; i < widget.media.surces.length; i++) {
+      final source = widget.media.surces[i];
+      print('数据源 $i: ${source.name}');
+      print('  剧集数量: ${source.episodes.length}');
+      for (int j = 0; j < source.episodes.length; j++) {
+        final episode = source.episodes[j];
+        print('    剧集 $j: ${episode.title} (${episode.url})');
+      }
+    }
+    print('=== 当前播放信息 ===');
+    print('当前剧集索引: ${widget.currentEpisodeIndex}');
+    print('总剧集数: ${widget.totalEpisodes}');
+    print('==================');
+  }
+
   Widget _buildTabBar(ThemeData theme) {
-    return Row(
-      children: [
-        _buildTabButton('选集', 0, theme),
-        const SizedBox(width: 16.0),
-        _buildTabButton('简介', 1, theme),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4.0,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildTabButton('选集', 0, theme),
+          const SizedBox(width: 4.0),
+          _buildTabButton('简介', 1, theme),
+        ],
+      ),
     );
   }
 
   Widget _buildTabButton(String title, int index, ThemeData theme) {
     final isSelected = _selectedTabIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTabIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.red : Colors.transparent,
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(
-            color: isSelected ? Colors.red : Colors.white.withOpacity(0.3),
-            width: 1.0,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTabIndex = index;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          decoration: BoxDecoration(
+            gradient: isSelected 
+                ? const LinearGradient(
+                    colors: [Colors.red, Color(0xFFE53E3E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isSelected ? null : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.0),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: Colors.red.withOpacity(0.3),
+                blurRadius: 4.0,
+                offset: const Offset(0, 1),
+              ),
+            ] : null,
           ),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontSize: 14.0,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.white70,
+              fontSize: 14.0,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -972,46 +1137,149 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
   }
 
   Widget _buildEpisodeSelector(ThemeData theme) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 8.0,
-        mainAxisSpacing: 8.0,
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      itemCount: widget.totalEpisodes,
-      itemBuilder: (context, index) {
-        final isSelected = index == widget.currentEpisodeIndex;
-        return GestureDetector(
-          onTap: () {
-            // 在短剧模式下，需要通过 PageView 来切换剧集
-            final videoPlayerPage =
-                context.findAncestorStateOfType<_VideoPlayerPageState>();
-            if (videoPlayerPage != null && videoPlayerPage._isShortDramaMode) {
-              videoPlayerPage._pageController.jumpToPage(index);
-            } else {
-              widget.onEpisodeChanged(index);
-            }
-            _toggleExpanded();
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.red : Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white,
-                  fontSize: 12.0,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 剧集信息头部
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '剧集选择',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      '共 ${widget.totalEpisodes} 集',
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12.0,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.red, Color(0xFFE53E3E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '第 ${widget.currentEpisodeIndex + 1} 集',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+          // 剧集网格
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 6,
+                childAspectRatio: 1.5,
+                crossAxisSpacing: 10.0,
+                mainAxisSpacing: 10.0,
+              ),
+              itemCount: widget.totalEpisodes,
+              itemBuilder: (context, index) {
+                final isSelected = index == widget.currentEpisodeIndex;
+                return GestureDetector(
+                  onTap: () {
+                    // 在短剧模式下，需要通过 PageView 来切换剧集
+                    final videoPlayerPage =
+                        context.findAncestorStateOfType<_VideoPlayerPageState>();
+                    if (videoPlayerPage != null && videoPlayerPage._isShortDramaMode) {
+                      videoPlayerPage._pageController.jumpToPage(index);
+                    } else {
+                      widget.onEpisodeChanged(index);
+                    }
+                    _toggleExpanded();
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: isSelected 
+                          ? const LinearGradient(
+                              colors: [Colors.red, Color(0xFFE53E3E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.15),
+                                Colors.white.withOpacity(0.08),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: isSelected 
+                            ? Colors.red.withOpacity(0.5)
+                            : Colors.white.withOpacity(0.2),
+                        width: 1.0,
+                      ),
+                      boxShadow: isSelected ? [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.3),
+                          blurRadius: 4.0,
+                          offset: const Offset(0, 1),
+                        ),
+                      ] : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontSize: 13.0,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -1020,45 +1288,293 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 评分信息
+          if (widget.media.score != null || widget.media.doubanScore != null) ...[
+            _buildRatingSection(),
+            const SizedBox(height: 20.0),
+          ],
+          
+          // 简介
           if (widget.media.description != null) ...[
-            Text(
-              '简介',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              widget.media.description!,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14.0,
-                height: 1.5,
-              ),
-            ),
+            _buildSectionCard('简介', _buildDescriptionContent()),
+            const SizedBox(height: 20.0),
           ],
-          if (widget.media.actors != null) ...[
-            const SizedBox(height: 16.0),
-            Text(
-              '主演: ${widget.media.actors}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14.0,
-              ),
-            ),
+          
+          // 演职人员
+          if (widget.media.actors != null || widget.media.director != null || widget.media.writer != null) ...[
+            _buildSectionCard('演职人员', _buildCastContent()),
+            const SizedBox(height: 20.0),
           ],
-          if (widget.media.director != null) ...[
-            const SizedBox(height: 8.0),
-            Text(
-              '导演: ${widget.media.director}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14.0,
-              ),
-            ),
+          
+          // 统计信息
+          _buildSectionCard('统计信息', _buildStatsGrid()),
+          const SizedBox(height: 20.0),
+          
+          // 其他信息
+          if (widget.media.remarks != null || widget.media.tag != null) ...[
+            _buildSectionCard('其他信息', _buildOtherInfoContent()),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard(String title, Widget content) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4.0,
+                height: 20.0,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.red, Color(0xFFE53E3E)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.circular(2.0),
+                ),
+              ),
+              const SizedBox(width: 12.0),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12.0),
+          content,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionContent() {
+    return Text(
+      widget.media.description!,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize: 14.0,
+        height: 1.6,
+      ),
+    );
+  }
+
+  Widget _buildCastContent() {
+    return Column(
+      children: [
+        if (widget.media.director != null) ...[
+          _buildInfoRow('导演', widget.media.director!),
+          const SizedBox(height: 8.0),
+        ],
+        if (widget.media.actors != null) ...[
+          _buildInfoRow('主演', widget.media.actors!),
+          const SizedBox(height: 8.0),
+        ],
+        if (widget.media.writer != null) ...[
+          _buildInfoRow('编剧', widget.media.writer!),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildOtherInfoContent() {
+    return Column(
+      children: [
+        if (widget.media.remarks != null) ...[
+          _buildInfoRow('备注', widget.media.remarks!),
+          const SizedBox(height: 8.0),
+        ],
+        if (widget.media.tag != null) ...[
+          _buildInfoRow('标签', widget.media.tag!),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16.0,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 50.0,
+          child: Text(
+            '$label:',
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 14.0,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14.0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingSection() {
+    return Row(
+      children: [
+        if (widget.media.score != null) ...[
+          Expanded(
+            child: _buildRatingCard('评分', widget.media.score!, Colors.orange),
+          ),
+          const SizedBox(width: 12.0),
+        ],
+        if (widget.media.doubanScore != null) ...[
+          Expanded(
+            child: _buildRatingCard('豆瓣', widget.media.doubanScore!, Colors.green),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRatingCard(String label, String score, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12.0,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            score,
+            style: TextStyle(
+              color: color,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 12.0,
+      mainAxisSpacing: 12.0,
+      childAspectRatio: 2.8,
+      children: [
+        _buildStatItem('播放量', '${widget.media.hits}', Icons.play_circle_outline, Colors.blue),
+        _buildStatItem('日播放', '${widget.media.hitsDay}', Icons.trending_up, Colors.green),
+        _buildStatItem('点赞', '${widget.media.up}', Icons.thumb_up_outlined, Colors.orange),
+        _buildStatItem('剧集数', '${widget.media.total}', Icons.video_library, Colors.purple),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withOpacity(0.15),
+            color.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6.0),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 16.0,
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: color.withOpacity(0.8),
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
