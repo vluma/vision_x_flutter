@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:vision_x_flutter/components/video_player.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
+import 'package:vision_x_flutter/components/video_swipe_back_gesture.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'dart:async';
 
@@ -47,7 +49,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   // MARK: - 控制器
   late PageController _pageController;
-  final Key _videoPlayerKey = UniqueKey();
+  Key _videoPlayerKey = UniqueKey();
 
   // MARK: - UI 配置
   static const List<Widget> _tabs = [
@@ -274,6 +276,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _currentProgress = 0;
       });
 
+      // 在普通模式下，需要重新构建视频播放器
+      if (!_isShortDramaMode) {
+        // 生成新的key来强制重建视频播放器
+        _videoPlayerKey = UniqueKey();
+      }
+
       _recordEpisodeHistory();
     } catch (e) {
       _showMessage(_switchEpisodeError);
@@ -292,11 +300,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   // MARK: - 导航方法
   void _onBackButtonPressed() {
     _updateFinalProgress();
+    // 直接刷新历史数据
+    HistoryService().refreshData();
     Navigator.of(context).pop();
   }
 
   Future<bool> _onShortDramaWillPop() async {
     _updateFinalProgress();
+    // 直接刷新历史数据
+    HistoryService().refreshData();
     return true;
   }
 
@@ -319,21 +331,29 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Widget _buildShortDramaLayout(ThemeData theme) {
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: _buildShortDramaPlayer(),
+    return VideoSwipeBackGesture(
+      onBackPressed: _onBackButtonPressed,
+      enableSwipeBack: true,
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: _buildShortDramaPlayer(),
+      ),
     );
   }
 
   Widget _buildTraditionalLayout(ThemeData theme) {
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: null,
-      body: Column(
-        children: [
-          _buildVideoPlayerSection(),
-          _buildTabSection(theme),
-        ],
+    return VideoSwipeBackGesture(
+      onBackPressed: _onBackButtonPressed,
+      enableSwipeBack: true,
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: null,
+        body: Column(
+          children: [
+            _buildVideoPlayerSection(),
+            _buildTabSection(theme),
+          ],
+        ),
       ),
     );
   }
@@ -726,46 +746,40 @@ class _ShortDramaInfoCard extends StatefulWidget {
   State<_ShortDramaInfoCard> createState() => _ShortDramaInfoCardState();
 }
 
-class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
-    with SingleTickerProviderStateMixin {
+class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   bool _isExpanded = false;
-  late AnimationController _animationController;
-  Animation<double>? _heightAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _heightAnimation = Tween<double>(
-      begin: 0.0,
-      end: MediaQuery.of(context).size.height * 0.75,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final safeAreaBottom = MediaQuery.of(context).padding.bottom;
 
-    if (_heightAnimation == null) {
+    if (_isExpanded) {
+      // 展开内容
       return Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12.0),
+            topRight: Radius.circular(12.0),
+          ),
+        ),
+        child: _buildExpandedContent(theme),
+      ).animate()
+        .slideY(
+          begin: 1.0,
+          end: 0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+    }
+
+    // 卡片（收起状态）
+    return Container(
+      color: const Color(0xFF0A0A0A),
+      child: Container(
         height: 44.0,
         margin: EdgeInsets.only(
           left: 16.0,
@@ -778,52 +792,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
         child: _buildHeader(theme),
-      );
-    }
-
-    if (_isExpanded) {
-      // 折叠内容
-      return AnimatedBuilder(
-        animation: _heightAnimation!,
-        builder: (context, child) {
-          // 展开内容
-          return Container(
-            height: _heightAnimation!.value,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.0),
-                topRight: Radius.circular(12.0),
-              ),
-            ),
-            child: _buildExpandedContent(theme),
-          );
-        },
-      );
-    }
-
-    return Container(
-      color: const Color(0xFF0A0A0A),
-      child: AnimatedBuilder(
-          animation: _heightAnimation!,
-          builder: (context, child) {
-            // 卡片（收起状态）
-            return Container(
-              height: 44.0,
-              margin: EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                top: 4.0,
-                bottom: safeAreaBottom + 4.0,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              ),
-              child: _buildHeader(theme),
-            );
-          }),
+      ),
     );
   }
 
@@ -863,150 +832,129 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
   Widget _buildExpandedContent(ThemeData theme) {
     // 打印所有可用数据用于调试
     _printMediaData();
-    
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12.0),
-          topRight: Radius.circular(12.0),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 顶部卡片 - 标题和基本信息
-          Container(
-            margin: const EdgeInsets.all(16.0),
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 8.0,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 标题和关闭按钮
-                Row(
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 顶部卡片 - 标题和基本信息
+        Container(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 12.0),
+          child: Row(
+            children: [
+              // 左侧：标题和基础信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.media.name ?? '未知剧集',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (widget.media.subtitle != null) ...[
-                            const SizedBox(height: 6.0),
-                            Text(
-                              widget.media.subtitle!,
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                fontSize: 14.0,
-                              ),
-                            ),
-                          ],
-                        ],
+                    // 标题
+                    Text(
+                      widget.media.name ?? '未知剧集',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 20.0,
-                        ),
-                        onPressed: _toggleExpanded,
-                      ),
-                    ),
+
+                    const SizedBox(height: 4.0),
+
+                    // 基本信息行（彩色背景标签）
+                    _buildBasicInfoRow(),
                   ],
                 ),
-                const SizedBox(height: 16.0),
-                // 基本信息行
-                _buildBasicInfoRow(),
-              ],
-            ),
+              ),
+              // 右侧：关闭按钮
+              Container(
+                width: 32.0,
+                height: 32.0,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                  iconSize: 16.0,
+                  onPressed: _toggleExpanded,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
-          
-          // Tab栏
-          Padding(
+        ),
+
+        const SizedBox(height: 8.0),
+        Container(
+          height: 0.3,
+          color: Colors.white24,
+        ),
+
+        const SizedBox(height: 16.0),
+
+        // Tab栏
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: _buildTabBar(theme),
+        ),
+
+        const SizedBox(height: 16.0),
+
+        // Tab内容
+        Expanded(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: _buildTabBar(theme),
+            child: _buildTabContent(theme),
           ),
-          
-          const SizedBox(height: 16.0),
-          
-          // Tab内容
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildTabContent(theme),
-            ),
-          ),
-          
-          const SizedBox(height: 16.0),
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 16.0),
+      ],
     );
   }
 
   Widget _buildBasicInfoRow() {
-    final List<String> infoItems = [];
-    
-    if (widget.media.year != null) infoItems.add(widget.media.year!);
-    if (widget.media.area != null) infoItems.add(widget.media.area!);
-    if (widget.media.language != null) infoItems.add(widget.media.language!);
-    if (widget.media.duration != null) infoItems.add(widget.media.duration!);
-    if (widget.media.state != null) infoItems.add(widget.media.state!);
-    
+    // 过滤掉null和空字符串
+    final List<String> infoItems = [
+      widget.media.year,
+      widget.media.area,
+      widget.media.language,
+      widget.media.duration,
+      widget.media.state,
+    ].where((item) => item != null && item.isNotEmpty).cast<String>().toList();
+
     if (infoItems.isEmpty) return const SizedBox();
-    
-    return Wrap(
-      spacing: 10.0,
-      runSpacing: 8.0,
-      children: infoItems.map((item) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withOpacity(0.15),
-              Colors.white.withOpacity(0.08),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1.0,
-          ),
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6.0,
+          runSpacing: 3.0,
+          children: infoItems.map((item) {
+            return Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+              child: Text(
+                item,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            );
+          }).toList(),
         ),
-        child: Text(
-          item,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12.0,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      )).toList(),
+      ],
     );
   }
 
@@ -1029,6 +977,13 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
     print('编剧: ${widget.media.writer}');
     print('描述: ${widget.media.description}');
     print('内容: ${widget.media.content}');
+
+    // 添加海报信息打印
+    print('海报: ${widget.media.poster}');
+    print('缩略海报: ${widget.media.posterThumb}');
+    print('幻灯片海报: ${widget.media.posterSlide}');
+    print('截图海报: ${widget.media.posterScreenshot}');
+
     print('评分: ${widget.media.score}');
     print('豆瓣评分: ${widget.media.doubanScore}');
     print('播放量: ${widget.media.hits}');
@@ -1094,7 +1049,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
           decoration: BoxDecoration(
-            gradient: isSelected 
+            gradient: isSelected
                 ? const LinearGradient(
                     colors: [Colors.red, Color(0xFFE53E3E)],
                     begin: Alignment.topLeft,
@@ -1103,13 +1058,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
                 : null,
             color: isSelected ? null : Colors.transparent,
             borderRadius: BorderRadius.circular(8.0),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: Colors.red.withOpacity(0.3),
-                blurRadius: 4.0,
-                offset: const Offset(0, 1),
-              ),
-            ] : null,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
           ),
           child: Text(
             title,
@@ -1159,6 +1116,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       '剧集选择',
@@ -1168,26 +1126,27 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4.0),
+                    const SizedBox(height: 2.0),
                     Text(
                       '共 ${widget.totalEpisodes} 集',
                       style: const TextStyle(
                         color: Colors.white60,
-                        fontSize: 12.0,
+                        fontSize: 11.0,
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Colors.red, Color(0xFFE53E3E)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.red.withOpacity(0.3),
@@ -1197,85 +1156,96 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
                   ],
                 ),
                 child: Text(
-                  '第 ${widget.currentEpisodeIndex + 1} 集',
+                  '第${widget.currentEpisodeIndex + 1}集',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12.0,
+                    fontSize: 11.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 8.0),
           // 剧集网格
           Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6,
-                childAspectRatio: 1.5,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12.0),
               ),
-              itemCount: widget.totalEpisodes,
-              itemBuilder: (context, index) {
-                final isSelected = index == widget.currentEpisodeIndex;
-                return GestureDetector(
-                  onTap: () {
-                    // 在短剧模式下，需要通过 PageView 来切换剧集
-                    final videoPlayerPage =
-                        context.findAncestorStateOfType<_VideoPlayerPageState>();
-                    if (videoPlayerPage != null && videoPlayerPage._isShortDramaMode) {
-                      videoPlayerPage._pageController.jumpToPage(index);
-                    } else {
-                      widget.onEpisodeChanged(index);
-                    }
-                    _toggleExpanded();
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: isSelected 
-                          ? const LinearGradient(
-                              colors: [Colors.red, Color(0xFFE53E3E)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : LinearGradient(
-                              colors: [
-                                Colors.white.withOpacity(0.15),
-                                Colors.white.withOpacity(0.08),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(
-                        color: isSelected 
-                            ? Colors.red.withOpacity(0.5)
-                            : Colors.white.withOpacity(0.2),
-                        width: 1.0,
-                      ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.3),
-                          blurRadius: 4.0,
-                          offset: const Offset(0, 1),
+              padding: const EdgeInsets.all(16.0),
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 6,
+                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 10.0,
+                  mainAxisSpacing: 10.0,
+                ),
+                itemCount: widget.totalEpisodes,
+                itemBuilder: (context, index) {
+                  final isSelected = index == widget.currentEpisodeIndex;
+                  return GestureDetector(
+                    onTap: () {
+                      // 在短剧模式下，需要通过 PageView 来切换剧集
+                      final videoPlayerPage = context
+                          .findAncestorStateOfType<_VideoPlayerPageState>();
+                      if (videoPlayerPage != null &&
+                          videoPlayerPage._isShortDramaMode) {
+                        videoPlayerPage._pageController.jumpToPage(index);
+                      } else {
+                        widget.onEpisodeChanged(index);
+                      }
+                      _toggleExpanded();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Colors.red, Color(0xFFE53E3E)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.15),
+                                  Colors.white.withOpacity(0.08),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.red.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.2),
+                          width: 1.0,
                         ),
-                      ] : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontSize: 13.0,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.3),
+                                  blurRadius: 4.0,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 13.0,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -1289,27 +1259,30 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 评分信息
-          if (widget.media.score != null || widget.media.doubanScore != null) ...[
+          if (widget.media.score != null ||
+              widget.media.doubanScore != null) ...[
             _buildRatingSection(),
             const SizedBox(height: 20.0),
           ],
-          
+
           // 简介
           if (widget.media.description != null) ...[
             _buildSectionCard('简介', _buildDescriptionContent()),
             const SizedBox(height: 20.0),
           ],
-          
+
           // 演职人员
-          if (widget.media.actors != null || widget.media.director != null || widget.media.writer != null) ...[
+          if (widget.media.actors != null ||
+              widget.media.director != null ||
+              widget.media.writer != null) ...[
             _buildSectionCard('演职人员', _buildCastContent()),
             const SizedBox(height: 20.0),
           ],
-          
+
           // 统计信息
           _buildSectionCard('统计信息', _buildStatsGrid()),
           const SizedBox(height: 20.0),
-          
+
           // 其他信息
           if (widget.media.remarks != null || widget.media.tag != null) ...[
             _buildSectionCard('其他信息', _buildOtherInfoContent()),
@@ -1461,7 +1434,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
         ],
         if (widget.media.doubanScore != null) ...[
           Expanded(
-            child: _buildRatingCard('豆瓣', widget.media.doubanScore!, Colors.green),
+            child:
+                _buildRatingCard('豆瓣', widget.media.doubanScore!, Colors.green),
           ),
         ],
       ],
@@ -1509,15 +1483,20 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
       mainAxisSpacing: 12.0,
       childAspectRatio: 2.8,
       children: [
-        _buildStatItem('播放量', '${widget.media.hits}', Icons.play_circle_outline, Colors.blue),
-        _buildStatItem('日播放', '${widget.media.hitsDay}', Icons.trending_up, Colors.green),
-        _buildStatItem('点赞', '${widget.media.up}', Icons.thumb_up_outlined, Colors.orange),
-        _buildStatItem('剧集数', '${widget.media.total}', Icons.video_library, Colors.purple),
+        _buildStatItem('播放量', '${widget.media.hits}', Icons.play_circle_outline,
+            Colors.blue),
+        _buildStatItem(
+            '日播放', '${widget.media.hitsDay}', Icons.trending_up, Colors.green),
+        _buildStatItem(
+            '点赞', '${widget.media.up}', Icons.thumb_up_outlined, Colors.orange),
+        _buildStatItem(
+            '剧集数', '${widget.media.total}', Icons.video_library, Colors.purple),
       ],
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -1584,14 +1563,6 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard>
     setState(() {
       _isExpanded = !_isExpanded;
     });
-
-    if (_heightAnimation != null) {
-      if (_isExpanded) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    }
   }
 
   int _selectedTabIndex = 0;

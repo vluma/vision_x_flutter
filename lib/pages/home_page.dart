@@ -7,6 +7,7 @@ import 'package:vision_x_flutter/theme/colors.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
 import 'package:vision_x_flutter/theme/spacing.dart';
+import 'package:vision_x_flutter/pages/test_swipe_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -313,7 +314,20 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('豆瓣热门'),
-        actions: _buildCategoryActions(),
+        actions: [
+          ..._buildCategoryActions(),
+          IconButton(
+            icon: const Icon(Icons.swipe_left),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TestSwipePage(),
+                ),
+              );
+            },
+            tooltip: '测试左滑返回',
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(40),
           child: SizedBox(

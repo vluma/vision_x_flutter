@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
   final String currentPath;
@@ -33,7 +34,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
   static const double _contentPaddingVertical = 8.0;
   static const double _contentPaddingHorizontal = 0.0;
   static const double _bottomPaddingOffset = 16.0;
-  static const double _maxColumnWidthOffset = 90.0;
+  static const double _maxColumnWidthOffset = 100.0;
   static const double _horizontalPadding = 16.0;
   static const double _minColumnWidth = 100.0; // 添加最小宽度限制
   static const double _borderAlphaDark = 0.3;
@@ -199,7 +200,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         child: Center(
           child: Icon(
             Icons.search,
-            color: _getIconColor(),
+            color: Colors.grey,
             size: _iconSize,
             semanticLabel: '搜索',
           ),
@@ -208,32 +209,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     );
   }
 
-  Color _getIconColor() {
-    final theme = Theme.of(context);
-    return theme.brightness == Brightness.dark
-        ? Colors.white60
-        : Colors.black54;
-  }
-
   Widget _buildSearchField() {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return TextField(
       controller: _searchController,
-      style: TextStyle(
-          color: theme.textTheme.bodyLarge?.color ??
-              (theme.brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.black)),
+      style: TextStyle(color: theme.textTheme.bodyLarge?.color),
       decoration: InputDecoration(
         hintText: 'Search...',
-        hintStyle: TextStyle(
-            color: isDarkMode
-                ? AppColors.darkSecondaryText
-                : AppColors.lightSecondaryText),
+        hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
         border: InputBorder.none,
-        prefixIcon: Icon(Icons.search, color: _getIconColor()),
+        prefixIcon: Icon(Icons.search, color: Colors.grey),
         prefixIconConstraints: const BoxConstraints(
           minWidth: _prefixIconMinSize,
           minHeight: _prefixIconMinSize,
@@ -254,125 +240,13 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     );
   }
 
-  Color _getBackgroundColor() {
-    final theme = Theme.of(context);
-    return theme.brightness == Brightness.dark
-        ? theme.scaffoldBackgroundColor
-        : theme.cardColor;
-  }
-
-  // 获取边框颜色
-  Color _getBorderColor() {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    // 使用更自然的边框颜色，与主题更协调
-    return isDarkMode
-        ? theme.dividerColor.withValues(alpha: _borderAlphaDark)
-        : theme.dividerColor.withValues(alpha: _borderAlphaLight);
-  }
-
-  Widget _buildNavigationContainer(double maxWidth) {
-    final theme = Theme.of(context);
-    return AnimatedContainer(
-      duration: _animationDuration,
-      width: searchDataSource.isSearchExpanded ? _containerHeight : maxWidth,
-      height: _containerHeight,
-      decoration: BoxDecoration(
-        color: _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(_containerBorderRadius),
-        border: Border.all(
-          color: _getBorderColor(),
-          width: _borderWidth, // 更细的边框
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _getBorderColor().withValues(alpha: _commonAlpha),
-            offset: const Offset(0, _boxShadowOffset),
-            blurRadius: _boxShadowBlurRadius,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(_paddingAll),
-        child: Stack(
-          children: [
-            // 滑动的选中背景
-            AnimatedAlign(
-              duration: _animationDuration,
-              curve: Curves.easeInOut,
-              alignment: searchDataSource.isSearchExpanded
-                  ? Alignment.centerRight
-                  : Alignment((_selectedIndex - 1) * 1.0, 0),
-              child: Container(
-                width: searchDataSource.isSearchExpanded ? 0 : (maxWidth / 3),
-                height: _selectedContainerHeight,
-                decoration: BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(_selectedContainerBorderRadius),
-                  color: theme.brightness == Brightness.dark
-                      ? AppColors.bottomNavSelectedItem
-                          .withValues(alpha: _selectedItemAlphaDark)
-                      : theme.primaryColor.withValues(alpha: _commonAlpha),
-                ),
-              ),
-            ),
-            AnimatedCrossFade(
-              duration: _animationDuration,
-              firstChild: _buildNavigationButtons(),
-              secondChild: _buildMenuButton(),
-              crossFadeState: searchDataSource.isSearchExpanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchContainer(double maxWidth) {
-    return AnimatedContainer(
-      duration: _animationDuration,
-      width: searchDataSource.isSearchExpanded ? maxWidth : _containerHeight,
-      height: _containerHeight,
-      decoration: BoxDecoration(
-        color: _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(_containerBorderRadius),
-        border: Border.all(
-          color: _getBorderColor(),
-          width: _borderWidth, // 更细的边框
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _getBorderColor().withValues(alpha: _commonAlpha),
-            offset: const Offset(0, _boxShadowOffset),
-            blurRadius: _boxShadowBlurRadius,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(_paddingAll),
-        child: AnimatedCrossFade(
-          duration: _animationDuration,
-          firstChild: _buildSearchButton(),
-          secondChild: _buildSearchField(),
-          crossFadeState: searchDataSource.isSearchExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     // 确保maxColumnWidth不会是负数，设置一个最小值
-    final maxColumnWidth = 
-        screenWidth > _maxColumnWidthOffset 
-            ? screenWidth - _maxColumnWidthOffset 
-            : _minColumnWidth;
+    final maxColumnWidth = screenWidth > _maxColumnWidthOffset
+        ? screenWidth - _maxColumnWidthOffset
+        : _minColumnWidth;
     final viewInsets = MediaQuery.of(context).viewInsets;
     final bottomPadding = MediaQuery.of(context).padding.bottom +
         viewInsets.bottom +
@@ -402,6 +276,153 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
           _buildSearchContainer(maxColumnWidth),
         ],
       ),
+    );
+  }
+
+  Widget _buildNavigationContainer(double maxWidth) {
+    final theme = Theme.of(context);
+    final selectBgWidth = maxWidth / 3;
+
+    return Container(
+      width: searchDataSource.isSearchExpanded ? _containerHeight : maxWidth,
+      height: _containerHeight,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(_containerBorderRadius),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+          width: _borderWidth,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+            offset: const Offset(0, _boxShadowOffset),
+            blurRadius: _boxShadowBlurRadius,
+          ),
+        ],
+      ),
+    ).animate(
+      target: searchDataSource.isSearchExpanded ? 1 : 0,
+    ).custom(
+      duration: _animationDuration,
+      builder: (context, value, child) {
+        // 使用动画值计算宽度
+        final animatedWidth = maxWidth - (value * (maxWidth - _containerHeight));
+        
+        return Container(
+          width: animatedWidth,
+          height: _containerHeight,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(_containerBorderRadius),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+              width: _borderWidth,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                offset: const Offset(0, _boxShadowOffset),
+                blurRadius: _boxShadowBlurRadius,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(_paddingAll),
+            child: Stack(
+              children: [
+                // 滑动的选中背景
+                AnimatedAlign(
+                  duration: _animationDuration,
+                  curve: Curves.easeInOut,
+                  alignment: searchDataSource.isSearchExpanded
+                      ? Alignment.centerRight
+                      : Alignment((_selectedIndex - 1) * 1.0, 0),
+                  child: Container(
+                    width: searchDataSource.isSearchExpanded ? 0 : selectBgWidth,
+                    height: _selectedContainerHeight,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                          _selectedContainerBorderRadius),
+                      color: theme.brightness == Brightness.dark
+                          ? AppColors.bottomNavSelectedItem
+                              .withValues(alpha: _selectedItemAlphaDark)
+                          : theme.primaryColor
+                              .withValues(alpha: _commonAlpha),
+                    ),
+                  ),
+                ),
+                // 内容切换
+                AnimatedSwitcher(
+                  duration: _animationDuration,
+                  child: searchDataSource.isSearchExpanded
+                      ? _buildMenuButton()
+                      : _buildNavigationButtons(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchContainer(double maxWidth) {
+    return Container(
+      width: searchDataSource.isSearchExpanded ? maxWidth : _containerHeight,
+      height: _containerHeight,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(_containerBorderRadius),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+          width: _borderWidth,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+            offset: const Offset(0, _boxShadowOffset),
+            blurRadius: _boxShadowBlurRadius,
+          ),
+        ],
+      ),
+    ).animate(
+      target: searchDataSource.isSearchExpanded ? 1 : 0,
+    ).custom(
+      duration: _animationDuration,
+      builder: (context, value, child) {
+        // 使用动画值计算宽度
+        final animatedWidth = _containerHeight + (value * (maxWidth - _containerHeight));
+        
+        return Container(
+          width: animatedWidth,
+          height: _containerHeight,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(_containerBorderRadius),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+              width: _borderWidth,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                offset: const Offset(0, _boxShadowOffset),
+                blurRadius: _boxShadowBlurRadius,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(_paddingAll),
+            child: AnimatedSwitcher(
+              duration: _animationDuration,
+              child: searchDataSource.isSearchExpanded
+                  ? _buildSearchField()
+                  : _buildSearchButton(),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,57 +1,81 @@
+// 媒体详情数据模型
 class MediaDetail {
-  final int id;
-  final String? name;
-  final String? subtitle;
-  final String? type;
-  final String? category;
-  final String? year;
-  final String? area;
-  final String? language;
-  final String? duration;
-  final String? state;
-  final String? remarks;
-  final String? version;
-  final String? actors;
-  final String? director;
-  final String? writer;
-  final String? description;
-  final String? content;
-  final String? poster;
-  final String? posterThumb;
-  final String? posterSlide;
-  final String? posterScreenshot;
-  final String? playUrl;
-  final String? playFrom;
-  final String? playServer;
-  final String? playNote;
-  final String? score;
-  final int scoreAll;
-  final int scoreNum;
-  final String? doubanScore;
-  final int doubanId;
-  final int hits;
-  final int hitsDay;
-  final int hitsWeek;
-  final int hitsMonth;
-  final int up;
-  final int down;
-  final String? time;
-  final int timeAdd;
-  final String? letter;
-  final String? color;
-  final String? tag;
-  final String? serial;
-  final String? tv;
-  final String? weekday;
-  final String? pubdate;
-  final int total;
-  final int isEnd;
-  final int trysee;
-  final String sourceName;
-  final String sourceCode;
-  final String? apiUrl;
-  final bool? hasCover;
-  final String? sourceInfo;
+  // 基本信息
+  final int id; // 媒体ID
+  final String? name; // 媒体名称
+  final String? subtitle; // 副标题
+  final String? type; // 类型
+  final String? category; // 分类
+  final String? year; // 年份
+  final String? area; // 地区
+  final String? language; // 语言
+  final String? duration; // 时长
+  final String? state; // 状态
+  final String? remarks; // 备注
+  final String? version; // 版本
+
+  // 人员信息
+  final String? actors; // 演员
+  final String? director; // 导演
+  final String? writer; // 编剧
+
+  // 内容信息
+  final String? description; // 描述
+  final String? content; // 内容
+
+  // 海报信息
+  final String? poster; // 海报
+  final String? posterThumb; // 缩略海报
+  final String? posterSlide; // 幻灯片海报
+  final String? posterScreenshot; // 截图海报
+
+  // 播放信息
+  final String? playUrl; // 播放地址
+  final String? playFrom; // 播放来源
+  final String? playServer; // 播放服务器
+  final String? playNote; // 播放备注
+
+  // 评分信息
+  final String? score; // 评分
+  final int scoreAll; // 总评分
+  final int scoreNum; // 评分人数
+  final String? doubanScore; // 豆瓣评分
+  final int doubanId; // 豆瓣ID
+
+  // 统计信息
+  final int hits; // 总播放量
+  final int hitsDay; // 日播放量
+  final int hitsWeek; // 周播放量
+  final int hitsMonth; // 月播放量
+  final int up; // 点赞数
+  final int down; // 点踩数
+
+  // 时间信息
+  final String? time; // 时间
+  final int timeAdd; // 添加时间
+
+  // 其他信息
+  final String? letter; // 字母
+  final String? color; // 颜色
+  final String? tag; // 标签
+  final String? serial; // 系列
+  final String? tv; // 电视台
+  final String? weekday; // 星期
+  final String? pubdate; // 发布日期
+
+  // 剧集信息
+  final int total; // 总集数
+  final int isEnd; // 是否完结
+  final int trysee; // 试看
+
+  // 来源信息
+  final String sourceName; // 来源名称
+  final String sourceCode; // 来源代码
+  final String? apiUrl; // API地址
+  final bool? hasCover; // 是否有封面
+  final String? sourceInfo; // 来源信息
+
+  // 数据源列表
   final List<Source> surces;
 
   MediaDetail({
@@ -237,9 +261,10 @@ class MediaDetail {
   }
 }
 
+// 数据源模型
 class Source {
-  final String name;
-  final List<Episode> episodes;
+  final String name; // 数据源名称
+  final List<Episode> episodes; // 剧集列表
 
   Source({
     required this.name,
@@ -268,11 +293,12 @@ class Source {
   }
 }
 
+// 剧集模型
 class Episode {
-  final String title;
-  final String url;
-  final int? index;
-  final String type;
+  final String title; // 剧集标题
+  final String url; // 播放地址
+  final int? index; // 索引
+  final String type; // 类型
 
   Episode({
     required this.title,

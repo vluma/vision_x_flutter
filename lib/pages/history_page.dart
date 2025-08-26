@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:vision_x_flutter/components/history_item.dart';
 import 'package:vision_x_flutter/models/history_record.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
-import 'package:vision_x_flutter/app_router.dart'; // 导入app_router.dart以访问routeObserver
+import 'package:vision_x_flutter/theme/spacing.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -14,7 +14,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage>
-    with WidgetsBindingObserver, RouteAware {
+    with WidgetsBindingObserver {
   List<HistoryRecord> _history = [];
   bool _isLoading = true;
 
@@ -23,10 +23,15 @@ class _HistoryPageState extends State<HistoryPage>
     super.initState();
     _loadHistory();
     WidgetsBinding.instance.addObserver(this);
+    
+    // 注册刷新回调
+    HistoryService.addRefreshCallback(_onHistoryUpdated);
   }
 
   @override
   void dispose() {
+    // 移除刷新回调
+    HistoryService.removeRefreshCallback(_onHistoryUpdated);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -39,26 +44,18 @@ class _HistoryPageState extends State<HistoryPage>
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // 监听路由变化
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  // 当路由被推入时调用
-  @override
-  void didPush() {
-    _refreshHistory();
-  }
-
-  // 当路由返回到此页面时调用
-  @override
-  void didPopNext() {
-    _refreshHistory();
+  // 历史记录更新时的回调
+  void _onHistoryUpdated() {
+    debugPrint('历史页面收到更新通知');
+    if (mounted) {
+      _refreshHistory();
+    }
   }
 
   Future<void> _refreshHistory() async {
+    if (!mounted) return;
+    
+    debugPrint('开始刷新历史数据');
     try {
       final history = await HistoryService().getHistory();
       if (mounted) {
@@ -66,8 +63,10 @@ class _HistoryPageState extends State<HistoryPage>
           _history = history;
           _isLoading = false;
         });
+        debugPrint('历史数据刷新完成，共${history.length}条记录');
       }
     } catch (e) {
+      debugPrint('刷新历史数据失败: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -186,12 +185,19 @@ class _HistoryPageState extends State<HistoryPage>
                             '观看的影片会显示在这里',
                             style: TextStyle(fontSize: 14),
                           ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _refreshHistory,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('刷新'),
+                          ),
                         ],
                       ),
                     )
                   : RefreshIndicator(
                       onRefresh: _refreshHistory,
                       child: ListView.builder(
+                        padding: const EdgeInsets.only(top: 10, bottom: AppSpacing.bottomNavigationBarMargin, left: 10, right: 10),
                         itemCount: _history.length,
                         itemBuilder: (context, index) {
                           final record = _history[index];
@@ -201,7 +207,7 @@ class _HistoryPageState extends State<HistoryPage>
                             direction: DismissDirection.endToStart,
                             background: Container(
                               margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 0,
                                 vertical: 5,
                               ),
                               decoration: BoxDecoration(

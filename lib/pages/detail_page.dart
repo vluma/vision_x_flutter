@@ -5,6 +5,7 @@ import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/components/swipe_back_gesture.dart';
 
 class DetailPage extends StatelessWidget {
   final String? id;
@@ -14,21 +15,26 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(media?.name ?? '详情页面'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+    return SwipeBackGesture(
+      onBackPressed: () {
+        Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(media?.name ?? '详情页面'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
         ),
+        body: media == null
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : _buildDetailContent(context),
       ),
-      body: media == null
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : _buildDetailContent(context),
     );
   }
 

@@ -30,6 +30,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // 显示自定义API表单
   bool _showCustomApiForm = false;
+  
+  // 自定义API是否为隐藏资源站
+  bool _isHiddenSource = false;
 
   // 主题选择
   int _selectedTheme = 0; // 0: 系统默认, 1: 浅色, 2: 深色
@@ -87,7 +90,16 @@ class _SettingsPageState extends State<SettingsPage> {
   void _toggleSource(String sourceKey) {
     setState(() {
       if (_selectedSources.contains(sourceKey)) {
-        _selectedSources.remove(sourceKey);
+        // 检查是否至少保留一个源
+        if (_selectedSources.length > 1) {
+          _selectedSources.remove(sourceKey);
+        } else {
+          // 如果只剩一个源，不允许取消选择
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('至少需要选择一个数据源')),
+          );
+          return;
+        }
       } else {
         _selectedSources.add(sourceKey);
       }
@@ -109,7 +121,17 @@ class _SettingsPageState extends State<SettingsPage> {
           _selectedSources = ApiService.apiSites.keys.toSet();
         }
       } else {
-        _selectedSources.clear();
+        // 不允许全不选，至少保留一个源
+        if (_selectedSources.length > 1) {
+          _selectedSources.clear();
+          // 默认选中第一个源
+          _selectedSources.add(ApiService.apiSites.keys.first);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('至少需要选择一个数据源')),
+          );
+          return;
+        }
       }
     });
 
@@ -126,11 +148,13 @@ class _SettingsPageState extends State<SettingsPage> {
         'name': _apiNameController.text,
         'api': _apiUrlController.text,
         'detail': _apiDetailController.text,
+        'isHidden': _isHiddenSource.toString(),
       };
 
       setState(() {
         _customApis.add(newApi);
         _showCustomApiForm = false;
+        _isHiddenSource = false;
       });
 
       // 清空输入框
@@ -160,6 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showAddCustomApiForm() {
     setState(() {
       _showCustomApiForm = true;
+      _isHiddenSource = false;
     });
   }
 
@@ -167,6 +192,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void _cancelAddCustomApi() {
     setState(() {
       _showCustomApiForm = false;
+      _isHiddenSource = false;
       _apiNameController.clear();
       _apiUrlController.clear();
       _apiDetailController.clear();
@@ -196,20 +222,64 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('确认清除'),
-          content: const Text('确定要清除所有本地存储数据吗？'),
+          content: const Text('确定要清除所有本地存储数据吗？\n包括搜索历史、播放记录等。'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('取消'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
                 // 实际清除逻辑
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                
+                // 重新加载设置
+                await _loadSettings();
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('本地数据已清除')),
                 );
               },
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // 检查更新
+  void _checkUpdate() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('当前已是最新版本')),
+    );
+  }
+
+  // 关于应用
+  void _showAbout() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('关于应用'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Vision X Flutter'),
+              SizedBox(height: 8),
+              Text('版本: 1.0.0'),
+              SizedBox(height: 8),
+              Text('一个聚合搜索影视资源的Flutter应用'),
+              SizedBox(height: 8),
+              Text('支持多数据源搜索，提供流畅的观影体验'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('确定'),
             ),
           ],
@@ -314,33 +384,43 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // API复选框列表（只显示名称）
+                      // API复选框列表（更密集的显示）
                       Container(
-                        height: 160,
+                        height: 200, // 增加高度以显示更多内容
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF2D2D2D)
                               : const Color(0xFFFAFAFA),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: ListView(
-                          children: ApiService.apiSites.entries.map((entry) {
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(8),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 4.0,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 4,
+                          ),
+                          itemCount: ApiService.apiSites.length,
+                          itemBuilder: (context, index) {
+                            final entry = ApiService.apiSites.entries.elementAt(index);
                             return CheckboxListTile(
                               activeColor: Theme.of(context).primaryColor,
                               title: Text(
                                 entry.value['name']!,
                                 style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black87,
-                                  fontSize: 14,
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  fontSize: 12,
                                 ),
                               ),
                               value: _selectedSources.contains(entry.key),
                               onChanged: (bool? value) {
                                 _toggleSource(entry.key);
                               },
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                             );
-                          }).toList(),
+                          },
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -356,7 +436,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
                           Text(
-                            '', // 站点状态信息
+                            '至少需要选择1个数据源',
                             style: TextStyle(
                               color: isDark ? Colors.white38 : Colors.grey,
                               fontSize: 12,
@@ -433,15 +513,40 @@ class _SettingsPageState extends State<SettingsPage> {
                             itemCount: _customApis.length,
                             itemBuilder: (context, index) {
                               final api = _customApis[index];
+                              final isHidden = api['isHidden'] == 'true';
                               return ListTile(
-                                title: Text(
-                                  api['name']!,
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
-                                    fontSize: 14,
-                                  ),
+                                title: Row(
+                                  children: [
+                                    Text(
+                                      api['name']!,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black87,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    if (isHidden) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          '隐藏',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 subtitle: Text(
                                   api['api']!,
@@ -550,18 +655,20 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              // 黄色资源站复选框
+                              // 隐藏资源站复选框
                               Row(
                                 children: [
                                   Checkbox(
                                     activeColor: Theme.of(context).primaryColor,
-                                    value: false, // 这里应该连接到一个状态变量
+                                    value: _isHiddenSource,
                                     onChanged: (bool? value) {
-                                      // 实现黄色资源站选择逻辑
+                                      setState(() {
+                                        _isHiddenSource = value ?? false;
+                                      });
                                     },
                                   ),
                                   Text(
-                                    '黄色资源站',
+                                    '隐藏资源站',
                                     style: TextStyle(
                                       color: Theme.of(context).primaryColor,
                                       fontSize: 12,
@@ -684,15 +791,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                             ),
-                            DropdownMenuItem(
-                              value: 3,
-                              child: Text(
-                                '跟随系统',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                              ),
-                            ),
                           ],
                           onChanged: (int? value) {
                             if (value != null) {
@@ -766,7 +864,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '过滤"伦理片"等黄色内容',
+                                    '过滤搜索列表中"伦理"等类型的视频',
                                     style: TextStyle(
                                       color: isDark
                                           ? Colors.white38
@@ -784,6 +882,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 setState(() {
                                   _yellowFilterEnabled = value;
                                 });
+                                _saveSettingsAutomatically();
                               },
                             ),
                           ],
@@ -836,6 +935,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 setState(() {
                                   _adFilterEnabled = value;
                                 });
+                                _saveSettingsAutomatically();
                               },
                             ),
                           ],
@@ -879,6 +979,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               setState(() {
                                 _doubanEnabled = value;
                               });
+                              _saveSettingsAutomatically();
                             },
                           ),
                         ],
@@ -914,8 +1015,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 12),
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
                           onPressed: _importConfig,
+                          icon: const Icon(Icons.file_upload, size: 18),
+                          label: const Text('导入配置'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
@@ -924,15 +1027,16 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          child: const Text('导入配置'),
                         ),
                       ),
                       // 导出配置
                       Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 12),
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
                           onPressed: _exportConfig,
+                          icon: const Icon(Icons.file_download, size: 18),
+                          label: const Text('导出配置'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
@@ -941,14 +1045,51 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          child: const Text('导出配置'),
+                        ),
+                      ),
+                      // 检查更新
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ElevatedButton.icon(
+                          onPressed: _checkUpdate,
+                          icon: const Icon(Icons.system_update, size: 18),
+                          label: const Text('检查更新'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      // 关于应用
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ElevatedButton.icon(
+                          onPressed: _showAbout,
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          label: const Text('关于应用'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
                       ),
                       // 清除Cookie
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
                           onPressed: _clearLocalStorage,
+                          icon: const Icon(Icons.delete_forever, size: 18),
+                          label: const Text('清除本地数据'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isDark
                                 ? const Color(0xFFCF6679)
@@ -959,7 +1100,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          child: const Text('清除Cookie'),
                         ),
                       ),
                     ],

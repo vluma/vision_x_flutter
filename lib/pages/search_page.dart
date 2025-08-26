@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
+import 'package:vision_x_flutter/services/content_filter_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:provider/provider.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
 import 'package:vision_x_flutter/theme/spacing.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 // 搜索状态管理类
 class _SearchController extends ChangeNotifier {
@@ -46,17 +48,24 @@ class _SearchController extends ChangeNotifier {
 
       await ApiService.streamAggregatedSearchWithSelectedSources(
         query.trim(),
-        (List<MediaDetail> results) {
+        (List<MediaDetail> results) async {
           // 当收到部分结果时更新UI
           if (currentSearchId == _searchId) {
             tempResults.addAll(results);
-            _mediaResults = List.from(tempResults);
-            _filteredResults = List.from(tempResults);
-            _aggregatedResults = _aggregateMedia(tempResults);
+            
+            // 应用内容过滤
+            final filteredResults = await ContentFilterService.filterYellowContent(
+              tempResults,
+              (media) => '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}'
+            );
+            
+            _mediaResults = List.from(filteredResults);
+            _filteredResults = List.from(filteredResults);
+            _aggregatedResults = _aggregateMedia(filteredResults);
             notifyListeners();
           }
         },
-        () {
+        () async {
           // 当所有搜索完成时
           if (currentSearchId == _searchId) {
             _isLoading = false;
@@ -171,14 +180,22 @@ class _SearchController extends ChangeNotifier {
   }
 
   // 筛选结果
-  void filterResults(String category) {
+  Future<void> filterResults(String category) async {
     _selectedCategory = category;
+    List<MediaDetail> categoryResults;
+    
     if (category == '全部') {
-      _filteredResults = List.from(_mediaResults);
+      categoryResults = List.from(_mediaResults);
     } else {
-      _filteredResults =
+      categoryResults =
           _mediaResults.where((media) => media.type == category).toList();
     }
+
+    // 应用内容过滤
+    _filteredResults = await ContentFilterService.filterYellowContent(
+      categoryResults,
+      (media) => '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}'
+    );
 
     // 应用当前排序
     _sortResults();
@@ -364,9 +381,9 @@ class _SearchPageContent extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(right: 15),
                             child: InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 if (!isSelected) {
-                                  searchController.filterResults(category);
+                                  await searchController.filterResults(category);
                                 }
                               },
                               splashColor: Colors.transparent,
@@ -1210,28 +1227,7 @@ class _MediaGridItemSkeleton extends StatefulWidget {
   State<_MediaGridItemSkeleton> createState() => _MediaGridItemSkeletonState();
 }
 
-class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.3, end: 0.6).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton> {
 
   @override
   Widget build(BuildContext context) {
@@ -1262,135 +1258,31 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // 标题占位
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 14,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(14, double.infinity, theme),
                   const SizedBox(height: 2),
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 12,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(12, 100, theme),
                   const SizedBox(height: 2),
 
                   // 年份、区域占位
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 10,
-                        width: 70,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(10, 70, theme),
                   const SizedBox(height: 2),
 
                   // 评分占位
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 10,
-                        width: 40,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(10, 40, theme),
                   const SizedBox(height: 2),
 
                   // 简介占位
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 10,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(10, double.infinity, theme),
                   const SizedBox(height: 2),
-                  AnimatedBuilder(
-                    animation: _animation,
-                    builder: (context, child) {
-                      return Container(
-                        height: 10,
-                        width: double.infinity * 0.6,
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color
-                              ?.withValues(alpha: _animation.value),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildSkeletonItem(10, double.infinity * 0.6, theme),
                   const SizedBox(height: 2),
 
                   // 底部信息占位
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AnimatedBuilder(
-                        animation: _animation,
-                        builder: (context, child) {
-                          return Container(
-                            height: 9,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: theme.cardTheme.color
-                                  ?.withValues(alpha: _animation.value),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        },
-                      ),
-                      AnimatedBuilder(
-                        animation: _animation,
-                        builder: (context, child) {
-                          return Container(
-                            height: 10,
-                            width: 20,
-                            decoration: BoxDecoration(
-                              color: theme.cardTheme.color
-                                  ?.withValues(alpha: _animation.value),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        },
-                      ),
+                      _buildSkeletonItem(9, 50, theme),
+                      _buildSkeletonItem(10, 20, theme),
                     ],
                   ),
                 ],
@@ -1399,6 +1291,32 @@ class _MediaGridItemSkeletonState extends State<_MediaGridItemSkeleton>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSkeletonItem(double height, double width, ThemeData theme) {
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color?.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(3),
+      ),
+    ).animate(
+      onPlay: (controller) => controller.repeat(reverse: true),
+    ).custom(
+      duration: const Duration(milliseconds: 1000),
+      builder: (context, value, child) {
+        final alpha = 0.3 + (value * 0.3);
+        return Container(
+          height: height,
+          width: width,
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color?.withValues(alpha: alpha),
+            borderRadius: BorderRadius.circular(3),
+          ),
+        );
+      },
     );
   }
 }
