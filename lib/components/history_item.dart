@@ -95,7 +95,7 @@ class HistoryItem extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: _calculateProgress(),
                     backgroundColor:
-                        Theme.of(context).dividerColor.withOpacity(0.2),
+                        Theme.of(context).dividerColor.withValues(alpha: 0.3),
                     valueColor: AlwaysStoppedAnimation<Color>(
                       Theme.of(context).colorScheme.primary,
                     ),
@@ -126,7 +126,7 @@ class HistoryItem extends StatelessWidget {
     if (record.duration != null && record.duration! > 0) {
       return (record.progress / record.duration!).clamp(0.0, 1.0);
     }
-    
+
     // 如果没有总时长信息，则使用估计值
     const estimatedVideoDuration = 2500; // 假设视频大约40分钟
     return (record.progress / estimatedVideoDuration).clamp(0.0, 1.0);

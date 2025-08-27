@@ -2,11 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vision_x_flutter/components/video_player.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
-import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/components/video_swipe_back_gesture.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'dart:async';
+
+// MARK: - 视频播放页面配置
+class VideoPlayerPageConfig {
+  // 页面过渡动画
+  static const Duration pageTransitionDuration = Duration(milliseconds: 300);
+  static const Duration episodeChangeDelay = Duration(milliseconds: 500);
+  static const Duration shortDramaEpisodeChangeDelay =
+      Duration(milliseconds: 100);
+
+  // 视频比例
+  static const double videoAspectRatio = 16 / 9;
+
+  // 短剧分类标识
+  static const String shortDramaCategory = '短剧';
+
+  // 消息文本
+  static const String lastEpisodeMessage = '已经是最后一集了';
+  static const String firstEpisodeMessage = '已经是第一集了';
+  static const String playNextEpisodeError = '无法播放下一集';
+  static const String playPrevEpisodeError = '无法播放上一集';
+  static const String switchEpisodeError = '无法切换到该集数';
+
+  // UI配置
+  static const double cardHeight = 44.0;
+  static const double expandedCardHeightRatio = 0.75;
+  static const double cardMargin = 16.0;
+  static const double cardPadding = 4.0;
+  static const double borderRadius = 8.0;
+  static const double expandedBorderRadius = 12.0;
+}
 
 /// 视频播放页面
 /// 支持竖屏短剧模式和横屏传统模式
@@ -27,25 +56,11 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
-  // MARK: - 常量定义
-  static const Duration _pageTransitionDuration = Duration(milliseconds: 300);
-  static const Duration _episodeChangeDelay = Duration(milliseconds: 500);
-  static const Duration _shortDramaEpisodeChangeDelay =
-      Duration(milliseconds: 100);
-  static const double _videoAspectRatio = 16 / 9;
-  static const String _shortDramaCategory = '短剧';
-  static const String _lastEpisodeMessage = '已经是最后一集了';
-  static const String _firstEpisodeMessage = '已经是第一集了';
-  static const String _playNextEpisodeError = '无法播放下一集';
-  static const String _playPrevEpisodeError = '无法播放上一集';
-  static const String _switchEpisodeError = '无法切换到该集数';
-
   // MARK: - 状态变量
   late Episode _episode;
   int _currentProgress = 0;
   int _currentEpisodeIndex = 0;
   int? _videoDuration;
-  bool _hasRecordedInitialHistory = false;
 
   // MARK: - 控制器
   late PageController _pageController;
@@ -84,15 +99,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _currentEpisodeIndex = _getCurrentEpisodeIndex();
     _pageController = PageController(initialPage: _currentEpisodeIndex);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _recordInitialHistory();
-    });
+    widget.media.printDebugInfo();
   }
 
   void _cleanup() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pageController.dispose();
-    _updateFinalProgress();
   }
 
   // MARK: - 数据获取方法
@@ -119,20 +131,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     final type = widget.media.type;
 
     return (category != null &&
-            (category.contains(_shortDramaCategory) ||
-                category == _shortDramaCategory)) ||
+            (category.contains(VideoPlayerPageConfig.shortDramaCategory) ||
+                category == VideoPlayerPageConfig.shortDramaCategory)) ||
         (type != null &&
-            (type.contains(_shortDramaCategory) ||
-                type == _shortDramaCategory));
-  }
-
-  // MARK: - 历史记录管理
-  void _recordInitialHistory() async {
-    if (_hasRecordedInitialHistory) return;
-
-    await HistoryService().addHistory(
-        widget.media, _episode, widget.startPosition, _videoDuration);
-    _hasRecordedInitialHistory = true;
+            (type.contains(VideoPlayerPageConfig.shortDramaCategory) ||
+                type == VideoPlayerPageConfig.shortDramaCategory));
   }
 
   void _updateProgress(int progress) {
@@ -141,24 +144,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     setState(() {
       _currentProgress = progress;
     });
-
-    _updateHistoryProgress(progress);
-  }
-
-  void _updateHistoryProgress(int progress) {
-    try {
-      HistoryService().updateHistoryProgress(
-          widget.media, _episode, progress, _videoDuration);
-    } catch (e) {
-      // 历史记录更新失败，静默处理
-    }
-  }
-
-  void _updateFinalProgress() {
-    if (_hasRecordedInitialHistory) {
-      HistoryService().updateHistoryProgress(
-          widget.media, _episode, _currentProgress, _videoDuration);
-    }
   }
 
   // MARK: - 播放控制回调
@@ -171,9 +156,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       setState(() {
         _videoDuration = duration;
       });
-      if (_hasRecordedInitialHistory) {
-        _updateHistoryProgress(_currentProgress);
-      }
     }
   }
 
@@ -191,7 +173,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   // MARK: - 剧集切换方法
   void _playNextEpisode() {
     if (!_canPlayNext) {
-      _showMessage(_lastEpisodeMessage);
+      _showMessage(VideoPlayerPageConfig.lastEpisodeMessage);
       return;
     }
 
@@ -202,13 +184,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _switchToNextEpisodeInNormalMode();
       }
     } catch (e) {
-      _showMessage(_playNextEpisodeError);
+      _showMessage(VideoPlayerPageConfig.playNextEpisodeError);
     }
   }
 
   void _playPrevEpisode() {
     if (!_canPlayPrev) {
-      _showMessage(_firstEpisodeMessage);
+      _showMessage(VideoPlayerPageConfig.firstEpisodeMessage);
       return;
     }
 
@@ -219,7 +201,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _changeEpisode(_currentEpisodeIndex - 1);
       }
     } catch (e) {
-      _showMessage(_playPrevEpisodeError);
+      _showMessage(VideoPlayerPageConfig.playPrevEpisodeError);
     }
   }
 
@@ -229,7 +211,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     } catch (e) {
       _pageController.animateToPage(
         _currentEpisodeIndex + 1,
-        duration: _pageTransitionDuration,
+        duration: VideoPlayerPageConfig.pageTransitionDuration,
         curve: Curves.easeInOut,
       );
     }
@@ -242,7 +224,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     } catch (e) {
       _pageController.animateToPage(
         _currentEpisodeIndex - 1,
-        duration: _pageTransitionDuration,
+        duration: VideoPlayerPageConfig.pageTransitionDuration,
         curve: Curves.easeInOut,
       );
     }
@@ -250,7 +232,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _switchToNextEpisodeInNormalMode() {
-    Future.delayed(_episodeChangeDelay, () {
+    Future.delayed(VideoPlayerPageConfig.episodeChangeDelay, () {
       if (mounted) {
         _changeEpisode(_currentEpisodeIndex + 1);
       }
@@ -281,34 +263,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         // 生成新的key来强制重建视频播放器
         _videoPlayerKey = UniqueKey();
       }
-
-      _recordEpisodeHistory();
     } catch (e) {
-      _showMessage(_switchEpisodeError);
-    }
-  }
-
-  Future<void> _recordEpisodeHistory() async {
-    try {
-      await HistoryService()
-          .addHistory(widget.media, _episode, 0, _videoDuration);
-    } catch (e) {
-      // 历史记录失败，静默处理
+      _showMessage(VideoPlayerPageConfig.switchEpisodeError);
     }
   }
 
   // MARK: - 导航方法
   void _onBackButtonPressed() {
-    _updateFinalProgress();
-    // 直接刷新历史数据
-    HistoryService().refreshData();
     Navigator.of(context).pop();
   }
 
   Future<bool> _onShortDramaWillPop() async {
-    _updateFinalProgress();
-    // 直接刷新历史数据
-    HistoryService().refreshData();
     return true;
   }
 
@@ -318,6 +283,78 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  // MARK: - 剧集选择UI方法
+  void _showEpisodeSelector() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        title: Text(
+          '选集 (${_currentEpisodeIndex + 1}/$_totalEpisodes)',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              childAspectRatio: 1.5,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemCount: _totalEpisodes,
+            itemBuilder: (context, index) {
+              final isSelected = index == _currentEpisodeIndex;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  _changeEpisode(index);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected ? Colors.red : Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.red
+                          : Colors.white.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white,
+                        fontSize: 14.0,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              '取消',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -361,7 +398,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Widget _buildVideoPlayerSection() {
     return SafeArea(
       child: AspectRatio(
-        aspectRatio: _videoAspectRatio,
+        aspectRatio: VideoPlayerPageConfig.videoAspectRatio,
         child: Container(
           color: Colors.black,
           child: Stack(
@@ -384,6 +421,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       onVideoDurationReceived: _onVideoDurationReceived,
       startPosition: _currentProgress,
       isShortDramaMode: _isShortDramaMode,
+      onShowEpisodeSelector: _showEpisodeSelector,
       onBackPressed: _onBackButtonPressed,
       onNextEpisode: _playNextEpisode,
       onPrevEpisode: _playPrevEpisode,
@@ -469,12 +507,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         ],
       ),
     );
-  }
-
-  void _setFullScreenMode() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    });
   }
 
   Widget _buildShortDramaEpisodeItem(int index) {
@@ -767,13 +799,12 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
           ),
         ),
         child: _buildExpandedContent(theme),
-      ).animate()
-        .slideY(
-          begin: 1.0,
-          end: 0.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-        );
+      ).animate().slideY(
+            begin: 1.0,
+            end: 0.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+          );
     }
 
     // 卡片（收起状态）
@@ -831,7 +862,6 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
 
   Widget _buildExpandedContent(ThemeData theme) {
     // 打印所有可用数据用于调试
-    _printMediaData();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -956,61 +986,6 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         ),
       ],
     );
-  }
-
-  void _printMediaData() {
-    print('=== 媒体数据调试信息 ===');
-    print('ID: ${widget.media.id}');
-    print('名称: ${widget.media.name}');
-    print('副标题: ${widget.media.subtitle}');
-    print('类型: ${widget.media.type}');
-    print('分类: ${widget.media.category}');
-    print('年份: ${widget.media.year}');
-    print('地区: ${widget.media.area}');
-    print('语言: ${widget.media.language}');
-    print('时长: ${widget.media.duration}');
-    print('状态: ${widget.media.state}');
-    print('备注: ${widget.media.remarks}');
-    print('版本: ${widget.media.version}');
-    print('演员: ${widget.media.actors}');
-    print('导演: ${widget.media.director}');
-    print('编剧: ${widget.media.writer}');
-    print('描述: ${widget.media.description}');
-    print('内容: ${widget.media.content}');
-
-    // 添加海报信息打印
-    print('海报: ${widget.media.poster}');
-    print('缩略海报: ${widget.media.posterThumb}');
-    print('幻灯片海报: ${widget.media.posterSlide}');
-    print('截图海报: ${widget.media.posterScreenshot}');
-
-    print('评分: ${widget.media.score}');
-    print('豆瓣评分: ${widget.media.doubanScore}');
-    print('播放量: ${widget.media.hits}');
-    print('日播放量: ${widget.media.hitsDay}');
-    print('周播放量: ${widget.media.hitsWeek}');
-    print('月播放量: ${widget.media.hitsMonth}');
-    print('点赞数: ${widget.media.up}');
-    print('点踩数: ${widget.media.down}');
-    print('标签: ${widget.media.tag}');
-    print('剧集总数: ${widget.media.total}');
-    print('是否完结: ${widget.media.isEnd}');
-    print('来源名称: ${widget.media.sourceName}');
-    print('来源代码: ${widget.media.sourceCode}');
-    print('=== 数据源信息 ===');
-    for (int i = 0; i < widget.media.surces.length; i++) {
-      final source = widget.media.surces[i];
-      print('数据源 $i: ${source.name}');
-      print('  剧集数量: ${source.episodes.length}');
-      for (int j = 0; j < source.episodes.length; j++) {
-        final episode = source.episodes[j];
-        print('    剧集 $j: ${episode.title} (${episode.url})');
-      }
-    }
-    print('=== 当前播放信息 ===');
-    print('当前剧集索引: ${widget.currentEpisodeIndex}');
-    print('总剧集数: ${widget.totalEpisodes}');
-    print('==================');
   }
 
   Widget _buildTabBar(ThemeData theme) {
@@ -1382,17 +1357,6 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
           _buildInfoRow('标签', widget.media.tag!),
         ],
       ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16.0,
-        fontWeight: FontWeight.bold,
-      ),
     );
   }
 

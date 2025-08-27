@@ -259,6 +259,79 @@ class MediaDetail {
       'surces': surces.map((e) => e.toJson()).toList(),
     };
   }
+
+  // 打印媒体数据用于调试
+  void printDebugInfo() {
+    print('=== 媒体数据调试信息 ===');
+    print('ID: $id');
+    print('名称: $name');
+    print('副标题: $subtitle');
+    print('类型: $type');
+    print('分类: $category');
+    print('年份: $year');
+    print('地区: $area');
+    print('语言: $language');
+    print('时长: $duration');
+    print('状态: $state');
+    print('备注: $remarks');
+    print('版本: $version');
+    print('演员: $actors');
+    print('导演: $director');
+    print('编剧: $writer');
+    print('描述: $description');
+    print('内容: $content');
+
+    // 添加海报信息打印
+    print('海报: $poster');
+    print('缩略海报: $posterThumb');
+    print('幻灯片海报: $posterSlide');
+    print('截图海报: $posterScreenshot');
+
+    // 添加播放信息打印
+    print('播放地址: $playUrl');
+    print('播放来源: $playFrom');
+    print('播放服务器: $playServer');
+    print('播放备注: $playNote');
+
+    print('评分: $score');
+    print('总评分: $scoreAll');
+    print('评分人数: $scoreNum');
+    print('豆瓣评分: $doubanScore');
+    print('豆瓣ID: $doubanId');
+    print('播放量: $hits');
+    print('日播放量: $hitsDay');
+    print('周播放量: $hitsWeek');
+    print('月播放量: $hitsMonth');
+    print('点赞数: $up');
+    print('点踩数: $down');
+    print('时间: $time');
+    print('添加时间: $timeAdd');
+    print('字母: $letter');
+    print('颜色: $color');
+    print('标签: $tag');
+    print('系列: $serial');
+    print('电视台: $tv');
+    print('星期: $weekday');
+    print('发布日期: $pubdate');
+    print('剧集总数: $total');
+    print('是否完结: $isEnd');
+    print('试看: $trysee');
+    print('来源名称: $sourceName');
+    print('来源代码: $sourceCode');
+    print('API地址: $apiUrl');
+    print('是否有封面: $hasCover');
+    print('来源信息: $sourceInfo');
+    print('=== 数据源信息 ===');
+    for (int i = 0; i < surces.length; i++) {
+      final source = surces[i];
+      print('数据源 $i: ${source.name}');
+      print('  剧集数量: ${source.episodes.length}');
+      for (int j = 0; j < source.episodes.length; j++) {
+        final episode = source.episodes[j];
+        print('    剧集 $j: ${episode.title} (${episode.url})');
+      }
+    }
+  }
 }
 
 // 数据源模型

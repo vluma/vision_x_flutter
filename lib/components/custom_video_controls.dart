@@ -1,10 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:async';
-import 'dart:ui'; // Added for ImageFilter
 import 'package:flutter_animate/flutter_animate.dart';
+
+// MARK: - 常量配置
+class VideoControlConfig {
+  // 计时器配置
+  static const int hideDelayMs = 3000; // 自动隐藏延迟时间（毫秒）
+
+  // 快进快退配置
+  static const int seekStepMs = 500; // 每次跳转的毫秒数
+  static const int seekIntervalMs = 100; // 跳转间隔毫秒数
+  static const double maxSeekSpeedMultiplier = 10.0; // 最大速度倍数
+  static const double seekSpeedIncrement = 1.05; // 速度递增倍数
+
+  // UI配置
+  static const double backButtonSize = 30.0;
+  static const double playButtonSize = 40.0;
+  static const double controlButtonSize = 24.0;
+  static const double pauseIconSize = 80.0;
+  static const double lockButtonSize = 30.0;
+
+  // 间距配置
+  static const double topPadding = 8.0;
+  static const double sidePadding = 8.0;
+  static const double bottomPadding = 52.0;
+  static const double gestureExcludeTop = 50.0;
+  static const double gestureExcludeSide = 50.0;
+  static const double gestureExcludeBottom = 100.0;
+
+  // 颜色配置
+  static const Color primaryColor = Color(0xFF00D4FF);
+  static const Color backgroundColor = Color(0xFF1E1E1E);
+  static const Color cardBackgroundColor = Color(0xFF2A2A2A);
+  static const Color gradientStartColor = Color(0xFF00D4FF);
+  static const Color gradientEndColor = Color(0xFFE53E3E);
+}
 
 class CustomControls extends StatefulWidget {
   final bool? isShortDramaMode; // 短剧模式参数
@@ -15,7 +47,7 @@ class CustomControls extends StatefulWidget {
   final String? mediaTitle; // 媒体标题
   final int currentEpisodeIndex; // 当前剧集索引
   final int totalEpisodes; // 总剧集数
-  final Function(int)? onEpisodeChanged; // 剧集切换回调
+  final VoidCallback? onEpisodeChanged; // 剧集切换回调
 
   const CustomControls({
     super.key,
@@ -109,7 +141,8 @@ class _CustomControlsState extends State<CustomControls>
             if (_isShortDramaMode)
               // 短剧模式：排除左上角返回按钮区域和底部进度条区域
               Positioned(
-                top: MediaQuery.of(context).padding.top + 50.0, // 排除顶部50px区域（返回按钮）
+                top: MediaQuery.of(context).padding.top +
+                    50.0, // 排除顶部50px区域（返回按钮）
                 left: 50.0, // 排除左侧50px区域（返回按钮）
                 right: 0,
                 bottom: 100.0, // 排除底部100px区域（进度条）
@@ -144,7 +177,7 @@ class _CustomControlsState extends State<CustomControls>
                 right: 50.0, // 排除右侧区域
                 bottom: 100.0, // 排除底部控制栏
                 child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,  
+                  behavior: HitTestBehavior.translucent,
                   onTap: _getTapHandler(),
                   onLongPressStart: _handleLongPressStartWithDelay,
                   onLongPressMoveUpdate: _handleLongPressMoveUpdate,
@@ -160,7 +193,6 @@ class _CustomControlsState extends State<CustomControls>
   // MARK: - 模式判断方法
   bool get _isShortDramaMode => widget.isShortDramaMode == true;
   bool get _isFullScreenMode => _chewieController.isFullScreen;
-  bool get _isNormalMode => !_isShortDramaMode && !_isFullScreenMode;
 
   // MARK: - 点击处理器
   VoidCallback _getTapHandler() {
@@ -925,73 +957,98 @@ class _CustomControlsState extends State<CustomControls>
   }
 
   void _showEpisodeSelector() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        title: Text(
-          '选集 (${widget.currentEpisodeIndex + 1}/${widget.totalEpisodes})',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6,
-              childAspectRatio: 1.5,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: widget.totalEpisodes,
-            itemBuilder: (context, index) {
-              final isSelected = index == widget.currentEpisodeIndex;
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onEpisodeChanged?.call(index);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        isSelected ? Colors.red : Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.red
-                          : Colors.white.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white,
-                        fontSize: 14.0,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              '取消',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
+    // 移除剧集选择对话框，改为调用回调函数
+    // 实际的剧集选择UI将在 video_player_page.dart 中实现
+    widget.onEpisodeChanged?.call();
+  }
+}
+
+// MARK: - UI组件类
+class VideoControlWidgets {
+  // 渐变背景装饰
+  static BoxDecoration gradientDecoration = const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color.fromRGBO(0, 0, 0, 0.7),
+        Color.fromRGBO(0, 0, 0, 0.0),
+        Color.fromRGBO(0, 0, 0, 0.0),
+        Color.fromRGBO(0, 0, 0, 0.7),
+      ],
+    ),
+  );
+
+  // 进度条颜色配置
+  static const VideoProgressColors progressColors = VideoProgressColors(
+    playedColor: Color(0xFF00D4FF),
+    bufferedColor: Colors.white54,
+    backgroundColor: Colors.white24,
+  );
+
+  // 构建返回按钮
+  static Widget buildBackButton({
+    required bool isFullScreen,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(
+        isFullScreen ? Icons.keyboard_arrow_down : Icons.arrow_back,
+        color: Colors.white,
+        size: VideoControlConfig.backButtonSize,
       ),
+      onPressed: onPressed,
+    );
+  }
+
+  // 构建播放/暂停按钮
+  static Widget buildPlayPauseButton({
+    required bool isPlaying,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(
+        isPlaying ? Icons.pause : Icons.play_arrow,
+        color: Colors.white,
+        size: VideoControlConfig.playButtonSize,
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  // 构建控制按钮
+  static Widget buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    double? size,
+  }) {
+    return IconButton(
+      icon: Icon(
+        icon,
+        color: Colors.white,
+        size: size ?? VideoControlConfig.controlButtonSize,
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  // 构建时间显示文本
+  static Widget buildTimeText(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 14.0,
+      ),
+    );
+  }
+
+  // 构建进度条
+  static Widget buildProgressIndicator(VideoPlayerController controller) {
+    return VideoProgressIndicator(
+      controller,
+      allowScrubbing: true,
+      colors: progressColors,
     );
   }
 }

@@ -5,6 +5,29 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:vision_x_flutter/models/media_detail.dart';
 import 'package:vision_x_flutter/components/custom_video_controls.dart';
+import 'package:vision_x_flutter/services/history_service.dart';
+import 'package:vision_x_flutter/services/enhanced_video_service.dart';
+import 'package:vision_x_flutter/components/loading_animation.dart';
+// 添加HLS解析器服务导入
+import 'package:vision_x_flutter/services/hls_parser_service.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
+
+// MARK: - 视频播放器配置
+class VideoPlayerConfig {
+  // 进度更新间隔
+  static const Duration progressUpdateInterval = Duration(seconds: 30);
+
+  // 播放速度选项
+  static const List<double> playbackSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+  // 预加载阈值（视频播放到90%时开始预加载）
+  static const double preloadThreshold = 0.9;
+
+  // 播放完成检测阈值（毫秒）
+  static const int completionThresholdMs = 1000;
+}
 
 class CustomVideoPlayer extends StatefulWidget {
   final MediaDetail media;
@@ -19,6 +42,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onNextEpisode; // 下一集回调
   final VoidCallback? onPrevEpisode; // 上一集回调
   final Function(int)? onEpisodeChanged; // 剧集切换回调
+  final VoidCallback? onShowEpisodeSelector; // 显示剧集选择器回调
   final int currentEpisodeIndex; // 当前剧集索引
   final int totalEpisodes; // 总剧集数
   // 预加载相关参数
@@ -38,6 +62,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onNextEpisode,
     this.onPrevEpisode,
     this.onEpisodeChanged,
+    this.onShowEpisodeSelector,
     this.currentEpisodeIndex = 0,
     this.totalEpisodes = 0,
     // 预加载相关参数
@@ -57,6 +82,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _hasCompleted = false; // 添加播放完成标志
   bool _hasReportedDuration = false; // 添加时长报告标志
   bool _hasPreloaded = false; // 添加预加载标志
+  bool _hasRecordedInitialHistory = false; // 添加历史记录标志
+  
+  // 广告检测相关
+  final EnhancedVideoService _enhancedVideoService = EnhancedVideoService();
+  bool _isProcessingVideo = false;
+  String? _processedVideoUrl;
+  ProcessedVideoResult? _processingResult;
+
+  // 添加HLS解析器服务
+  final HlsParserService _hlsParserService = HlsParserService();
 
   // 播放状态数据
   bool _isPlaying = false;
@@ -65,6 +100,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _isBuffering = false;
   double _playbackSpeed = 1.0;
 
+  // 错误处理
+  String? _errorMessage;
+
+  // 图片加载状态
+  bool _isImageLoading = true;
+  bool _imageLoadError = false;
+
   @override
   void initState() {
     super.initState();
@@ -72,33 +114,127 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   Future<void> _initializePlayer() async {
-    // 确保在组件未被销毁时才进行初始化
-    if (!mounted || _isDisposing) return;
+    try {
+      // 确保在组件未被销毁时才进行初始化
+      if (!mounted || _isDisposing) return;
 
-    _videoPlayer = VideoPlayerController.networkUrl(
-      Uri.parse(widget.episode.url),
-    );
+      // 处理视频URL（检测和过滤广告）
+      await _processVideoUrlWithHlsParser();
 
-    await _videoPlayer.initialize();
+      // 使用处理后的URL或原始URL
+      final videoUrl = _processedVideoUrl ?? widget.episode.url;
+      
+      _videoPlayer = VideoPlayerController.networkUrl(
+        Uri.parse(videoUrl),
+      );
 
-    // 如果指定了起始位置，则跳转到该位置
-    if (widget.startPosition > 0) {
-      await _videoPlayer.seekTo(Duration(seconds: widget.startPosition));
+      await _videoPlayer.initialize();
+
+      // 如果指定了起始位置，则跳转到该位置
+      if (widget.startPosition > 0) {
+        await _videoPlayer.seekTo(Duration(seconds: widget.startPosition));
+      }
+
+      // 报告视频总时长
+      _reportVideoDuration();
+
+      // 记录初始历史
+      _recordInitialHistory();
+
+      // 监听播放完成事件
+      _videoPlayer.addListener(_videoPlayerListener);
+
+      // 启动进度更新定时器
+      _startProgressTracking();
+
+      // 创建Chewie控制器
+      _createChewieController();
+
+      if (mounted) {
+        setState(() {
+          _isPlayerInitialized = true;
+        });
+      }
+    } catch (e) {
+      _handleInitializationError(e.toString());
     }
+  }
 
-    // 报告视频总时长
+  /// 使用HLS解析器处理视频URL
+  Future<void> _processVideoUrlWithHlsParser() async {
+    try {
+      setState(() {
+        _isProcessingVideo = true;
+      });
+
+      // 判断是否为HLS流
+      if (_isHlsStream(widget.episode.url)) {
+        try {
+          // 使用HLS解析器的内置广告过滤功能
+          final processedPlaylist = await _hlsParserService.filterAdsAndRebuild(widget.episode.url);
+          
+          // 将处理后的播放列表保存到本地文件
+          final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
+          
+          // 设置处理后的URL
+          _processedVideoUrl = processedUrl;
+          print('HLS解析器处理完成，广告已过滤');
+        } catch (e) {
+          print('HLS解析器处理失败: $e');
+          // 处理失败时使用原始URL
+          _processedVideoUrl = widget.episode.url;
+        }
+      } else {
+        // 非HLS流，直接返回原URL
+        _processedVideoUrl = widget.episode.url;
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingVideo = false;
+        });
+      }
+    }
+  }
+
+  /// 保存处理后的播放列表到本地文件
+  Future<String> _saveProcessedPlaylist(String playlist) async {
+    try {
+      // 获取文档目录
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'processed_playlist_${DateTime.now().millisecondsSinceEpoch}.m3u8';
+      final filePath = '${directory.path}/$fileName';
+      
+      // 将播放列表写入文件
+      final file = File(filePath);
+      await file.writeAsString(playlist);
+      
+      // 返回文件路径 (在实际应用中，您可能需要启动一个本地HTTP服务器来提供这个文件)
+      // 这里我们返回文件URI
+      return file.uri.toString();
+    } catch (e) {
+      print('保存处理后的播放列表失败: $e');
+      rethrow;
+    }
+  }
+
+  /// 判断是否为HLS流
+  bool _isHlsStream(String url) {
+    final lowerUrl = url.toLowerCase();
+    return lowerUrl.contains('.m3u8') || 
+           lowerUrl.contains('application/vnd.apple.mpegurl') ||
+           lowerUrl.contains('application/x-mpegurl');
+  }
+
+  void _reportVideoDuration() {
     if (!_hasReportedDuration) {
       _hasReportedDuration = true;
       final duration = _videoPlayer.value.duration.inSeconds;
       widget.onVideoDurationReceived?.call(duration);
     }
+  }
 
-    // 监听播放完成事件
-    _videoPlayer.addListener(_videoPlayerListener);
-
-    // 启动进度更新定时器
-    _startProgressTracking();
-
+  void _createChewieController() {
     _chewieController = ChewieController(
       videoPlayerController: _videoPlayer,
       autoPlay: true,
@@ -106,86 +242,398 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       allowedScreenSleep: false,
       aspectRatio: _videoPlayer.value.aspectRatio,
       systemOverlaysAfterFullScreen: SystemUiOverlay.values,
-      playbackSpeeds: const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0],
-      // 使用自定义控制组件，传递所有必要的参数
+      playbackSpeeds: VideoPlayerConfig.playbackSpeeds,
       customControls: CustomControls(
         isShortDramaMode: widget.isShortDramaMode,
         onBackPressed: widget.onBackPressed,
         onNextEpisode: widget.onNextEpisode,
         onPrevEpisode: widget.onPrevEpisode,
-        onEpisodeChanged: widget.onEpisodeChanged,
+        onEpisodeChanged: widget.onShowEpisodeSelector,
         episodeTitle: widget.episode.title,
         mediaTitle: widget.media.name,
         currentEpisodeIndex: widget.currentEpisodeIndex,
         totalEpisodes: widget.totalEpisodes,
       ),
+      placeholder:
+          widget.media.poster != null ? _buildPosterPlaceholder() : null,
     );
+  }
 
+  // 构建海报占位符
+  Widget _buildPosterPlaceholder() {
+    // 只在短剧模式下显示海报图片
+    if (widget.isShortDramaMode && widget.media.poster != null && widget.media.poster!.isNotEmpty) {
+      return Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 海报图片
+              if (!_imageLoadError)
+                Image.network(
+                  widget.media.poster!,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      // 加载完成
+                      _isImageLoading = false;
+                      return child;
+                    } else {
+                      // 加载中
+                      return LoadingAnimation(
+                        showBackground: true,
+                        backgroundColor: Colors.black,
+                        sizeRatio: 0.2,
+                      );
+                    }
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    // 加载失败
+                    _isImageLoading = false;
+                    _imageLoadError = true;
+                    return _buildDefaultPlaceholder(BoxConstraints.tight(const Size(double.infinity, double.infinity)));
+                  },
+                ),
+              // 加载动画（在图片加载期间显示）
+              if (_isImageLoading)
+                const LoadingAnimation(
+                  showBackground: false,
+                  sizeRatio: 0.2,
+                ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // 非短剧模式或没有海报时显示默认占位符
+      return Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    }
+  }
+
+  // 构建默认占位符
+  Widget _buildDefaultPlaceholder(BoxConstraints constraints) {
+    return Container(
+      width: constraints.maxWidth,
+      height: constraints.maxHeight,
+      color: Colors.black,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.movie,
+            size: 64,
+            color: Colors.white38,
+          ),
+          SizedBox(height: 16),
+          Text(
+            '视频加载中...',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleInitializationError(String error) {
     if (mounted) {
       setState(() {
-        _isPlayerInitialized = true;
+        _errorMessage = error;
       });
     }
   }
 
   void _videoPlayerListener() {
-    // 检查视频是否播放完成
-    if (_videoPlayer.value.isInitialized &&
-        _videoPlayer.value.duration.inMilliseconds > 0 && // 确保视频时长有效
+    if (!_shouldCheckCompletion()) return;
+
+    final position = _videoPlayer.value.position;
+    final duration = _videoPlayer.value.duration;
+    final difference = duration - position;
+
+    // 检查预加载
+    _checkPreloadCondition(position, duration);
+
+    // 检查播放完成
+    _checkPlaybackCompletion(difference);
+  }
+
+  bool _shouldCheckCompletion() {
+    return _videoPlayer.value.isInitialized &&
+        _videoPlayer.value.duration.inMilliseconds > 0 &&
         !_isDisposing &&
-        !_hasCompleted) {
-      // 检查是否接近或到达视频结尾
-      final position = _videoPlayer.value.position;
-      final duration = _videoPlayer.value.duration;
-      final difference = duration - position;
+        !_hasCompleted;
+  }
 
-      // 短剧模式下的预加载逻辑
-      if (widget.isShortDramaMode && 
-          !_hasPreloaded && 
-          widget.currentEpisodeIndex < widget.totalEpisodes - 1) {
-        // 当视频播放到90%时开始预加载下一集
-        final progressPercentage = position.inMilliseconds / duration.inMilliseconds;
-        if (progressPercentage >= 0.9) {
-          _hasPreloaded = true;
-          widget.onPreloadNextEpisode?.call();
-        }
-      }
-
-      // 添加调试信息
-      if (difference.inMilliseconds <= 5000 &&
-          difference.inMilliseconds >= -1000) {
-        // print('Video position: $position, duration: $duration, difference: $difference');
-      }
-
-      // 如果位置接近或超过持续时间（允许1秒误差）
-      if (difference.inMilliseconds <= 1000 &&
-          difference.inMilliseconds >= -1000) {
-        // print('Video completed. Calling onPlaybackCompleted callback.');
-        _hasCompleted = true; // 标记为已完成，防止重复触发
-        widget.onPlaybackCompleted?.call();
+  void _checkPreloadCondition(Duration position, Duration duration) {
+    if (widget.isShortDramaMode &&
+        !_hasPreloaded &&
+        widget.currentEpisodeIndex < widget.totalEpisodes - 1) {
+      final progressPercentage =
+          position.inMilliseconds / duration.inMilliseconds;
+      if (progressPercentage >= VideoPlayerConfig.preloadThreshold) {
+        _hasPreloaded = true;
+        widget.onPreloadNextEpisode?.call();
       }
     }
   }
 
+  void _checkPlaybackCompletion(Duration difference) {
+    if (difference.inMilliseconds <= VideoPlayerConfig.completionThresholdMs &&
+        difference.inMilliseconds >= -VideoPlayerConfig.completionThresholdMs) {
+      _hasCompleted = true;
+      widget.onPlaybackCompleted?.call();
+    }
+  }
+
   void _startProgressTracking() {
-    // 每30秒更新一次进度
-    _progressTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (_videoPlayer.value.isInitialized &&
-          !_isDisposing &&
-          _videoPlayer.value.isPlaying) {
+    _progressTimer =
+        Timer.periodic(VideoPlayerConfig.progressUpdateInterval, (timer) {
+      if (_shouldUpdateProgress()) {
         final position = _videoPlayer.value.position.inSeconds;
-        widget.onProgressUpdate?.call(position);
+        _updateProgressAndHistory(position);
       }
     });
   }
 
+  bool _shouldUpdateProgress() {
+    return _videoPlayer.value.isInitialized &&
+        !_isDisposing &&
+        _videoPlayer.value.isPlaying;
+  }
 
+  void _updateProgressAndHistory(int position) {
+    widget.onProgressUpdate?.call(position);
+    _updateHistoryProgress(position);
+  }
+
+  // MARK: - 历史记录管理方法
+  void _recordInitialHistory() async {
+    if (_hasRecordedInitialHistory) return;
+
+    try {
+      await HistoryService().addHistory(widget.media, widget.episode,
+          widget.startPosition, _videoPlayer.value.duration.inSeconds);
+      _hasRecordedInitialHistory = true;
+    } catch (e) {
+      // 历史记录失败，静默处理
+    }
+  }
+
+  void _updateHistoryProgress(int progress) {
+    if (!_hasRecordedInitialHistory) return;
+
+    try {
+      HistoryService().updateHistoryProgress(widget.media, widget.episode,
+          progress, _videoPlayer.value.duration.inSeconds);
+    } catch (e) {
+      // 历史记录更新失败，静默处理
+    }
+  }
+
+  void _updateFinalProgress() {
+    if (_hasRecordedInitialHistory) {
+      final position = _videoPlayer.value.position.inSeconds;
+      HistoryService().updateHistoryProgress(widget.media, widget.episode,
+          position, _videoPlayer.value.duration.inSeconds);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _isPlayerInitialized
-        ? Chewie(controller: _chewieController)
-        : const Center(child: CircularProgressIndicator());
+    if (_errorMessage != null) {
+      return _buildErrorWidget();
+    }
+
+    if (!_isPlayerInitialized) {
+      return _buildLoadingWidget();
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Chewie(
+        controller: _chewieController,
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '视频加载失败',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage ?? '未知错误',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _retryInitialization,
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingWidget() {
+    // 如果正在处理视频，显示处理状态
+    if (_isProcessingVideo) {
+      return Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const LoadingAnimation(
+                showBackground: false,
+                sizeRatio: 0.2,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '正在检测和过滤广告...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '请稍候，这可能需要几秒钟',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 只在短剧模式下显示海报图片
+    if (widget.isShortDramaMode && widget.media.poster != null && widget.media.poster!.isNotEmpty) {
+      return Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 海报图片
+              if (!_imageLoadError)
+                Image.network(
+                  widget.media.poster!,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      // 加载完成
+                      _isImageLoading = false;
+                      return child;
+                    } else {
+                      // 加载中
+                      return LoadingAnimation(
+                        showBackground: true,
+                        backgroundColor: Colors.black,
+                        sizeRatio: 0.2,
+                      );
+                    }
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    // 加载失败
+                    _isImageLoading = false;
+                    _imageLoadError = true;
+                    return _buildDefaultLoadingWidget(BoxConstraints.tight(const Size(double.infinity, double.infinity)));
+                  },
+                ),
+              // 加载动画（在图片加载期间显示）
+              if (_isImageLoading)
+                const LoadingAnimation(
+                  showBackground: false,
+                  sizeRatio: 0.2,
+                ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // 非短剧模式或没有海报时显示默认加载控件
+      return Container(
+        color: Colors.black,
+        width: double.infinity,
+        height: double.infinity,
+        child: _buildDefaultLoadingWidget(BoxConstraints.tight(const Size(double.infinity, double.infinity))),
+      );
+    }
+  }
+
+  // 构建默认加载控件
+  Widget _buildDefaultLoadingWidget(BoxConstraints constraints) {
+    return Container(
+      width: constraints.maxWidth,
+      height: constraints.maxHeight,
+      color: Colors.black,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          LoadingAnimation(
+            showBackground: false,
+            sizeRatio: 0.2,
+          ),
+          SizedBox(height: 16),
+          Text(
+            '正在加载视频...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _retryInitialization() {
+    setState(() {
+      _errorMessage = null;
+      _isPlayerInitialized = false;
+      _isImageLoading = true;
+      _imageLoadError = false;
+    });
+    _initializePlayer();
   }
 
   // MARK: - 播放控制方法
@@ -237,6 +685,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     _isDisposing = true;
     _progressTimer?.cancel();
     _videoPlayer.removeListener(_videoPlayerListener);
+
+    // 更新最终进度
+    _updateFinalProgress();
 
     // 异步销毁控制器，避免在构建过程中销毁
     Future.microtask(() async {
