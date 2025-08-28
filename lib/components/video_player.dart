@@ -170,18 +170,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       // 判断是否为HLS流
       if (_isHlsStream(widget.episode.url)) {
         try {
-          // 使用HLS解析器的内置广告过滤功能
           final processedPlaylist =
               await _hlsParserService.filterAdsAndRebuild(widget.episode.url);
-          debugPrint('处理后的播放列表: $processedPlaylist');
+          // debugPrint('处理后的播放列表: $processedPlaylist');
           // 将处理后的播放列表保存到本地文件
           final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
 
           // 设置处理后的URL
           _processedVideoUrl = processedUrl;
-          print('HLS解析器处理完成，广告已过滤');
+          debugPrint('HLS解析器处理完成，广告已过滤');
         } catch (e) {
-          print('HLS解析器处理失败: $e');
+          debugPrint('HLS解析器处理失败: $e');
           // 处理失败时使用原始URL
           _processedVideoUrl = widget.episode.url;
         }
@@ -215,7 +214,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       // 这里我们返回文件URI
       return file.uri.toString();
     } catch (e) {
-      print('保存处理后的播放列表失败: $e');
+      debugPrint('保存处理后的播放列表失败: $e');
       rethrow;
     }
   }
@@ -517,28 +516,59 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         width: double.infinity,
         height: double.infinity,
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              const LoadingAnimation(
-                showBackground: false,
-                sizeRatio: 0.2,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '正在检测和过滤广告...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
+              // 添加背景图片
+              if (widget.media.poster != null &&
+                  widget.media.poster!.isNotEmpty &&
+                  !_imageLoadError)
+                Image.network(
+                  widget.media.poster!,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      // 加载完成
+                      _isImageLoading = false;
+                      return child;
+                    } else {
+                      // 加载中
+                      return Container(); // 加载过程中不显示
+                    }
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    // 加载失败
+                    _imageLoadError = true;
+                    return Container(); // 错误时也不显示
+                  },
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '请稍候，这可能需要几秒钟',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
-                ),
+              // 处理状态信息
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const LoadingAnimation(
+                    showBackground: false,
+                    sizeRatio: 0.2,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '正在检测和过滤广告...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '请稍候，这可能需要几秒钟',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

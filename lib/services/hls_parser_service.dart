@@ -10,35 +10,14 @@ class HlsParserService {
   HlsParserService._internal();
 
   final Dio _dio = Dio();
-  
+
   // 广告过滤设置
   bool _adFilterByMetadata = true; // 合并码率和不连续标记检测
-  bool _adFilterByResolution = true;
-
-  /// 广告检测规则
-  static const Map<String, dynamic> _adDetectionRules = {
-    'keywords': [
-      'ad',
-      'ads',
-      'advertisement',
-      'commercial',
-      'sponsor',
-      'promo',
-      '广告',
-      '赞助',
-      '推广',
-      '商业',
-      '宣传'
-    ],
-    'durationThreshold': 30, // 广告片段通常较短（秒）
-    'patternThreshold': 0.8, // 相似度阈值
-  };
 
   /// 加载广告过滤设置
   Future<void> _loadAdFilterSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _adFilterByMetadata = prefs.getBool('ad_filter_by_metadata') ?? true;
-    _adFilterByResolution = prefs.getBool('ad_filter_by_resolution') ?? true;
   }
 
   /// 解析主播放列表 - 使用 Dio 获取内容
@@ -88,9 +67,8 @@ class HlsParserService {
   /// 过滤广告并重新构建播放列表
   Future<String> filterAdsAndRebuild(String originalUrl) async {
     try {
-      // 加载最新的广告过滤设置
       await _loadAdFilterSettings();
-      
+
       // 解析主播放列表
       final masterPlaylist = await parseMasterPlaylist(originalUrl);
       debugPrint('主播放列表解析成功: ${masterPlaylist.variants.length} 个流');
@@ -104,7 +82,8 @@ class HlsParserService {
       final mediaPlaylist = await parseMediaPlaylist(bestVariant.url);
 
       // 检测和过滤广告片段
-      final filteredSegments = await _detectAndFilterAds(mediaPlaylist, bestVariant);
+      final filteredSegments =
+          await _detectAndFilterAds(mediaPlaylist, bestVariant);
 
       // 重新构建播放列表
       return _rebuildPlaylist(mediaPlaylist, filteredSegments, bestVariant.url);
@@ -222,7 +201,8 @@ class HlsParserService {
               hasDiscontinuity: hasDiscontinuity, // 传递不连续标记状态
               discontinuityGroup: discontinuityGroup, // 分组信息
             ));
-            debugPrint('添加片段: URL=$url, 时长=$currentDuration, 不连续=$hasDiscontinuity, 组=$discontinuityGroup');
+            debugPrint(
+                '添加片段: URL=$url, 时长=$currentDuration, 不连续=$hasDiscontinuity, 组=$discontinuityGroup');
             hasDiscontinuity = false; // 重置不连续标记
             i = j; // 跳过已经处理过的行
             break;
@@ -240,7 +220,8 @@ class HlsParserService {
           hasDiscontinuity: hasDiscontinuity, // 传递不连续标记状态
           discontinuityGroup: discontinuityGroup, // 分组信息
         ));
-        debugPrint('添加片段: URL=$url, 时长=$currentDuration, 不连续=$hasDiscontinuity, 组=$discontinuityGroup');
+        debugPrint(
+            '添加片段: URL=$url, 时长=$currentDuration, 不连续=$hasDiscontinuity, 组=$discontinuityGroup');
         hasDiscontinuity = false; // 重置不连续标记
       }
     }
@@ -285,8 +266,10 @@ class HlsParserService {
     final mainBandwidthPattern = _extractBandwidthFromUrl(bestVariant.url);
     debugPrint('主播放列表码率模式: $mainBandwidthPattern');
 
-    // 存储非广告片段
+    // 存储非广告片段和被过滤的片段信息
     final filteredSegments = <HlsSegment>[];
+    final filteredOutSegments = <HlsSegment>[];
+    final filteredReasons = <HlsSegment, String>{};
 
     // 检查每个组
     groups.forEach((groupIndex, segmentsInGroup) {
@@ -297,9 +280,9 @@ class HlsParserService {
       for (final segment in segmentsInGroup) {
         final segmentBandwidthPattern = _extractBandwidthFromUrl(segment.url);
         debugPrint('  片段URL: ${segment.url}, 码率模式: $segmentBandwidthPattern');
-        
-        if (segmentBandwidthPattern != null && 
-            mainBandwidthPattern != null && 
+
+        if (segmentBandwidthPattern != null &&
+            mainBandwidthPattern != null &&
             segmentBandwidthPattern == mainBandwidthPattern) {
           isMainContent = true;
           debugPrint('  找到匹配主码率的片段，确认为正片');
@@ -313,8 +296,30 @@ class HlsParserService {
         filteredSegments.addAll(segmentsInGroup);
       } else {
         debugPrint('  过滤掉组 $groupIndex 的片段（识别为广告）');
+        // 记录被过滤的片段及原因
+        for (final segment in segmentsInGroup) {
+          filteredOutSegments.add(segment);
+          filteredReasons[segment] = '不连续组 $groupIndex 被识别为广告内容';
+        }
       }
     });
+
+    // 打印被过滤掉的片段及其原因
+    debugPrint('=== 被过滤掉的视频片段 ===');
+    if (filteredOutSegments.isEmpty) {
+      debugPrint('没有片段被过滤掉');
+    } else {
+      for (final segment in filteredOutSegments) {
+        final reason = filteredReasons[segment] ?? '未知原因';
+        debugPrint('URL: ${segment.url}');
+        debugPrint('  时长: ${segment.duration}秒');
+        debugPrint('  标题: ${segment.title ?? "无"}');
+        debugPrint('  不连续组: ${segment.discontinuityGroup}');
+        debugPrint('  过滤原因: $reason');
+        debugPrint('---');
+      }
+    }
+    debugPrint('=== 过滤完成 ===');
 
     return filteredSegments;
   }
@@ -324,8 +329,8 @@ class HlsParserService {
     try {
       final uri = Uri.parse(url);
       for (final segment in uri.pathSegments) {
-        // 查找类似 "2000kb" 或 "8997kb" 的模式
-        if (RegExp(r'\d+kb').hasMatch(segment)) {
+        // 查找类似 "2000k" 或 "8997kb" 的模式
+        if (RegExp(r'\d+k[b]?').hasMatch(segment)) {
           return segment;
         }
       }
@@ -333,98 +338,6 @@ class HlsParserService {
       debugPrint('解析URL码率信息失败: $e');
     }
     return null;
-  }
-
-  /// 判断是否为广告片段（增强版）
-  Future<bool> _isAdSegment(HlsSegment segment, HlsVariant bestVariant) async {
-    debugPrint('检查片段是否为广告: ${segment.url}');
-    debugPrint('  片段时长: ${segment.duration}');
-    debugPrint('  片段标题: ${segment.title}');
-    debugPrint('  片段不连续标记: ${segment.hasDiscontinuity}');
-
-    // 1. 通过元数据检测广告（包括码率和不连续标记）
-    if (_adFilterByMetadata) {
-      // 1.1 通过不连续标记检测广告
-      if (segment.hasDiscontinuity) {
-        debugPrint('  广告检测: 片段有不连续标记');
-        return true;
-      }
-      
-      // 1.2 通过码率检测广告
-      // 提取URL中的码率信息
-      final uri = Uri.parse(segment.url);
-      final pathSegments = uri.pathSegments;
-      
-      // 查找码率相关路径段（例如 2000kb）
-      bool hasBandwidthInPath = false;
-      String? bandwidthSegment;
-      for (final pathSegment in pathSegments) {
-        if (pathSegment.contains('kb')) {
-          hasBandwidthInPath = true;
-          bandwidthSegment = pathSegment;
-          break;
-        }
-      }
-      
-      // 如果主播放列表的最佳变体URL中也包含码率信息，则比较它们
-      if (hasBandwidthInPath && bestVariant.url.isNotEmpty) {
-        final bestUri = Uri.parse(bestVariant.url);
-        final bestPathSegments = bestUri.pathSegments;
-        String? bestBandwidthSegment;
-        for (final pathSegment in bestPathSegments) {
-          if (pathSegment.contains('kb')) {
-            bestBandwidthSegment = pathSegment;
-            break;
-          }
-        }
-        
-        // 如果片段的码率与主播放列表的码率不一致，则可能是广告
-        if (bandwidthSegment != null && 
-            bestBandwidthSegment != null && 
-            bandwidthSegment != bestBandwidthSegment) {
-          debugPrint('  广告检测: 片段码率($bandwidthSegment)与主播放列表码率($bestBandwidthSegment)不一致');
-          return true;
-        }
-      }
-    }
-
-    // 2. 通过分辨率检测广告
-    if (_adFilterByResolution && bestVariant.resolution != null) {
-      // 这个检测需要更复杂的实现，因为需要分析片段内容才能知道实际分辨率
-      // 在当前实现中，我们暂时跳过此检测
-    }
-
-    // 3. 检查时长（广告通常较短）
-    if (segment.duration <= _adDetectionRules['durationThreshold']) {
-      debugPrint('  广告检测: 片段时长过短 (${segment.duration}s < ${_adDetectionRules['durationThreshold']}s)');
-      return true;
-    }
-
-    // 4. 检查URL中的关键词
-    final url = segment.url.toLowerCase();
-    for (final keyword in _adDetectionRules['keywords']) {
-      if (url.contains(keyword.toLowerCase())) {
-        debugPrint('  广告检测: URL包含关键词 "$keyword"');
-        return true;
-      }
-    }
-
-    // 5. 检查标题中的关键词
-    if (segment.title != null) {
-      final title = segment.title!.toLowerCase();
-      for (final keyword in _adDetectionRules['keywords']) {
-        if (title.contains(keyword.toLowerCase())) {
-          debugPrint('  广告检测: 标题包含关键词 "$keyword"');
-          return true;
-        }
-      }
-    }
-
-    // 6. 检查内容特征（可选，需要下载片段头部进行分析）
-    // 这里可以添加更复杂的检测逻辑，比如检查视频编码参数等
-
-    debugPrint('  广告检测: 未检测到广告特征');
-    return false;
   }
 
   /// 重新构建播放列表

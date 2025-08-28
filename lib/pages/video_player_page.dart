@@ -99,7 +99,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _currentEpisodeIndex = _getCurrentEpisodeIndex();
     _pageController = PageController(initialPage: _currentEpisodeIndex);
 
-    widget.media.printDebugInfo();
+    // widget.media.printDebugInfo();
   }
 
   void _cleanup() {
