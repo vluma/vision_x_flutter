@@ -27,6 +27,10 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _yellowFilterEnabled = true;
   bool _adFilterEnabled = true;
   bool _doubanEnabled = true;
+  
+  // 广告过滤子选项
+  bool _adFilterByMetadata = true; // 合并码率和不连续标记检测
+  bool _adFilterByResolution = true;
 
   // 显示自定义API表单
   bool _showCustomApiForm = false;
@@ -75,6 +79,10 @@ class _SettingsPageState extends State<SettingsPage> {
       _yellowFilterEnabled = prefs.getBool('yellow_filter_enabled') ?? true;
       _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? true;
       _doubanEnabled = prefs.getBool('douban_enabled') ?? true;
+      
+      // 加载广告过滤子选项
+      _adFilterByMetadata = prefs.getBool('ad_filter_by_metadata') ?? true;
+      _adFilterByResolution = prefs.getBool('ad_filter_by_resolution') ?? true;
     });
 
     // 加载主题设置
@@ -941,6 +949,106 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
+                      // 广告过滤子选项
+                      if (_adFilterEnabled) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  color:
+                                      isDark ? Colors.white12 : Colors.black12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '通过元数据过滤广告',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black87,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '通过码率和标签过滤广告（快速）',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black54,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                activeColor: Theme.of(context).primaryColor,
+                                value: _adFilterByMetadata,
+                                onChanged: (bool value) {
+                                  setState(() {
+                                    _adFilterByMetadata = value;
+                                  });
+                                  _saveSettingsAutomatically();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '通过分辨率过滤广告',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black87,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '通过分辨率区分过滤广告',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black54,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                activeColor: Theme.of(context).primaryColor,
+                                value: _adFilterByResolution,
+                                onChanged: (bool value) {
+                                  setState(() {
+                                    _adFilterByResolution = value;
+                                  });
+                                  _saveSettingsAutomatically();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       // 豆瓣热门推荐
                       Row(
@@ -1125,6 +1233,10 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
     await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
     await prefs.setBool('douban_enabled', _doubanEnabled);
+    
+    // 保存广告过滤子选项
+    await prefs.setBool('ad_filter_by_metadata', _adFilterByMetadata);
+    await prefs.setBool('ad_filter_by_resolution', _adFilterByResolution);
 
     // 保存主题设置
     await prefs.setInt('selected_theme', _selectedTheme);
@@ -1148,6 +1260,10 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
     await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
     await prefs.setBool('douban_enabled', _doubanEnabled);
+    
+    // 保存广告过滤子选项
+    await prefs.setBool('ad_filter_by_metadata', _adFilterByMetadata);
+    await prefs.setBool('ad_filter_by_resolution', _adFilterByResolution);
 
     // 保存主题设置
     await prefs.setInt('selected_theme', _selectedTheme);

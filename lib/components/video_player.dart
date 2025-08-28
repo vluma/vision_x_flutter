@@ -83,7 +83,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _hasReportedDuration = false; // 添加时长报告标志
   bool _hasPreloaded = false; // 添加预加载标志
   bool _hasRecordedInitialHistory = false; // 添加历史记录标志
-  
+
   // 广告检测相关
   final EnhancedVideoService _enhancedVideoService = EnhancedVideoService();
   bool _isProcessingVideo = false;
@@ -123,7 +123,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
       // 使用处理后的URL或原始URL
       final videoUrl = _processedVideoUrl ?? widget.episode.url;
-      
+
       _videoPlayer = VideoPlayerController.networkUrl(
         Uri.parse(videoUrl),
       );
@@ -171,11 +171,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       if (_isHlsStream(widget.episode.url)) {
         try {
           // 使用HLS解析器的内置广告过滤功能
-          final processedPlaylist = await _hlsParserService.filterAdsAndRebuild(widget.episode.url);
-          
+          final processedPlaylist =
+              await _hlsParserService.filterAdsAndRebuild(widget.episode.url);
+          debugPrint('处理后的播放列表: $processedPlaylist');
           // 将处理后的播放列表保存到本地文件
           final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
-          
+
           // 设置处理后的URL
           _processedVideoUrl = processedUrl;
           print('HLS解析器处理完成，广告已过滤');
@@ -202,13 +203,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     try {
       // 获取文档目录
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'processed_playlist_${DateTime.now().millisecondsSinceEpoch}.m3u8';
+      final fileName =
+          'processed_playlist_${DateTime.now().millisecondsSinceEpoch}.m3u8';
       final filePath = '${directory.path}/$fileName';
-      
+
       // 将播放列表写入文件
       final file = File(filePath);
       await file.writeAsString(playlist);
-      
+
       // 返回文件路径 (在实际应用中，您可能需要启动一个本地HTTP服务器来提供这个文件)
       // 这里我们返回文件URI
       return file.uri.toString();
@@ -221,9 +223,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   /// 判断是否为HLS流
   bool _isHlsStream(String url) {
     final lowerUrl = url.toLowerCase();
-    return lowerUrl.contains('.m3u8') || 
-           lowerUrl.contains('application/vnd.apple.mpegurl') ||
-           lowerUrl.contains('application/x-mpegurl');
+    return lowerUrl.contains('.m3u8') ||
+        lowerUrl.contains('application/vnd.apple.mpegurl') ||
+        lowerUrl.contains('application/x-mpegurl');
   }
 
   void _reportVideoDuration() {
@@ -262,7 +264,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   // 构建海报占位符
   Widget _buildPosterPlaceholder() {
     // 只在短剧模式下显示海报图片
-    if (widget.isShortDramaMode && widget.media.poster != null && widget.media.poster!.isNotEmpty) {
+    if (widget.isShortDramaMode &&
+        widget.media.poster != null &&
+        widget.media.poster!.isNotEmpty) {
       return Container(
         color: Colors.black,
         width: double.infinity,
@@ -296,7 +300,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                     // 加载失败
                     _isImageLoading = false;
                     _imageLoadError = true;
-                    return _buildDefaultPlaceholder(BoxConstraints.tight(const Size(double.infinity, double.infinity)));
+                    return _buildDefaultPlaceholder(BoxConstraints.tight(
+                        const Size(double.infinity, double.infinity)));
                   },
                 ),
               // 加载动画（在图片加载期间显示）
@@ -542,7 +547,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     }
 
     // 只在短剧模式下显示海报图片
-    if (widget.isShortDramaMode && widget.media.poster != null && widget.media.poster!.isNotEmpty) {
+    if (widget.isShortDramaMode &&
+        widget.media.poster != null &&
+        widget.media.poster!.isNotEmpty) {
       return Container(
         color: Colors.black,
         width: double.infinity,
@@ -576,7 +583,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                     // 加载失败
                     _isImageLoading = false;
                     _imageLoadError = true;
-                    return _buildDefaultLoadingWidget(BoxConstraints.tight(const Size(double.infinity, double.infinity)));
+                    return _buildDefaultLoadingWidget(BoxConstraints.tight(
+                        const Size(double.infinity, double.infinity)));
                   },
                 ),
               // 加载动画（在图片加载期间显示）
@@ -595,7 +603,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         color: Colors.black,
         width: double.infinity,
         height: double.infinity,
-        child: _buildDefaultLoadingWidget(BoxConstraints.tight(const Size(double.infinity, double.infinity))),
+        child: _buildDefaultLoadingWidget(
+            BoxConstraints.tight(const Size(double.infinity, double.infinity))),
       );
     }
   }
