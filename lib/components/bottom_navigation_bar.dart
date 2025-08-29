@@ -1,12 +1,39 @@
-// bottom_navigation_bar.dart
-// 功能: 底部导航栏组件，包含首页、历史、设置三个导航按钮和一个可展开的搜索按钮
-// 创建日期: 2023-11-07
+ // bottom_navigation_bar.dart
+// 功能: 底部导航栏组件 - 优化版本
+// 优化重点: 性能提升、代码结构、可维护性
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
+/// 导航栏常量配置
+class NavBarConstants {
+  // 尺寸常量
+  static const double containerHeight = 56.0;
+  static const double containerBorderRadius = 28.0;
+  static const double selectedContainerHeight = 48.0;
+  static const double selectedContainerBorderRadius = 24.0;
+  static const double iconSize = 24.0;
+  static const double paddingAll = 4.0;
+  static const double borderWidth = 0.5;
+  static const double horizontalPadding = 16.0;
+  static const double bottomPaddingOffset = 16.0;
+  static const double maxColumnWidthOffset = 100.0;
+  static const double minColumnWidth = 100.0;
+
+  // 动画配置
+  static const Duration animationDuration = Duration(milliseconds: 200);
+  static const Curve animationCurve = Curves.easeInOut;
+
+  // 颜色透明度
+  static const double commonAlpha = 0.1;
+  static const double selectedItemAlphaDark = 0.2;
+
+  // 路由路径
+  static const List<String> navPaths = ['/', '/history', '/settings'];
+}
 
 class BottomNavigationBarWidget extends StatefulWidget {
   final String currentPath;
@@ -18,62 +45,38 @@ class BottomNavigationBarWidget extends StatefulWidget {
       _BottomNavigationBarWidgetState();
 }
 
-class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
-    with WidgetsBindingObserver {
-  // 常量定义
-  static const double _containerHeight = 56.0;
-  static const double _containerBorderRadius = 28.0;
-  static const double _selectedContainerHeight = 48.0;
-  static const double _selectedContainerBorderRadius = 24.0;
-  static const double _prefixIconMinSize = 48.0;
-  static const double _iconSize = 24.0;
-  static const double _paddingAll = 4.0;
-  static const double _borderWidth = 0.5;
-  static const double _boxShadowBlurRadius = 2.0;
-  static const double _boxShadowOffset = 1.0;
-  static const double _contentPaddingVertical = 8.0;
-  static const double _contentPaddingHorizontal = 0.0;
-  static const double _bottomPaddingOffset = 16.0;
-  static const double _maxColumnWidthOffset = 100.0;
-  static const double _horizontalPadding = 16.0;
-  static const double _minColumnWidth = 100.0; // 添加最小宽度限制
-  static const double _commonAlpha = 0.1;
-  static const double _selectedItemAlphaDark = 0.2;
-
-  static const Duration _animationDuration = Duration(milliseconds: 200);
-
+class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   final TextEditingController _searchController = TextEditingController();
   String? _lastActivePath;
   int _selectedIndex = 0;
+  bool _isSearchExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _initializeSelectedIndex();
-    searchDataSource.addListener(_onSearchDataSourceChanged);
-    _searchController.text = searchDataSource.searchQuery;
-    WidgetsBinding.instance.addObserver(this);
+    _setupSearchListeners();
+  }
+
+  @override
+  void didUpdateWidget(covariant BottomNavigationBarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentPath != widget.currentPath) {
+      _initializeSelectedIndex();
+    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    searchDataSource.removeListener(_onSearchDataSourceChanged);
     _searchController.dispose();
+    searchDataSource.removeListener(_onSearchDataSourceChanged);
     super.dispose();
   }
 
-  @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    // 当系统配置发生变化时刷新界面
-    setState(() {});
-  }
-
-  @override
-  void didChangePlatformBrightness() {
-    // 当系统亮度发生变化时刷新界面
-    setState(() {});
+  void _setupSearchListeners() {
+    searchDataSource.addListener(_onSearchDataSourceChanged);
+    _searchController.text = searchDataSource.searchQuery;
+    _isSearchExpanded = searchDataSource.isSearchExpanded;
   }
 
   void _initializeSelectedIndex() {
@@ -91,45 +94,52 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
 
   void _onSearchDataSourceChanged() {
     if (_searchController.text != searchDataSource.searchQuery) {
+      _searchController.text = searchDataSource.searchQuery;
+    }
+    if (_isSearchExpanded != searchDataSource.isSearchExpanded) {
       setState(() {
-        _searchController.text = searchDataSource.searchQuery;
+        _isSearchExpanded = searchDataSource.isSearchExpanded;
       });
     }
   }
 
   void _toggleSearch() {
+    final newSearchState = !_isSearchExpanded;
+    
     setState(() {
       _lastActivePath = widget.currentPath;
-      GoRouter.of(context).go('/search');
-      searchDataSource.setSearchExpanded(!searchDataSource.isSearchExpanded);
-
-      if (!searchDataSource.isSearchExpanded) {
-        searchDataSource.clearSearch();
-        _searchController.clear();
-      }
+      _isSearchExpanded = newSearchState;
     });
+
+    searchDataSource.setSearchExpanded(newSearchState);
+    GoRouter.of(context).go('/search');
+
+    if (!newSearchState) {
+      searchDataSource.clearSearch();
+      _searchController.clear();
+    }
   }
 
   void _toggleMenu() {
+    if (_lastActivePath != null) {
+      GoRouter.of(context).go(_lastActivePath!);
+    }
+    
     setState(() {
-      if (_lastActivePath != null) {
-        GoRouter.of(context).go(_lastActivePath!);
-      }
-      searchDataSource.setSearchExpanded(false);
-      _searchController.clear();
+      _isSearchExpanded = false;
     });
+    
+    searchDataSource.setSearchExpanded(false);
+    _searchController.clear();
   }
 
   void _onNavItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-
-      final paths = ['/', '/history', '/settings'];
-      final path = paths[index];
-
-      _lastActivePath = path;
-      GoRouter.of(context).go(path);
+      _lastActivePath = NavBarConstants.navPaths[index];
     });
+
+    GoRouter.of(context).go(_lastActivePath!);
   }
 
   Widget _buildNavButton(int index, IconData icon) {
@@ -139,10 +149,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     return Expanded(
       child: InkWell(
         onTap: () => _onNavItemTapped(index),
+        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
         child: Container(
           decoration: BoxDecoration(
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.circular(_containerBorderRadius),
+            borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
           ),
           child: Center(
             child: Icon(
@@ -152,7 +162,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
                   : theme.brightness == Brightness.dark
                       ? Colors.white60
                       : Colors.black54,
-              size: _iconSize,
+              size: NavBarConstants.iconSize,
             ),
           ),
         ),
@@ -175,15 +185,14 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     final theme = Theme.of(context);
     return InkWell(
       onTap: _toggleMenu,
+      borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
       child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-        ),
+        decoration: const BoxDecoration(shape: BoxShape.circle),
         child: Center(
           child: Icon(
             Icons.menu,
             color: theme.primaryColor,
-            size: _iconSize,
+            size: NavBarConstants.iconSize,
           ),
         ),
       ),
@@ -193,13 +202,14 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
   Widget _buildSearchButton() {
     return InkWell(
       onTap: _toggleSearch,
+      borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
       child: const SizedBox(
         width: double.infinity,
         child: Center(
           child: Icon(
             Icons.search,
             color: Colors.grey,
-            size: _iconSize,
+            size: NavBarConstants.iconSize,
             semanticLabel: '搜索',
           ),
         ),
@@ -218,13 +228,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         hintStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
         border: InputBorder.none,
         prefixIcon: const Icon(Icons.search, color: Colors.grey),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: _prefixIconMinSize,
-          minHeight: _prefixIconMinSize,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-            vertical: _contentPaddingVertical,
-            horizontal: _contentPaddingHorizontal),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
         isDense: true,
       ),
       textAlignVertical: TextAlignVertical.center,
@@ -238,35 +242,114 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
     );
   }
 
+  Widget _buildNavigationContainer(double maxWidth) {
+    final theme = Theme.of(context);
+    final selectBgWidth = maxWidth / 3;
+
+    return AnimatedContainer(
+      duration: NavBarConstants.animationDuration,
+      curve: NavBarConstants.animationCurve,
+      width: _isSearchExpanded ? NavBarConstants.containerHeight : maxWidth,
+      height: NavBarConstants.containerHeight,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          width: NavBarConstants.borderWidth,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            offset: const Offset(0, 1),
+            blurRadius: 2.0,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(NavBarConstants.paddingAll),
+        child: Stack(
+          children: [
+            // 滑动的选中背景
+            AnimatedAlign(
+              duration: NavBarConstants.animationDuration,
+              curve: NavBarConstants.animationCurve,
+              alignment: _isSearchExpanded
+                  ? Alignment.centerRight
+                  : Alignment((_selectedIndex - 1) * 1.0, 0),
+              child: AnimatedContainer(
+                duration: NavBarConstants.animationDuration,
+                curve: NavBarConstants.animationCurve,
+                width: _isSearchExpanded ? 0 : selectBgWidth,
+                height: NavBarConstants.selectedContainerHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(NavBarConstants.selectedContainerBorderRadius),
+                  color: theme.brightness == Brightness.dark
+                      ? AppColors.bottomNavSelectedItem.withOpacity(NavBarConstants.selectedItemAlphaDark)
+                      : theme.primaryColor.withOpacity(NavBarConstants.commonAlpha),
+                ),
+              ),
+            ),
+            // 内容切换
+            AnimatedSwitcher(
+              duration: NavBarConstants.animationDuration,
+              child: _isSearchExpanded ? _buildMenuButton() : _buildNavigationButtons(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchContainer(double maxWidth) {
+    return AnimatedContainer(
+      duration: NavBarConstants.animationDuration,
+      curve: NavBarConstants.animationCurve,
+      width: _isSearchExpanded ? maxWidth : NavBarConstants.containerHeight,
+      height: NavBarConstants.containerHeight,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          width: NavBarConstants.borderWidth,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            offset: const Offset(0, 1),
+            blurRadius: 2.0,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(NavBarConstants.paddingAll),
+        child: AnimatedSwitcher(
+          duration: NavBarConstants.animationDuration,
+          child: _isSearchExpanded ? _buildSearchField() : _buildSearchButton(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // 确保maxColumnWidth不会是负数，设置一个最小值
-    final maxColumnWidth = screenWidth > _maxColumnWidthOffset
-        ? screenWidth - _maxColumnWidthOffset
-        : _minColumnWidth;
+    final maxColumnWidth = screenWidth > NavBarConstants.maxColumnWidthOffset
+        ? screenWidth - NavBarConstants.maxColumnWidthOffset
+        : NavBarConstants.minColumnWidth;
+    
     final viewInsets = MediaQuery.of(context).viewInsets;
     final bottomPadding = MediaQuery.of(context).padding.bottom +
         viewInsets.bottom +
-        _bottomPaddingOffset;
-    final theme = Theme.of(context);
+        NavBarConstants.bottomPaddingOffset;
 
     return Container(
-      decoration: BoxDecoration(
-        // 使用渐变背景替代纯色背景，透明度范围在0-0.4之间
-        gradient: LinearGradient(
-          colors: [
-            theme.scaffoldBackgroundColor.withValues(alpha: 0.0),
-            theme.scaffoldBackgroundColor.withValues(alpha: 1.0),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
       padding: EdgeInsets.only(
-          bottom: bottomPadding,
-          left: _horizontalPadding,
-          right: _horizontalPadding),
+        bottom: bottomPadding,
+        left: NavBarConstants.horizontalPadding,
+        right: NavBarConstants.horizontalPadding,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -275,162 +358,5 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget>
         ],
       ),
     );
-  }
-
-  Widget _buildNavigationContainer(double maxWidth) {
-    final theme = Theme.of(context);
-    final selectBgWidth = maxWidth / 3;
-
-    return Container(
-      width: searchDataSource.isSearchExpanded ? _containerHeight : maxWidth,
-      height: _containerHeight,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(_containerBorderRadius),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
-          width: _borderWidth,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-            offset: const Offset(0, _boxShadowOffset),
-            blurRadius: _boxShadowBlurRadius,
-          ),
-        ],
-      ),
-    )
-        .animate(
-          target: searchDataSource.isSearchExpanded ? 1 : 0,
-        )
-        .custom(
-          duration: _animationDuration,
-          builder: (context, value, child) {
-            // 使用动画值计算宽度
-            final animatedWidth =
-                maxWidth - (value * (maxWidth - _containerHeight));
-
-            return Container(
-              width: animatedWidth,
-              height: _containerHeight,
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(_containerBorderRadius),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
-                  width: _borderWidth,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                    offset: const Offset(0, _boxShadowOffset),
-                    blurRadius: _boxShadowBlurRadius,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(_paddingAll),
-                child: Stack(
-                  children: [
-                    // 滑动的选中背景
-                    AnimatedAlign(
-                      duration: _animationDuration,
-                      curve: Curves.easeInOut,
-                      alignment: searchDataSource.isSearchExpanded
-                          ? Alignment.centerRight
-                          : Alignment((_selectedIndex - 1) * 1.0, 0),
-                      child: Container(
-                        width: searchDataSource.isSearchExpanded
-                            ? 0
-                            : selectBgWidth,
-                        height: _selectedContainerHeight,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                              _selectedContainerBorderRadius),
-                          color: theme.brightness == Brightness.dark
-                              ? AppColors.bottomNavSelectedItem
-                                  .withValues(alpha: _selectedItemAlphaDark)
-                              : theme.primaryColor
-                                  .withValues(alpha: _commonAlpha),
-                        ),
-                      ),
-                    ),
-                    // 内容切换
-                    AnimatedSwitcher(
-                      duration: _animationDuration,
-                      child: searchDataSource.isSearchExpanded
-                          ? _buildMenuButton()
-                          : _buildNavigationButtons(),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-  }
-
-  Widget _buildSearchContainer(double maxWidth) {
-    return Container(
-      width: searchDataSource.isSearchExpanded ? maxWidth : _containerHeight,
-      height: _containerHeight,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(_containerBorderRadius),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
-          width: _borderWidth,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-            offset: const Offset(0, _boxShadowOffset),
-            blurRadius: _boxShadowBlurRadius,
-          ),
-        ],
-      ),
-    )
-        .animate(
-          target: searchDataSource.isSearchExpanded ? 1 : 0,
-        )
-        .custom(
-          duration: _animationDuration,
-          builder: (context, value, child) {
-            // 使用动画值计算宽度
-            final animatedWidth =
-                _containerHeight + (value * (maxWidth - _containerHeight));
-
-            return Container(
-              width: animatedWidth,
-              height: _containerHeight,
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(_containerBorderRadius),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
-                  width: _borderWidth,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                    offset: const Offset(0, _boxShadowOffset),
-                    blurRadius: _boxShadowBlurRadius,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(_paddingAll),
-                child: AnimatedSwitcher(
-                  duration: _animationDuration,
-                  child: searchDataSource.isSearchExpanded
-                      ? _buildSearchField()
-                      : _buildSearchButton(),
-                ),
-              ),
-            );
-          },
-        );
   }
 }
