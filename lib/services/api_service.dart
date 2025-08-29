@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/douban_movie.dart';
 import '../models/media_detail.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
+/// 搜索数据状态管理类，处理搜索查询和UI状态
 class SearchDataSource extends ChangeNotifier {
   String _searchQuery = '';
   bool _isSearchExpanded = false;
@@ -28,9 +29,11 @@ class SearchDataSource extends ChangeNotifier {
   }
 }
 
-// 创建全局单例
+// 全局搜索数据源单例
 final searchDataSource = SearchDataSource();
 
+/// API服务类 - 处理豆瓣电影数据和聚合搜索
+/// 提供电影/电视剧标签获取、内容搜索、聚合搜索等功能
 class ApiService {
   static const String baseUrl = 'https://movie.douban.com/j';
 
@@ -68,15 +71,18 @@ class ApiService {
     "纪录片",
   ];
 
-  // 提供公共访问方法获取默认标签
+  /// 获取默认电影标签列表
   static List<String> get defaultMovieTags => _defaultMovieTags;
+
+  /// 获取默认电视剧标签列表
   static List<String> get defaultTvTags => _defaultTvTags;
 
+  // 豆瓣API Dio实例
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     headers: {
       'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Referer': 'https://movie.douban.com/',
       'Accept': 'application/json',
     },
@@ -84,63 +90,42 @@ class ApiService {
     receiveTimeout: const Duration(seconds: 10),
   ));
 
-  // 聚合搜索的API配置
+  /// 聚合搜索API配置 - 支持多个视频资源站点
   static final Map<String, Map<String, String>> apiSites = {
     'dyttzy': {
       'api': 'http://caiji.dyttzyapi.com/api.php/provide/vod',
-      'name': '电影天堂资源',
+      'name': '电影天堂资源'
     },
     'ruyi': {
       'api': 'https://cj.rycjapi.com/api.php/provide/vod',
-      'name': '如意资源',
+      'name': '如意资源'
     },
-    'bfzy': {
-      'api': 'https://bfzyapi.com/api.php/provide/vod',
-      'name': '暴风资源',
-    },
-    'tyyszy': {
-      'api': 'https://tyyszy.com/api.php/provide/vod',
-      'name': '天涯资源',
-    },
-    'ffzy': {
-      'api': 'http://ffzy5.tv/api.php/provide/vod',
-      'name': '非凡影视',
-    },
+    'bfzy': {'api': 'https://bfzyapi.com/api.php/provide/vod', 'name': '暴风资源'},
+    'tyyszy': {'api': 'https://tyyszy.com/api.php/provide/vod', 'name': '天涯资源'},
+    'ffzy': {'api': 'http://ffzy5.tv/api.php/provide/vod', 'name': '非凡影视'},
     'heimuer': {
       'api': 'https://json.heimuer.xyz/api.php/provide/vod',
-      'name': '黑木耳',
+      'name': '黑木耳'
     },
-    'zy360': {
-      'api': 'https://360zy.com/api.php/provide/vod',
-      'name': '360资源',
-    },
+    'zy360': {'api': 'https://360zy.com/api.php/provide/vod', 'name': '360资源'},
     'iqiyi': {
       'api': 'https://www.iqiyizyapi.com/api.php/provide/vod',
-      'name': 'iqiyi资源',
+      'name': 'iqiyi资源'
     },
     'wolong': {
       'api': 'https://wolongzyw.com/api.php/provide/vod',
-      'name': '卧龙资源',
+      'name': '卧龙资源'
     },
-    'hwba': {
-      'api': 'https://cjhwba.com/api.php/provide/vod',
-      'name': '华为吧资源',
-    },
-    'jisu': {
-      'api': 'https://jszyapi.com/api.php/provide/vod',
-      'name': '极速资源',
-    },
-    'dbzy': {
-      'api': 'https://dbzy.tv/api.php/provide/vod',
-      'name': '豆瓣资源',
-    },
+    'hwba': {'api': 'https://cjhwba.com/api.php/provide/vod', 'name': '华为吧资源'},
+    'jisu': {'api': 'https://jszyapi.com/api.php/provide/vod', 'name': '极速资源'},
+    'dbzy': {'api': 'https://dbzy.tv/api.php/provide/vod', 'name': '豆瓣资源'},
     'mozhua': {
       'api': 'https://mozhuazy.com/api.php/provide/vod',
-      'name': '魔爪资源',
+      'name': '魔爪资源'
     },
     'mdzy': {
       'api': 'https://www.mdzyapi.com/api.php/provide/vod',
-      'name': '魔都资源',
+      'name': '魔都资源'
     },
     'zuid': {
       'api': 'https://api.zuidapi.com/api.php/provide/vod',
@@ -165,20 +150,26 @@ class ApiService {
     },
   };
 
-  // 获取电影标签
+  /// 获取电影标签列表
+  /// 如果API调用失败，返回默认电影标签
   static Future<List<String>> getMovieTags() async {
     return _getTags('movie', _defaultMovieTags);
   }
 
-  // 获取电视剧标签
+  /// 获取电视剧标签列表
+  /// 如果API调用失败，返回默认电视剧标签
   static Future<List<String>> getTvTags() async {
     return _getTags('tv', _defaultTvTags);
   }
 
-  // 私有方法：获取标签的通用实现
-  static Future<List<String>> _getTags(String type, List<String> defaultTags) async {
+  /// 私有方法：获取标签的通用实现
+  /// [type] 内容类型：'movie' 或 'tv'
+  /// [defaultTags] 默认标签列表，用于API调用失败时返回
+  static Future<List<String>> _getTags(
+      String type, List<String> defaultTags) async {
     try {
-      final response = await _dio.get('/search_tags', queryParameters: {'type': type});
+      final response =
+          await _dio.get('/search_tags', queryParameters: {'type': type});
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -188,12 +179,16 @@ class ApiService {
       }
       return defaultTags;
     } catch (e) {
-      // 出错时返回默认标签
       return defaultTags;
     }
   }
 
-  // 获取电影/电视剧列表
+  /// 获取电影/电视剧列表
+  /// [type] 内容类型：'movie' 或 'tv'
+  /// [tag] 标签名称
+  /// [sort] 排序方式，默认'recommend'
+  /// [pageStart] 起始页码，默认0
+  /// [pageLimit] 每页数量，默认20
   static Future<List<DoubanMovie>> getMovies({
     required String type,
     required String tag,
@@ -228,130 +223,99 @@ class ApiService {
     }
   }
 
-  // 聚合搜索
+  /// 聚合搜索 - 使用所有数据源进行搜索
+  /// [query] 搜索关键词
+  /// 返回所有数据源的搜索结果合并列表
   static Future<List<MediaDetail>> aggregatedSearch(String query) async {
     try {
-      // 创建所有API请求
-      List<Future<List<MediaDetail>>> futures = [];
+      final futures = apiSites.entries
+          .map((entry) => _searchByAPI(
+              entry.key, entry.value['api']!, entry.value['name']!, query))
+          .toList();
 
-      apiSites.forEach((key, value) {
-        futures.add(_searchByAPI(key, value['api']!, value['name']!, query));
-      });
-
-      // 并发执行所有请求
       final results = await Future.wait(futures, eagerError: false);
-
-      // 合并结果
-      List<MediaDetail> allResults = [];
-      for (var result in results) {
-        allResults.addAll(result);
-      }
-
-      return allResults;
+      return results.expand((result) => result).toList();
     } catch (e) {
       return [];
     }
   }
 
-  // 获取选中的数据源
+  /// 获取用户选中的数据源配置
+  /// 从SharedPreferences读取用户选择的数据源
   static Future<Map<String, Map<String, String>>> getSelectedApiSites() async {
     final prefs = await SharedPreferences.getInstance();
     final selectedSourcesString = prefs.getString('selected_sources') ?? '';
-    
+
     if (selectedSourcesString.isNotEmpty) {
-      Set<String> selectedSources = selectedSourcesString.split(',').toSet();
-      Map<String, Map<String, String>> selectedSites = {};
-      
-      apiSites.forEach((key, value) {
-        if (selectedSources.contains(key)) {
-          selectedSites[key] = value;
-        }
-      });
-      
-      return selectedSites;
+      final selectedSources = selectedSourcesString.split(',').toSet();
+      return Map.from(apiSites)
+        ..removeWhere((key, _) => !selectedSources.contains(key));
     } else {
-      // 如果没有保存的设置，默认使用所有源
-      return apiSites;
+      return Map.from(apiSites); // 默认使用所有源
     }
   }
 
-  // 聚合搜索（只使用选中的数据源）
-  static Future<List<MediaDetail>> aggregatedSearchWithSelectedSources(String query) async {
+  /// 聚合搜索 - 只使用用户选中的数据源
+  /// [query] 搜索关键词
+  static Future<List<MediaDetail>> aggregatedSearchWithSelectedSources(
+      String query) async {
     try {
-      // 获取选中的数据源
       final selectedSites = await getSelectedApiSites();
-      
-      // 创建选中API的请求
-      List<Future<List<MediaDetail>>> futures = [];
+      final futures = selectedSites.entries
+          .map((entry) => _searchByAPI(
+              entry.key, entry.value['api']!, entry.value['name']!, query))
+          .toList();
 
-      selectedSites.forEach((key, value) {
-        futures.add(_searchByAPI(key, value['api']!, value['name']!, query));
-      });
-
-      // 并发执行所有请求
       final results = await Future.wait(futures, eagerError: false);
-
-      // 合并结果
-      List<MediaDetail> allResults = [];
-      for (var result in results) {
-        allResults.addAll(result);
-      }
-
-      return allResults;
+      return results.expand((result) => result).toList();
     } catch (e) {
       return [];
     }
   }
 
-  // 流式聚合搜索（只使用选中的数据源）- 每个API返回结果后立即回调
+  /// 流式聚合搜索 - 每个API返回结果后立即回调
+  /// [query] 搜索关键词
+  /// [onResultsReceived] 单个API结果回调
+  /// [onSearchCompleted] 所有搜索完成回调
   static Future<void> streamAggregatedSearchWithSelectedSources(
-    String query, 
+    String query,
     Function(List<MediaDetail>) onResultsReceived,
     Function() onSearchCompleted,
   ) async {
     try {
-      // 获取选中的数据源
       final selectedSites = await getSelectedApiSites();
-      
-      // 创建计数器跟踪完成的请求数量
-      int completedRequests = 0;
       final totalRequests = selectedSites.length;
+      var completedRequests = 0;
 
-      // 为每个API创建单独的请求
       selectedSites.forEach((key, value) {
         _searchByAPI(key, value['api']!, value['name']!, query).then((results) {
-          // 当一个API返回结果时，立即回调
           onResultsReceived(results);
-          
-          // 增加完成计数
-          completedRequests++;
-          
-          // 如果所有请求都完成了，调用完成回调
-          if (completedRequests == totalRequests) {
+          if (++completedRequests == totalRequests) {
             onSearchCompleted();
           }
-        }).catchError((error) {
-          // 即使某个请求出错，也要增加计数器，确保能触发完成回调
-          completedRequests++;
-          if (completedRequests == totalRequests) {
+        }).catchError((_) {
+          if (++completedRequests == totalRequests) {
             onSearchCompleted();
           }
         });
       });
     } catch (e) {
-      // 如果获取选中数据源时出错，直接调用完成回调
       onSearchCompleted();
     }
   }
 
-  // 按API搜索
+  /// 按指定API进行搜索
+  /// [apiCode] API代码标识
+  /// [apiUrl] API地址
+  /// [apiName] API名称
+  /// [query] 搜索关键词
   static Future<List<MediaDetail>> _searchByAPI(
       String apiCode, String apiUrl, String apiName, String query) async {
     try {
-      final Dio apiDio = Dio(BaseOptions(
+      final apiDio = Dio(BaseOptions(
         headers: {
           'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json',
         },
         connectTimeout: const Duration(seconds: 10),
@@ -364,8 +328,8 @@ class ApiService {
 
       if (response.statusCode == 200) {
         dynamic data = response.data;
-        
-        // 如果返回的是字符串，则尝试解析为JSON
+
+        // 处理字符串类型的响应数据
         if (data is String) {
           try {
             data = json.decode(data);
@@ -373,18 +337,18 @@ class ApiService {
             return [];
           }
         }
-        
+
         if (data is Map && data.containsKey('list') && data['list'] is List) {
           final List<dynamic> list = data['list'];
-          return list.map((item) {
-            return _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl);
-          }).toList();
+          return list
+              .map((item) =>
+                  _mapApiDataToMediaDetail(item, apiName, apiCode, apiUrl))
+              .toList();
         }
       }
 
       return [];
     } catch (e) {
-      // 出错时返回空列表而不是抛出异常
       return [];
     }
   }

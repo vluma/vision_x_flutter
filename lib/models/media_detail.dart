@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
 // 媒体详情数据模型
 class MediaDetail {
@@ -332,6 +333,154 @@ class MediaDetail {
         final episode = source.episodes[j];
         debugPrint('    剧集 $j: ${episode.title} (${episode.url})');
       }
+    }
+  }
+
+  /// 从API原始数据映射到MediaDetail对象
+  /// [item] 原始API数据项
+  /// [apiName] API名称
+  /// [apiCode] API代码
+  /// [apiUrl] API地址
+  static MediaDetail fromApiData(
+      dynamic item, String apiName, String apiCode, String apiUrl) {
+    final sources = _parseEpisodes(item['vod_play_url']?.toString() ?? '');
+
+    return MediaDetail(
+      id: _parseInt(item['vod_id']),
+      name: item['vod_name']?.toString(),
+      subtitle: item['vod_sub']?.toString(),
+      type: item['type_name']?.toString(),
+      category: item['vod_class']?.toString(),
+      year: item['vod_year']?.toString(),
+      area: item['vod_area']?.toString(),
+      language: item['vod_lang']?.toString(),
+      duration: item['vod_duration']?.toString(),
+      state: item['vod_state']?.toString(),
+      remarks: item['vod_remarks']?.toString(),
+      version: item['vod_version']?.toString(),
+      actors: item['vod_actor']?.toString(),
+      director: item['vod_director']?.toString(),
+      writer: item['vod_writer']?.toString(),
+      description: item['vod_blurb']?.toString(),
+      content: item['vod_content']?.toString(),
+      poster: _validateImageUrl(item['vod_pic']?.toString()),
+      posterThumb: _validateImageUrl(item['vod_pic_thumb']?.toString()),
+      posterSlide: _validateImageUrl(item['vod_pic_slide']?.toString()),
+      posterScreenshot: _validateImageUrl(item['vod_pic_screenshot']?.toString()),
+      playUrl: item['vod_play_url']?.toString(),
+      playFrom: item['vod_play_from']?.toString(),
+      playServer: item['vod_play_server']?.toString(),
+      playNote: item['vod_play_note']?.toString(),
+      score: item['vod_score']?.toString(),
+      scoreAll: _parseInt(item['vod_score_all']),
+      scoreNum: _parseInt(item['vod_score_num']),
+      doubanScore: item['vod_douban_score']?.toString(),
+      doubanId: _parseInt(item['vod_douban_id']),
+      hits: _parseInt(item['vod_hits']),
+      hitsDay: _parseInt(item['vod_hits_day']),
+      hitsWeek: _parseInt(item['vod_hits_week']),
+      hitsMonth: _parseInt(item['vod_hits_month']),
+      up: _parseInt(item['vod_up']),
+      down: _parseInt(item['vod_down']),
+      time: item['vod极速资源_time']?.toString(),
+      timeAdd: _parseInt(item['vod_time_add']),
+      letter: item['vod_letter']?.toString(),
+      color: item['vod_color']?.toString(),
+      tag: item['vod_tag']?.toString(),
+      serial: item['vod_serial']?.toString(),
+      tv: item['vod_tv']?.toString(),
+      weekday: item['vod_weekday']?.toString(),
+      pubdate: item['vod_pubdate']?.toString(),
+      total: _parseInt(item['vod_total']),
+      isEnd: _parseInt(item['vod_isend']),
+      trysee: _parseInt(item['vod_trysee']),
+      sourceName: apiName,
+      sourceCode: apiCode,
+      apiUrl: apiUrl,
+      hasCover: item['vod_pic'] != null && item['vod_pic'].toString().startsWith('http'),
+      sourceInfo: null,
+      surces: sources,
+    );
+  }
+
+  /// 解析整数值的辅助方法
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  /// 验证图片URL是否有效
+  static String? _validateImageUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return null;
+  }
+
+  /// 解析剧集信息
+  static List<Source> _parseEpisodes(String playUrl) {
+    if (playUrl.isEmpty) return [];
+
+    try {
+      List<Source> sources = [];
+      final sourceStrings = playUrl.split(r'$$$');
+
+      for (var sourceStr in sourceStrings) {
+        final trimmedSource = sourceStr.trim();
+        if (trimmedSource.isEmpty) continue;
+
+        final episodeStrings = trimmedSource.split('#');
+        List<Episode> episodes = [];
+        String sourceType = 'unknown';
+
+        for (var episodeStr in episodeStrings) {
+          final trimmedEpisode = episodeStr.trim();
+          if (trimmedEpisode.isEmpty) continue;
+
+          final parts = trimmedEpisode.split(r'$');
+          if (parts.length < 2) continue;
+
+          final title = parts[0].trim();
+          final url = parts[1].trim();
+
+          if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            continue;
+          }
+
+          String type = 'unknown';
+          if (url.contains('.m3u8')) {
+            type = 'm3u8';
+          } else if (url.contains('.mp4')) {
+            type = 'mp4';
+          } else if (url.contains('.flv')) {
+            type = 'flv';
+          }
+
+          if (sourceType == 'unknown' && type != 'unknown') {
+            sourceType = type;
+          }
+
+          episodes.add(Episode(
+            title: title,
+            url: url,
+            index: episodes.length,
+            type: type,
+          ));
+        }
+
+        if (episodes.isNotEmpty && sourceType != 'unknown') {
+          sources.add(Source(
+            name: sourceType,
+            episodes: episodes,
+          ));
+        }
+      }
+
+      return sources;
+    } catch (e) {
+      return [];
     }
   }
 }
