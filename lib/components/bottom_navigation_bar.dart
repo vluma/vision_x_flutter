@@ -1,4 +1,4 @@
- // bottom_navigation_bar.dart
+// bottom_navigation_bar.dart
 // 功能: 底部导航栏组件 - 优化版本
 // 优化重点: 性能提升、代码结构、可维护性
 
@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/theme/colors.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 /// 导航栏常量配置
 class NavBarConstants {
@@ -105,7 +104,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   void _toggleSearch() {
     final newSearchState = !_isSearchExpanded;
-    
+
     setState(() {
       _lastActivePath = widget.currentPath;
       _isSearchExpanded = newSearchState;
@@ -124,11 +123,11 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     if (_lastActivePath != null) {
       GoRouter.of(context).go(_lastActivePath!);
     }
-    
+
     setState(() {
       _isSearchExpanded = false;
     });
-    
+
     searchDataSource.setSearchExpanded(false);
     _searchController.clear();
   }
@@ -149,10 +148,12 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     return Expanded(
       child: InkWell(
         onTap: () => _onNavItemTapped(index),
-        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        borderRadius:
+            BorderRadius.circular(NavBarConstants.containerBorderRadius),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+            borderRadius:
+                BorderRadius.circular(NavBarConstants.containerBorderRadius),
           ),
           child: Center(
             child: Icon(
@@ -185,7 +186,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     final theme = Theme.of(context);
     return InkWell(
       onTap: _toggleMenu,
-      borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+      borderRadius:
+          BorderRadius.circular(NavBarConstants.containerBorderRadius),
       child: Container(
         decoration: const BoxDecoration(shape: BoxShape.circle),
         child: Center(
@@ -202,7 +204,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   Widget _buildSearchButton() {
     return InkWell(
       onTap: _toggleSearch,
-      borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+      borderRadius:
+          BorderRadius.circular(NavBarConstants.containerBorderRadius),
       child: const SizedBox(
         width: double.infinity,
         child: Center(
@@ -244,7 +247,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   Widget _buildNavigationContainer(double maxWidth) {
     final theme = Theme.of(context);
-    final selectBgWidth = maxWidth / 3;
+    final selectBgWidth = maxWidth / 3 -
+        NavBarConstants.borderWidth -
+        NavBarConstants.borderWidth;
 
     return AnimatedContainer(
       duration: NavBarConstants.animationDuration,
@@ -253,7 +258,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        borderRadius:
+            BorderRadius.circular(NavBarConstants.containerBorderRadius),
         border: Border.all(
           color: Theme.of(context).dividerColor.withOpacity(0.2),
           width: NavBarConstants.borderWidth,
@@ -270,30 +276,75 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         padding: const EdgeInsets.all(NavBarConstants.paddingAll),
         child: Stack(
           children: [
-            // 滑动的选中背景
-            AnimatedAlign(
-              duration: NavBarConstants.animationDuration,
-              curve: NavBarConstants.animationCurve,
-              alignment: _isSearchExpanded
-                  ? Alignment.centerRight
-                  : Alignment((_selectedIndex - 1) * 1.0, 0),
-              child: AnimatedContainer(
-                duration: NavBarConstants.animationDuration,
-                curve: NavBarConstants.animationCurve,
-                width: _isSearchExpanded ? 0 : selectBgWidth,
-                height: NavBarConstants.selectedContainerHeight,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(NavBarConstants.selectedContainerBorderRadius),
-                  color: theme.brightness == Brightness.dark
-                      ? AppColors.bottomNavSelectedItem.withOpacity(NavBarConstants.selectedItemAlphaDark)
-                      : theme.primaryColor.withOpacity(NavBarConstants.commonAlpha),
-                ),
+            // 滑动的选中背景 - 优化大小和增强形变效果
+            TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.elasticOut,
+              tween: Tween<double>(
+                begin: _isSearchExpanded ? 1.0 : 0.0,
+                end: _isSearchExpanded ? 0.0 : (_selectedIndex - 1) * 1.0,
               ),
+              builder: (context, value, child) {
+                final alignment = _isSearchExpanded
+                    ? Alignment.centerRight
+                    : Alignment(value, 0);
+
+                // 计算当前位置与目标位置的距离
+                final distance = ((_selectedIndex - 1) * 1.0 - value).abs();
+
+                // 增强形变效果 - 基于物理的弹簧压缩
+                final springScale =
+                    1.0 + (0.15 * (1 - distance * distance)); // 抛物线形变
+                final squeeze = 1.0 - (0.08 * (1 - distance)); // 挤压效果
+
+                // 限制最大形变防止超出范围
+                final clampedWidth =
+                    (_isSearchExpanded ? 0.0 : selectBgWidth * 0.9)
+                        .toDouble(); // 缩小10%防止超出
+                final clampedHeight =
+                    (NavBarConstants.selectedContainerHeight * 0.95)
+                        .toDouble(); // 缩小5%
+
+                return Align(
+                  alignment: alignment,
+                  child: Transform.scale(
+                    scaleX:
+                        _isSearchExpanded ? 0.0 : springScale.clamp(0.85, 1.15),
+                    scaleY: _isSearchExpanded ? 0.0 : squeeze.clamp(0.9, 1.1),
+                    child: Container(
+                      width: clampedWidth,
+                      height: clampedHeight,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 2.0), // 添加边距防止溢出
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                            NavBarConstants.selectedContainerBorderRadius *
+                                0.95), // 稍微圆角
+                        color: theme.brightness == Brightness.dark
+                            ? AppColors.bottomNavSelectedItem.withOpacity(
+                                NavBarConstants.selectedItemAlphaDark)
+                            : theme.primaryColor
+                                .withOpacity(NavBarConstants.commonAlpha),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.primaryColor.withOpacity(0.25),
+                            blurRadius: 10.0,
+                            offset: const Offset(0, 2),
+                            spreadRadius: 0.5,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             // 内容切换
             AnimatedSwitcher(
               duration: NavBarConstants.animationDuration,
-              child: _isSearchExpanded ? _buildMenuButton() : _buildNavigationButtons(),
+              child: _isSearchExpanded
+                  ? _buildMenuButton()
+                  : _buildNavigationButtons(),
             ),
           ],
         ),
@@ -309,7 +360,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        borderRadius:
+            BorderRadius.circular(NavBarConstants.containerBorderRadius),
         border: Border.all(
           color: Theme.of(context).dividerColor.withOpacity(0.2),
           width: NavBarConstants.borderWidth,
@@ -338,7 +390,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     final maxColumnWidth = screenWidth > NavBarConstants.maxColumnWidthOffset
         ? screenWidth - NavBarConstants.maxColumnWidthOffset
         : NavBarConstants.minColumnWidth;
-    
+
     final viewInsets = MediaQuery.of(context).viewInsets;
     final bottomPadding = MediaQuery.of(context).padding.bottom +
         viewInsets.bottom +

@@ -92,14 +92,17 @@ class HistoryItem extends StatelessWidget {
               if (record.progress > 0)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: LinearProgressIndicator(
-                    value: _calculateProgress(),
-                    backgroundColor:
-                        Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: _calculateProgress(),
+                      backgroundColor:
+                          Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                      minHeight: 4,
                     ),
-                    minHeight: 4,
                   ),
                 ),
               if (record.progress > 0)
