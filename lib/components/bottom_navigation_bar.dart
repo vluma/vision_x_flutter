@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/core/themes/colors.dart';
+import 'package:vision_x_flutter/services/api_service.dart';
 
 /// 导航栏常量配置
 class NavBarConstants {
@@ -253,7 +253,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
     return AnimatedContainer(
       duration: NavBarConstants.animationDuration,
-      curve: NavBarConstants.animationCurve,
+      curve: Curves.easeOutCubic, // 使用更柔和的缓动
       width: _isSearchExpanded ? NavBarConstants.containerHeight : maxWidth,
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
@@ -276,10 +276,10 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         padding: const EdgeInsets.all(NavBarConstants.paddingAll),
         child: Stack(
           children: [
-            // 滑动的选中背景 - 优化大小和增强形变效果
+            // 滑动的选中背景 - 使用更柔和的动画
             TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.elasticOut,
+              duration: NavBarConstants.animationDuration, // 恢复标准动画时间
+              curve: Curves.easeOutCubic, // 使用更柔和的缓动
               tween: Tween<double>(
                 begin: _isSearchExpanded ? 1.0 : 0.0,
                 end: _isSearchExpanded ? 0.0 : (_selectedIndex - 1) * 1.0,
@@ -289,28 +289,32 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                     ? Alignment.centerRight
                     : Alignment(value, 0);
 
-                // 计算当前位置与目标位置的距离
-                final distance = ((_selectedIndex - 1) * 1.0 - value).abs();
+                // 计算当前距离目标的距离 - 动画完成时应该为0
+                final targetValue = (_selectedIndex - 1) * 1.0;
+                final distance = (targetValue - value).abs();
 
-                // 增强形变效果 - 基于物理的弹簧压缩
-                final springScale =
-                    1.0 + (0.15 * (1 - distance * distance)); // 抛物线形变
-                final squeeze = 1.0 - (0.08 * (1 - distance)); // 挤压效果
+                // 距离越小，形变越小，动画完成时完全恢复正常
+                final intensity = distance.clamp(0.0, 0.3) * 3.0; // 减弱势变强度
+                final springScale = 1.0 + (0.08 * intensity); // 减弱势变幅度
+                final squeeze = 1.0 - (0.05 * intensity); // 减弱势变幅度
+
+                // 确保动画完成时完全恢复正常
+                final finalScaleX =
+                    distance < 0.001 ? 1.0 : springScale.clamp(0.9, 1.1);
+                final finalScaleY =
+                    distance < 0.001 ? 1.0 : squeeze.clamp(0.92, 1.08);
 
                 // 限制最大形变防止超出范围
                 final clampedWidth =
-                    (_isSearchExpanded ? 0.0 : selectBgWidth * 0.9)
-                        .toDouble(); // 缩小10%防止超出
+                    (_isSearchExpanded ? 0.0 : selectBgWidth * 0.9).toDouble();
                 final clampedHeight =
-                    (NavBarConstants.selectedContainerHeight * 0.95)
-                        .toDouble(); // 缩小5%
+                    (NavBarConstants.selectedContainerHeight * 0.95).toDouble();
 
                 return Align(
                   alignment: alignment,
                   child: Transform.scale(
-                    scaleX:
-                        _isSearchExpanded ? 0.0 : springScale.clamp(0.85, 1.15),
-                    scaleY: _isSearchExpanded ? 0.0 : squeeze.clamp(0.9, 1.1),
+                    scaleX: _isSearchExpanded ? 0.0 : finalScaleX,
+                    scaleY: _isSearchExpanded ? 0.0 : finalScaleY,
                     child: Container(
                       width: clampedWidth,
                       height: clampedHeight,
@@ -339,9 +343,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                 );
               },
             ),
-            // 内容切换
+            // 内容切换 - 使用更简单的淡入淡出
             AnimatedSwitcher(
-              duration: NavBarConstants.animationDuration,
+              duration: NavBarConstants.animationDuration, // 更快的切换
+              switchInCurve: Curves.easeOut, // 简单缓出
+              switchOutCurve: Curves.easeIn, // 简单缓入
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
               child: _isSearchExpanded
                   ? _buildMenuButton()
                   : _buildNavigationButtons(),
@@ -354,8 +366,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
   Widget _buildSearchContainer(double maxWidth) {
     return AnimatedContainer(
-      duration: NavBarConstants.animationDuration,
-      curve: NavBarConstants.animationCurve,
+      duration: NavBarConstants.animationDuration, // 恢复标准动画时间
+      curve: Curves.easeOutCubic, // 使用更柔和的缓动
       width: _isSearchExpanded ? maxWidth : NavBarConstants.containerHeight,
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
@@ -377,7 +389,15 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       child: Padding(
         padding: const EdgeInsets.all(NavBarConstants.paddingAll),
         child: AnimatedSwitcher(
-          duration: NavBarConstants.animationDuration,
+          duration: NavBarConstants.animationDuration, // 更快的切换
+          switchInCurve: Curves.easeOut, // 简单缓出
+          switchOutCurve: Curves.easeIn, // 简单缓入
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
           child: _isSearchExpanded ? _buildSearchField() : _buildSearchButton(),
         ),
       ),

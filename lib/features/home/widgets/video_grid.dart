@@ -8,7 +8,7 @@ import 'package:vision_x_flutter/components/loading_animation.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 
 /// 视频网格组件，支持下拉刷新和上拉加载更多
-class VideoGrid extends StatelessWidget {
+class VideoGrid extends StatefulWidget {
   final List<DoubanMovie> movies;
   final bool hasMoreData;
   final bool isLoading;
@@ -27,18 +27,74 @@ class VideoGrid extends StatelessWidget {
   });
 
   @override
+  State<VideoGrid> createState() => _VideoGridState();
+}
+
+class _VideoGridState extends State<VideoGrid> {
+  final ScrollController _scrollController = ScrollController();
+  List<DoubanMovie> _previousMovies = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _previousMovies = widget.movies;
+  }
+
+  @override
+  void didUpdateWidget(covariant VideoGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // 检测数据是否刷新或排序，如果是则滚动到顶部
+    if (_shouldScrollToTop(oldWidget.movies, widget.movies)) {
+      _scrollToTop();
+    }
+    _previousMovies = widget.movies;
+  }
+
+  bool _shouldScrollToTop(List<DoubanMovie> oldMovies, List<DoubanMovie> newMovies) {
+    // 如果数据完全刷新（长度变化或内容完全不同）
+    if (oldMovies.length != newMovies.length) {
+      return true;
+    }
+    
+    // 如果排序可能发生变化（第一个元素不同）
+    if (oldMovies.isNotEmpty && newMovies.isNotEmpty && 
+        oldMovies.first.id != newMovies.first.id) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: RefreshIndicator(
-            onRefresh: onRefresh,
+            onRefresh: widget.onRefresh,
             child: NotificationListener<ScrollNotification>(
               onNotification: (ScrollNotification scrollInfo) {
                 if (scrollInfo.metrics.pixels >=
                     scrollInfo.metrics.maxScrollExtent - 500) {
-                  onLoadMore();
+                  widget.onLoadMore();
                   return true;
                 }
                 return false;
@@ -53,6 +109,7 @@ class VideoGrid extends StatelessWidget {
 
   Widget _buildGridContent() {
     return GridView.builder(
+      controller: _scrollController, // 添加滚动控制器
       padding: AppSpacing.pageMargin.copyWith(
         top: AppSpacing.md,
         bottom: AppSpacing.bottomNavigationBarMargin,
@@ -63,11 +120,11 @@ class VideoGrid extends StatelessWidget {
         crossAxisSpacing: 0,
         mainAxisSpacing: 0,
       ),
-      itemCount: movies.length + (hasMoreData ? 1 : 0),
+      itemCount: widget.movies.length + (widget.hasMoreData ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
-        if (index == movies.length && hasMoreData) {
+        if (index == widget.movies.length && widget.hasMoreData) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            onLoadMore();
+            widget.onLoadMore();
           });
           return const Center(
             child: Padding(
@@ -77,10 +134,10 @@ class VideoGrid extends StatelessWidget {
           );
         }
 
-        final movie = movies[index];
+        final movie = widget.movies[index];
         return _VideoItem(
           movie: movie,
-          onTap: () => onItemTap(movie),
+          onTap: () => widget.onItemTap(movie),
         );
       },
     );
@@ -188,4 +245,4 @@ class _VideoItem extends StatelessWidget {
       ),
     );
   }
-} 
+}
