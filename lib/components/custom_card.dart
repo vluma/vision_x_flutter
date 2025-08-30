@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/theme/colors.dart';
+import 'package:vision_x_flutter/core/themes/colors.dart';
 
 class CustomCard extends StatelessWidget {
   final Widget child;

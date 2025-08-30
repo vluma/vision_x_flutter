@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vision_x_flutter/models/history_record.dart';
-import 'package:vision_x_flutter/models/media_detail.dart';
+import 'package:vision_x_flutter/data/models/history_record.dart';
+import 'package:vision_x_flutter/data/models/media_detail.dart';
 
 class HistoryService extends ChangeNotifier {
   static const String _historyKey = 'watch_history';

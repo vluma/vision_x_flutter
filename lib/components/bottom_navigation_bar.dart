@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
-import 'package:vision_x_flutter/theme/colors.dart';
+import 'package:vision_x_flutter/core/themes/colors.dart';
 
 /// 导航栏常量配置
 class NavBarConstants {

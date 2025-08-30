@@ -1,0 +1,9 @@
+// 详情页面模块导出文件
+export 'detail_page.dart';
+export 'detail_view_model.dart';
+export 'widgets/detail_app_bar.dart';
+export 'widgets/detail_header.dart';
+export 'widgets/detail_description.dart';
+export 'widgets/detail_cast.dart';
+export 'widgets/detail_sources.dart';
+export 'widgets/loading_state.dart';

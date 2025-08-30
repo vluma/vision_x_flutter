@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vision_x_flutter/models/history_record.dart';
+import 'package:vision_x_flutter/data/models/history_record.dart';
 import 'package:intl/intl.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
 
