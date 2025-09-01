@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/core/themes/colors.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/data/models/douban_movie.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 
 /// 视频网格组件，支持下拉刷新和上拉加载更多

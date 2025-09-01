@@ -13,6 +13,7 @@ import 'package:vision_x_flutter/services/hls_parser_service.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // MARK: - 视频播放器配置
 class VideoPlayerConfig {
@@ -167,26 +168,47 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         _isProcessingVideo = true;
       });
 
-      // 判断是否为HLS流
-      if (_isHlsStream(widget.episode.url)) {
-        try {
-          final processedPlaylist =
-              await _hlsParserService.filterAdsAndRebuild(widget.episode.url);
-          // debugPrint('处理后的播放列表: $processedPlaylist');
-          // 将处理后的播放列表保存到本地文件
-          final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
+      // 获取基础URL用于拼接可能不完整的视频URL
+      final baseUrl = widget.media.apiUrl ?? '';
+      debugPrint('基础URL: $baseUrl');
 
-          // 设置处理后的URL
-          _processedVideoUrl = processedUrl;
-          debugPrint('HLS解析器处理完成，广告已过滤');
-        } catch (e) {
-          debugPrint('HLS解析器处理失败: $e');
-          // 处理失败时使用原始URL
-          _processedVideoUrl = widget.episode.url;
+      // 处理可能不完整的视频URL
+      final resolvedUrl = baseUrl.isNotEmpty
+          ? _resolveIncompleteUrl(widget.episode.url, baseUrl)
+          : widget.episode.url;
+      debugPrint('解析后的URL: $resolvedUrl');
+
+      // 判断是否为HLS流
+      if (_isHlsStream(resolvedUrl)) {
+        // 检查广告过滤是否启用
+        final prefs = await SharedPreferences.getInstance();
+        final isAdFilterEnabled = prefs.getBool('ad_filter_enabled') ?? true;
+        
+        if (!isAdFilterEnabled) {
+          // 广告过滤已禁用，直接使用原始URL
+          debugPrint('广告过滤功能已禁用，跳过广告检测');
+          _processedVideoUrl = resolvedUrl;
+        } else {
+          // 广告过滤已启用，执行广告过滤
+          try {
+            final processedPlaylist =
+                await _hlsParserService.filterAdsAndRebuild(resolvedUrl);
+            // debugPrint('处理后的播放列表: $processedPlaylist');
+            // 将处理后的播放列表保存到本地文件
+            final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
+
+            // 设置处理后的URL
+            _processedVideoUrl = processedUrl;
+            debugPrint('HLS解析器处理完成，广告已过滤');
+          } catch (e) {
+            debugPrint('HLS解析器处理失败: $e');
+            // 处理失败时使用解析后的URL
+            _processedVideoUrl = resolvedUrl;
+          }
         }
       } else {
-        // 非HLS流，直接返回原URL
-        _processedVideoUrl = widget.episode.url;
+        // 非HLS流，使用解析后的URL
+        _processedVideoUrl = resolvedUrl;
       }
     } finally {
       if (mounted) {
@@ -225,6 +247,46 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     return lowerUrl.contains('.m3u8') ||
         lowerUrl.contains('application/vnd.apple.mpegurl') ||
         lowerUrl.contains('application/x-mpegurl');
+  }
+
+  /// 处理可能不完整的URL，与源地址拼接
+  String _resolveIncompleteUrl(String url, String baseUrl) {
+    // 如果URL已经是完整格式，直接返回
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    try {
+      // 处理相对路径URL
+      final baseUri = Uri.parse(baseUrl);
+
+      // 如果是绝对路径（以/开头）
+      if (url.startsWith('/')) {
+        return '${baseUri.scheme}://${baseUri.host}$url';
+      }
+
+      // 处理相对路径
+      final pathSegments = List<String>.from(baseUri.pathSegments);
+
+      // 移除空的路径段
+      pathSegments.removeWhere((element) => element.isEmpty);
+
+      // 移除最后一级文件名，准备添加相对路径
+      if (pathSegments.isNotEmpty && !baseUri.path.endsWith('/')) {
+        pathSegments.removeLast();
+      }
+
+      // 分割并添加相对URL路径
+      final relativeSegments =
+          url.split('/').where((element) => element.isNotEmpty).toList();
+      pathSegments.addAll(relativeSegments);
+
+      return '${baseUri.scheme}://${baseUri.host}/${pathSegments.join('/')}';
+    } catch (e) {
+      debugPrint('URL解析错误: $e');
+      // 如果解析失败，返回原始URL
+      return url;
+    }
   }
 
   void _reportVideoDuration() {
@@ -478,27 +540,27 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         children: [
           const Icon(
             Icons.error_outline,
-            size: 64,
+            size: 48,
             color: Colors.red,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           const Text(
             '视频加载失败',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             _errorMessage ?? '未知错误',
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               color: Colors.grey,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _retryInitialization,
             child: const Text('重试'),
@@ -554,7 +616,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    '正在检测和过滤广告...',
+                    '正在准备视频...',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vision_x_flutter/features/history/presentation/providers/history_providers.dart';
 
-/// 空历史记录状态组件
-class EmptyHistory extends StatelessWidget {
+/// 空历史记录状态组件 - Riverpod版本
+class EmptyHistory extends ConsumerWidget {
   final Future<void> Function() onRefresh;
 
   const EmptyHistory({super.key, required this.onRefresh});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -29,7 +31,9 @@ class EmptyHistory extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: onRefresh,
+            onPressed: () async {
+              await ref.read(historyNotifierProvider.notifier).refreshHistory();
+            },
             icon: const Icon(Icons.refresh),
             label: const Text('刷新'),
           ),

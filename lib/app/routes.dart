@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/detail_page/detail_page.dart';
-import 'package:vision_x_flutter/features/home/home_page.dart';
-import 'package:vision_x_flutter/features/history/history_page.dart';
+import 'package:vision_x_flutter/features/home/index.dart';
+import 'package:vision_x_flutter/features/history/presentation/pages/history_page.dart';
 import 'package:vision_x_flutter/features/settings/settings_page.dart';
 import 'package:vision_x_flutter/features/main_page.dart';
 import 'package:vision_x_flutter/features/search/search_page.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_page.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
+
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[

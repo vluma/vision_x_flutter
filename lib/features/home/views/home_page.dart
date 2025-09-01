@@ -1,0 +1,87 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
+import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
+import 'package:vision_x_flutter/features/home/states/home_state.dart';
+import 'package:vision_x_flutter/features/home/views/widgets/home_app_bar.dart';
+import 'package:vision_x_flutter/features/home/views/widgets/loading_skeleton.dart';
+import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
+import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
+
+class HomePage extends ConsumerStatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 初始化加载数据
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(homeViewModelProvider.notifier).loadMovies();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(homeViewModelProvider);
+    
+    return Scaffold(
+      appBar: HomeAppBar(
+        selectedCategory: '电影',
+        selectedSource: '热门',
+        selectedSort: 'recommend',
+        onCategoryChanged: (category) {},
+        onSourceChanged: (source) {},
+        onSortChanged: (sort) {},
+      ),
+      body: _buildBody(state),
+    );
+  }
+
+  Widget _buildBody(HomeState state) {
+    return state.map(
+      initial: (_) => const LoadingSkeleton(),
+      loading: (_) => const LoadingSkeleton(),
+      loaded: (loadedState) => VideoGrid(
+        movies: loadedState.movies.map((movie) => _convertToDoubanMovie(movie)).toList(),
+        hasMoreData: loadedState.hasMore,
+        isLoading: loadedState.isLoadingMore,
+        onRefresh: () => ref.read(homeViewModelProvider.notifier).refresh(),
+        onLoadMore: () => ref.read(homeViewModelProvider.notifier).loadMore(),
+        onItemTap: (movie) => ref.read(homeViewModelProvider.notifier).onItemTap(_convertToMovieEntity(movie), context),
+      ),
+      error: (errorState) => Center(
+        child: Text('错误: ${errorState.message}'),
+      ),
+    );
+  }
+  
+  DoubanMovie _convertToDoubanMovie(MovieEntity movie) {
+    return DoubanMovie(
+      id: movie.id,
+      title: movie.title,
+      cover: movie.poster,
+      rate: movie.rating.toString(),
+      url: '',
+      isNew: false,
+      playable: true,
+      episodesInfo: '',
+      coverX: 0,
+      coverY: 0,
+    );
+  }
+  
+  MovieEntity _convertToMovieEntity(DoubanMovie movie) {
+    return MovieEntity(
+      id: movie.id,
+      title: movie.title,
+      poster: movie.cover,
+      rating: double.tryParse(movie.rate) ?? 0.0,
+      year: 0,
+    );
+  }
+}

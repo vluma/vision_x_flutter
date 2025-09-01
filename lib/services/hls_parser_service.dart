@@ -12,11 +12,13 @@ class HlsParserService {
   final Dio _dio = Dio();
 
   // 广告过滤设置
+  bool _adFilterEnabled = true; // 全局广告过滤开关
   bool _adFilterByMetadata = true; // 合并码率和不连续标记检测
 
   /// 加载广告过滤设置
   Future<void> _loadAdFilterSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? true;
     _adFilterByMetadata = prefs.getBool('ad_filter_by_metadata') ?? true;
   }
 
@@ -68,6 +70,13 @@ class HlsParserService {
   Future<String> filterAdsAndRebuild(String originalUrl) async {
     try {
       await _loadAdFilterSettings();
+
+      // 如果全局广告过滤被禁用，直接返回原始播放列表内容
+      if (!_adFilterEnabled) {
+        debugPrint('广告过滤功能已禁用，跳过广告检测');
+        final response = await _dio.get(originalUrl);
+        return response.data as String;
+      }
 
       // 解析主播放列表
       final masterPlaylist = await parseMasterPlaylist(originalUrl);

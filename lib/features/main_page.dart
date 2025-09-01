@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/components/bottom_navigation_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:vision_x_flutter/features/navigation/index.dart';
 
 class MainPage extends StatelessWidget {
   final Widget child;
@@ -13,10 +14,14 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: child,
-      bottomNavigationBar: BottomNavigationBarWidget(currentPath: currentPath),
+    return ChangeNotifierProvider(
+      create: (context) => NavigationProvider(),
+      child: Scaffold(
+        extendBody: true,
+        body: child,
+        bottomNavigationBar:
+            BottomNavigationBarWidget(currentPath: currentPath),
+      ),
     );
   }
 }

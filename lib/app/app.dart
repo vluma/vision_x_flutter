@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'routes.dart';
-import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/core/themes/app_theme.dart';
 import 'package:vision_x_flutter/core/themes/theme_provider.dart';
 
@@ -41,18 +40,15 @@ class _VisionXAppState extends State<VisionXApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => HistoryService(),
-      child: ThemeProvider(
-        selectedTheme: _selectedTheme,
-        updateTheme: _updateTheme,
-        child: MaterialApp.router(
-          title: 'Vision X',
-          theme: AppThemes.lightTheme,
-          darkTheme: AppThemes.darkTheme,
-          themeMode: _getThemeMode(),
-          routerConfig: router,
-        ),
+    return ThemeProvider(
+      selectedTheme: _selectedTheme,
+      updateTheme: _updateTheme,
+      child: MaterialApp.router(
+        title: 'Vision X',
+        theme: AppThemes.lightTheme,
+        darkTheme: AppThemes.darkTheme,
+        themeMode: _getThemeMode(),
+        routerConfig: router,
       ),
     );
   }
