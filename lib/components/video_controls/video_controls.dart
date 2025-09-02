@@ -1,0 +1,288 @@
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+import 'video_control_models.dart';
+import 'short_drama_controls.dart';
+import 'full_screen_controls.dart';
+import 'normal_controls.dart';
+
+/// 统一的视频控制器，根据模式自动选择合适的控制界面
+class UnifiedVideoControls extends StatelessWidget {
+  final VideoPlayerController controller;
+  final VideoPlayState playState;
+  final UIState uiState;
+  final String? title;
+  final String? episodeTitle;
+  final int currentEpisodeIndex;
+  final int totalEpisodes;
+  final ControlMode controlMode;
+
+  final VoidCallback? onPlayPause;
+  final VoidCallback? onBack;
+  final VoidCallback? onToggleFullScreen;
+  final VoidCallback? onToggleLock;
+  final VoidCallback? onNextEpisode;
+  final VoidCallback? onPrevEpisode;
+  final ValueChanged<double>? onSeek;
+  final ValueChanged<double>? onSpeedChanged;
+
+  const UnifiedVideoControls({
+    super.key,
+    required this.controller,
+    required this.playState,
+    required this.uiState,
+    this.title,
+    this.episodeTitle,
+    this.currentEpisodeIndex = 0,
+    this.totalEpisodes = 0,
+    this.controlMode = ControlMode.normal,
+    this.onPlayPause,
+    this.onBack,
+    this.onToggleFullScreen,
+    this.onToggleLock,
+    this.onNextEpisode,
+    this.onPrevEpisode,
+    this.onSeek,
+    this.onSpeedChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    switch (controlMode) {
+      case ControlMode.shortDrama:
+        return ShortDramaControls(
+          controller: controller,
+          playState: playState,
+          uiState: uiState,
+          onPlayPause: onPlayPause,
+          onBack: onBack,
+          onSeek: onSeek,
+        );
+
+      case ControlMode.fullScreen:
+        return FullScreenControls(
+          controller: controller,
+          playState: playState,
+          uiState: uiState,
+          title: title,
+          onPlayPause: onPlayPause,
+          onBack: onBack,
+          onToggleFullScreen: onToggleFullScreen,
+          onToggleLock: onToggleLock,
+          onSeek: onSeek,
+        );
+
+      case ControlMode.normal:
+        return NormalControls(
+          controller: controller,
+          playState: playState,
+          uiState: uiState,
+          title: title,
+          onPlayPause: onPlayPause,
+          onBack: onBack,
+          onToggleFullScreen: onToggleFullScreen,
+          onSeek: onSeek,
+        );
+    }
+  }
+}
+
+/// 控制器模式枚举
+enum ControlMode {
+  normal, // 普通模式
+  shortDrama, // 短剧模式
+  fullScreen, // 全屏模式
+}
+
+/// 简化的控制器配置类
+class VideoControlsConfig {
+  final ControlMode mode;
+  final bool showTitle;
+  final bool showLockButton;
+  final bool showEpisodeControls;
+  final bool showSpeedControls;
+  final Duration autoHideDelay;
+  final Color themeColor;
+
+  const VideoControlsConfig({
+    this.mode = ControlMode.normal,
+    this.showTitle = true,
+    this.showLockButton = false,
+    this.showEpisodeControls = false,
+    this.showSpeedControls = true,
+    this.autoHideDelay = const Duration(seconds: 3),
+    this.themeColor = const Color(0xFF00D4FF),
+  });
+
+  VideoControlsConfig copyWith({
+    ControlMode? mode,
+    bool? showTitle,
+    bool? showLockButton,
+    bool? showEpisodeControls,
+    bool? showSpeedControls,
+    Duration? autoHideDelay,
+    Color? themeColor,
+  }) {
+    return VideoControlsConfig(
+      mode: mode ?? this.mode,
+      showTitle: showTitle ?? this.showTitle,
+      showLockButton: showLockButton ?? this.showLockButton,
+      showEpisodeControls: showEpisodeControls ?? this.showEpisodeControls,
+      showSpeedControls: showSpeedControls ?? this.showSpeedControls,
+      autoHideDelay: autoHideDelay ?? this.autoHideDelay,
+      themeColor: themeColor ?? this.themeColor,
+    );
+  }
+}
+
+/// 简化的状态管理器
+class VideoControlsState extends ChangeNotifier {
+  VideoPlayState _playState = const VideoPlayState();
+  UIState _uiState = const UIState();
+  VideoControlsConfig _config = const VideoControlsConfig();
+
+  VideoPlayState get playState => _playState;
+  UIState get uiState => _uiState;
+  VideoControlsConfig get config => _config;
+
+  void updatePlayState(VideoPlayState newState) {
+    _playState = newState;
+    notifyListeners();
+  }
+
+  void updateUIState(UIState newState) {
+    _uiState = newState;
+    notifyListeners();
+  }
+
+  void updateConfig(VideoControlsConfig newConfig) {
+    _config = newConfig;
+    notifyListeners();
+  }
+
+  void togglePlayPause() {
+    _playState = _playState.copyWith(isPlaying: !_playState.isPlaying);
+    notifyListeners();
+  }
+
+  void toggleControlsVisibility() {
+    _uiState = _uiState.copyWith(controlsVisible: !_uiState.controlsVisible);
+    notifyListeners();
+  }
+
+  void toggleLock() {
+    _uiState = _uiState.copyWith(isLocked: !_uiState.isLocked);
+    notifyListeners();
+  }
+
+  void updateCurrentPosition(Duration position) {
+    _playState = _playState.copyWith(currentPosition: position);
+    notifyListeners();
+  }
+
+  void updateSpeed(double speed) {
+    _playState = _playState.copyWith(playbackSpeed: speed);
+    notifyListeners();
+  }
+}
+
+/// 使用示例
+class VideoPlayerWithUnifiedControls extends StatefulWidget {
+  final String videoUrl;
+  final VideoControlsConfig config;
+
+  const VideoPlayerWithUnifiedControls({
+    super.key,
+    required this.videoUrl,
+    this.config = const VideoControlsConfig(),
+  });
+
+  @override
+  State<VideoPlayerWithUnifiedControls> createState() =>
+      _VideoPlayerWithUnifiedControlsState();
+}
+
+class _VideoPlayerWithUnifiedControlsState
+    extends State<VideoPlayerWithUnifiedControls> {
+  late VideoPlayerController _controller;
+  late VideoControlsState _controlsState;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+    _controlsState = VideoControlsState();
+    _controlsState.updateConfig(widget.config);
+
+    _controller.initialize().then((_) {
+      _updatePlayState();
+      _controller.play();
+    });
+
+    _controller.addListener(_updatePlayState);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_updatePlayState);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updatePlayState() {
+    _controlsState.updatePlayState(VideoPlayState(
+      isPlaying: _controller.value.isPlaying,
+      currentPosition: _controller.value.position,
+      totalDuration: _controller.value.duration,
+      isBuffering: _controller.value.isBuffering,
+      playbackSpeed: _controller.value.playbackSpeed,
+    ));
+  }
+
+  void _handleSeek(double position) {
+    final duration = _controller.value.duration;
+    final seekPosition = Duration(
+      milliseconds: (position * duration.inMilliseconds).round(),
+    );
+    _controller.seekTo(seekPosition);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: _controller.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: Stack(
+                  children: [
+                    VideoPlayer(_controller),
+                    AnimatedBuilder(
+                      animation: _controlsState,
+                      builder: (context, child) {
+                        return UnifiedVideoControls(
+                          controller: _controller,
+                          playState: _controlsState.playState,
+                          uiState: _controlsState.uiState,
+                          controlMode: _controlsState.config.mode,
+                          onPlayPause: () {
+                            _controlsState.playState.isPlaying
+                                ? _controller.pause()
+                                : _controller.play();
+                          },
+                          onBack: () => Navigator.pop(context),
+                          onToggleFullScreen: () {
+                            // 实现全屏切换逻辑
+                          },
+                          onToggleLock: _controlsState.toggleLock,
+                          onSeek: _handleSeek,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(),
+      ),
+    );
+  }
+}

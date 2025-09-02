@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
-import 'package:vision_x_flutter/components/custom_video_controls.dart';
+import 'package:vision_x_flutter/components/video_controls/video_controls.dart';
+import 'package:vision_x_flutter/components/video_controls/video_control_models.dart'
+    as models;
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/services/enhanced_video_service.dart';
 import 'package:vision_x_flutter/components/loading_animation.dart';
@@ -183,7 +185,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         // 检查广告过滤是否启用
         final prefs = await SharedPreferences.getInstance();
         final isAdFilterEnabled = prefs.getBool('ad_filter_enabled') ?? true;
-        
+
         if (!isAdFilterEnabled) {
           // 广告过滤已禁用，直接使用原始URL
           debugPrint('广告过滤功能已禁用，跳过广告检测');
@@ -195,7 +197,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                 await _hlsParserService.filterAdsAndRebuild(resolvedUrl);
             // debugPrint('处理后的播放列表: $processedPlaylist');
             // 将处理后的播放列表保存到本地文件
-            final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
+            final processedUrl =
+                await _saveProcessedPlaylist(processedPlaylist);
 
             // 设置处理后的URL
             _processedVideoUrl = processedUrl;
@@ -306,16 +309,40 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       aspectRatio: _videoPlayer.value.aspectRatio,
       systemOverlaysAfterFullScreen: SystemUiOverlay.values,
       playbackSpeeds: VideoPlayerConfig.playbackSpeeds,
-      customControls: CustomControls(
-        isShortDramaMode: widget.isShortDramaMode,
-        onBackPressed: widget.onBackPressed,
-        onNextEpisode: widget.onNextEpisode,
-        onPrevEpisode: widget.onPrevEpisode,
-        onEpisodeChanged: widget.onShowEpisodeSelector,
+      customControls: UnifiedVideoControls(
+        controller: _videoPlayer,
+        playState: models.VideoPlayState(
+          isPlaying: _videoPlayer.value.isPlaying,
+          currentPosition: _videoPlayer.value.position,
+          totalDuration: _videoPlayer.value.duration,
+          isBuffering: _videoPlayer.value.isBuffering,
+          playbackSpeed: _videoPlayer.value.playbackSpeed,
+        ),
+        uiState: const models.UIState(),
+        controlMode: widget.isShortDramaMode
+            ? ControlMode.shortDrama
+            : ControlMode.normal,
+        title: widget.media.name,
         episodeTitle: widget.episode.title,
-        mediaTitle: widget.media.name,
         currentEpisodeIndex: widget.currentEpisodeIndex,
         totalEpisodes: widget.totalEpisodes,
+        onPlayPause: () {
+          if (_videoPlayer.value.isPlaying) {
+            _videoPlayer.pause();
+          } else {
+            _videoPlayer.play();
+          }
+        },
+        onBack: widget.onBackPressed,
+        onNextEpisode: widget.onNextEpisode,
+        onPrevEpisode: widget.onPrevEpisode,
+        onSeek: (position) {
+          final duration = _videoPlayer.value.duration;
+          final seekPosition = Duration(
+            milliseconds: (position * duration.inMilliseconds).round(),
+          );
+          _videoPlayer.seekTo(seekPosition);
+        },
       ),
       placeholder:
           widget.media.poster != null ? _buildPosterPlaceholder() : null,
