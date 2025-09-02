@@ -12,8 +12,7 @@ class SettingsController extends ChangeNotifier {
 
   // 功能开关
   bool _yellowFilterEnabled = true;
-  bool _adFilterEnabled = true;
-  bool _doubanEnabled = true;
+  bool _adFilterEnabled = false;
   
   // 广告过滤子选项
   bool _adFilterByMetadata = true;
@@ -33,7 +32,6 @@ class SettingsController extends ChangeNotifier {
   List<Map<String, String>> get customApis => _customApis;
   bool get yellowFilterEnabled => _yellowFilterEnabled;
   bool get adFilterEnabled => _adFilterEnabled;
-  bool get doubanEnabled => _doubanEnabled;
   bool get adFilterByMetadata => _adFilterByMetadata;
   bool get adFilterByResolution => _adFilterByResolution;
   bool get showCustomApiForm => _showCustomApiForm;
@@ -56,7 +54,6 @@ class SettingsController extends ChangeNotifier {
     // 加载功能开关设置
     _yellowFilterEnabled = prefs.getBool('yellow_filter_enabled') ?? true;
     _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? false;
-    _doubanEnabled = prefs.getBool('douban_enabled') ?? true;
     
     // 加载广告过滤子选项
     _adFilterByMetadata = prefs.getBool('ad_filter_by_metadata') ?? true;
@@ -129,11 +126,7 @@ class SettingsController extends ChangeNotifier {
     _saveSettingsWithoutNotification();
   }
 
-  void updateDouban(bool value) {
-    _doubanEnabled = value;
-    notifyListeners();
-    _saveSettingsWithoutNotification();
-  }
+
 
   void updateAdFilterByMetadata(bool value) {
     _adFilterByMetadata = value;
@@ -223,9 +216,6 @@ class SettingsController extends ChangeNotifier {
     // 保存功能开关设置
     await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
     await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
-    await prefs.setBool('douban_enabled', _doubanEnabled);
-    
-    // 保存广告过滤子选项
     await prefs.setBool('ad_filter_by_metadata', _adFilterByMetadata);
     await prefs.setBool('ad_filter_by_resolution', _adFilterByResolution);
 
@@ -248,7 +238,6 @@ class SettingsController extends ChangeNotifier {
     // 保存功能开关设置
     await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
     await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
-    await prefs.setBool('douban_enabled', _doubanEnabled);
     
     // 保存广告过滤子选项
     await prefs.setBool('ad_filter_by_metadata', _adFilterByMetadata);

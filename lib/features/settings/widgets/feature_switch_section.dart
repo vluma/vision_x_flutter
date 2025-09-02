@@ -298,42 +298,6 @@ class FeatureSwitchSection extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            // 豆瓣热门推荐
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '豆瓣热门推荐',
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black87,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '首页显示豆瓣热门影视内容',
-                        style: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black54,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  activeColor: Theme.of(context).primaryColor,
-                  value: controller.doubanEnabled,
-                  onChanged: (bool value) {
-                    controller.updateDouban(value);
-                  },
-                ),
-              ],
-            ),
           ],
         ),
       ),
