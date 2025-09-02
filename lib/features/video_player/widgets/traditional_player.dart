@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vision_x_flutter/components/video_swipe_back_gesture.dart';
+
 import 'package:vision_x_flutter/components/video_player.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_controller.dart';
@@ -14,18 +14,14 @@ class TraditionalPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return VideoSwipeBackGesture(
-      onBackPressed: () => context.pop(),
-      enableSwipeBack: true,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: null,
-        body: Column(
-          children: [
-            _buildVideoPlayerSection(context),
-            _buildTabSection(Theme.of(context)),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: null,
+      body: Column(
+        children: [
+          _buildVideoPlayerSection(context),
+          _buildTabSection(Theme.of(context)),
+        ],
       ),
     );
   }

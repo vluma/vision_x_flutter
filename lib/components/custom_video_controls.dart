@@ -623,13 +623,16 @@ class _CustomControlsState extends State<CustomControls>
           // 进度条
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: VideoProgressIndicator(
-              _videoPlayerController,
-              allowScrubbing: true,
-              colors: const VideoProgressColors(
-                playedColor: Color(0xFF00D4FF), // 使用蓝色替代红色
-                bufferedColor: Colors.white54,
-                backgroundColor: Colors.white24,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4.0), // 添加圆角
+              child: VideoProgressIndicator(
+                _videoPlayerController,
+                allowScrubbing: true,
+                colors: const VideoProgressColors(
+                  playedColor: Color(0xFF00D4FF), // 使用蓝色替代红色
+                  bufferedColor: Colors.white54,
+                  backgroundColor: Colors.white24,
+                ),
               ),
             ),
           ),
@@ -692,13 +695,16 @@ class _CustomControlsState extends State<CustomControls>
           // 进度条
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: VideoProgressIndicator(
-              _videoPlayerController,
-              allowScrubbing: true,
-              colors: const VideoProgressColors(
-                playedColor: Color(0xFF00D4FF), // 使用蓝色替代红色
-                bufferedColor: Colors.white54,
-                backgroundColor: Colors.white24,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4.0), // 添加圆角
+              child: VideoProgressIndicator(
+                _videoPlayerController,
+                allowScrubbing: true,
+                colors: const VideoProgressColors(
+                  playedColor: Color(0xFF00D4FF), // 使用蓝色替代红色
+                  bufferedColor: Colors.white54,
+                  backgroundColor: Colors.white24,
+                ),
               ),
             ),
           ),

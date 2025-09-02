@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/detail_page/detail_page.dart';
@@ -8,7 +9,6 @@ import 'package:vision_x_flutter/features/main_page.dart';
 import 'package:vision_x_flutter/features/search/search_page.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_page.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
-
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -37,41 +37,48 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/',
-              builder: (BuildContext context, GoRouterState state) {
-                return const HomePage();
+              pageBuilder: (BuildContext context, GoRouterState state) {
+                return CupertinoPage(
+                child: const HomePage(),
+              );
               },
               routes: <RouteBase>[
                 GoRoute(
                   path: 'detail/:id',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final id = state.pathParameters['id']!;
                     final extra = state.extra;
-                    if (extra is MediaDetail) {
-                      return DetailPage(id: id, media: extra);
-                    }
-                    return DetailPage(id: id);
+                    return CupertinoPage(
+                      child: extra is MediaDetail
+                          ? DetailPage(id: id, media: extra)
+                          : DetailPage(id: id),
+                    );
                   },
                 ),
                 GoRoute(
                   path: 'video',
                   name: 'video_player',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
                       final startPosition = extra['startPosition'] as int? ?? 0;
-                      return VideoPlayerPage(
-                        media: extra['media'] as MediaDetail,
-                        episode: extra['episode'] as Episode,
-                        startPosition: startPosition,
-                      );
+                      return CupertinoPage(
+                    child: VideoPlayerPage(
+                      media: extra['media'] as MediaDetail,
+                      episode: extra['episode'] as Episode,
+                      startPosition: startPosition,
+                    ),
+                  );
                     }
-                    return const Scaffold(
+                    return CupertinoPage(
+                    child: const Scaffold(
                       body: Center(
                         child: Text('视频信息不完整'),
                       ),
-                    );
+                    ),
+                  );
                   },
                 ),
               ],
@@ -83,38 +90,45 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/history',
-              builder: (BuildContext context, GoRouterState state) {
-                return const HistoryPage();
+              pageBuilder: (BuildContext context, GoRouterState state) {
+                return CupertinoPage(
+                child: const HistoryPage(),
+              );
               },
               routes: <RouteBase>[
                 GoRoute(
                   path: 'detail/:id',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final id = state.pathParameters['id']!;
                     final extra = state.extra;
-                    if (extra is MediaDetail) {
-                      return DetailPage(id: id, media: extra);
-                    }
-                    return DetailPage(id: id);
+                    return CupertinoPage(
+                    child: extra is MediaDetail
+                        ? DetailPage(id: id, media: extra)
+                        : DetailPage(id: id),
+                  );
                   },
                 ),
                 GoRoute(
                   path: 'video',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
                       final startPosition = extra['startPosition'] as int? ?? 0;
-                      return VideoPlayerPage(
-                        media: extra['media'] as MediaDetail,
-                        episode: extra['episode'] as Episode,
-                        startPosition: startPosition,
+                      return CupertinoPage(
+                        child: VideoPlayerPage(
+                          media: extra['media'] as MediaDetail,
+                          episode: extra['episode'] as Episode,
+                          startPosition: startPosition,
+                        ),
                       );
                     }
-                    return const Scaffold(
-                      body: Center(
-                        child: Text('视频信息不完整'),
+                    return CupertinoPage(
+                      child: const Scaffold(
+                        body: Center(
+                          child: Text('视频信息不完整'),
+                        ),
                       ),
                     );
                   },
@@ -128,38 +142,45 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/settings',
-              builder: (BuildContext context, GoRouterState state) {
-                return const SettingsPage();
+              pageBuilder: (BuildContext context, GoRouterState state) {
+                return CupertinoPage(
+                child: const SettingsPage(),
+              );
               },
               routes: <RouteBase>[
                 GoRoute(
                   path: 'detail/:id',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final id = state.pathParameters['id']!;
                     final extra = state.extra;
-                    if (extra is MediaDetail) {
-                      return DetailPage(id: id, media: extra);
-                    }
-                    return DetailPage(id: id);
+                    return CupertinoPage(
+                      child: extra is MediaDetail
+                          ? DetailPage(id: id, media: extra)
+                          : DetailPage(id: id),
+                    );
                   },
                 ),
                 GoRoute(
                   path: 'video',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
                       final startPosition = extra['startPosition'] as int? ?? 0;
-                      return VideoPlayerPage(
-                        media: extra['media'] as MediaDetail,
-                        episode: extra['episode'] as Episode,
-                        startPosition: startPosition,
+                      return CupertinoPage(
+                        child: VideoPlayerPage(
+                          media: extra['media'] as MediaDetail,
+                          episode: extra['episode'] as Episode,
+                          startPosition: startPosition,
+                        ),
                       );
                     }
-                    return const Scaffold(
-                      body: Center(
-                        child: Text('视频信息不完整'),
+                    return CupertinoPage(
+                      child: const Scaffold(
+                        body: Center(
+                          child: Text('视频信息不完整'),
+                        ),
                       ),
                     );
                   },
@@ -173,38 +194,45 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/search',
-              builder: (BuildContext context, GoRouterState state) {
-                return const SearchPage();
+              pageBuilder: (BuildContext context, GoRouterState state) {
+                return CupertinoPage(
+                child: const SearchPage(),
+              );
               },
               routes: <RouteBase>[
                 GoRoute(
                   path: 'detail/:id',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final id = state.pathParameters['id']!;
                     final extra = state.extra;
-                    if (extra is MediaDetail) {
-                      return DetailPage(id: id, media: extra);
-                    }
-                    return DetailPage(id: id);
+                    return CupertinoPage(
+                      child: extra is MediaDetail
+                          ? DetailPage(id: id, media: extra)
+                          : DetailPage(id: id),
+                    );
                   },
                 ),
                 GoRoute(
                   path: 'video',
-                  builder: (BuildContext context, GoRouterState state) {
+                  pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
                     if (extra is Map &&
                         extra['media'] is MediaDetail &&
                         extra['episode'] is Episode) {
                       final startPosition = extra['startPosition'] as int? ?? 0;
-                      return VideoPlayerPage(
-                        media: extra['media'] as MediaDetail,
-                        episode: extra['episode'] as Episode,
-                        startPosition: startPosition,
+                      return CupertinoPage(
+                        child: VideoPlayerPage(
+                          media: extra['media'] as MediaDetail,
+                          episode: extra['episode'] as Episode,
+                          startPosition: startPosition,
+                        ),
                       );
                     }
-                    return const Scaffold(
-                      body: Center(
-                        child: Text('视频信息不完整'),
+                    return CupertinoPage(
+                      child: const Scaffold(
+                        body: Center(
+                          child: Text('视频信息不完整'),
+                        ),
                       ),
                     );
                   },

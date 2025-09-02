@@ -92,12 +92,35 @@ class FeatureSwitchSection extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '分片广告过滤',
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            fontSize: 14,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '分片广告过滤',
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Beta',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.orange.shade200
+                                      : Colors.orange.shade800,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -105,6 +128,14 @@ class FeatureSwitchSection extends StatelessWidget {
                           style: TextStyle(
                             color: isDark ? Colors.white38 : Colors.black54,
                             fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '注意：此功能为Beta版本，可能导致未知问题',
+                          style: TextStyle(
+                            color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                            fontSize: 11,
                           ),
                         ),
                       ],
@@ -138,12 +169,35 @@ class FeatureSwitchSection extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '通过元数据过滤广告',
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black87,
-                              fontSize: 14,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                '通过元数据过滤广告',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Beta',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.orange.shade200
+                                        : Colors.orange.shade800,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -151,6 +205,14 @@ class FeatureSwitchSection extends StatelessWidget {
                             style: TextStyle(
                               color: isDark ? Colors.white38 : Colors.black54,
                               fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '注意：Beta功能，可能导致未知问题',
+                            style: TextStyle(
+                              color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -176,12 +238,35 @@ class FeatureSwitchSection extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '通过分辨率过滤广告',
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black87,
-                              fontSize: 14,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                '通过分辨率过滤广告',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Beta',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.orange.shade200
+                                        : Colors.orange.shade800,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -189,6 +274,14 @@ class FeatureSwitchSection extends StatelessWidget {
                             style: TextStyle(
                               color: isDark ? Colors.white38 : Colors.black54,
                               fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '注意：Beta功能，可能导致未知问题',
+                            style: TextStyle(
+                              color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                              fontSize: 11,
                             ),
                           ),
                         ],

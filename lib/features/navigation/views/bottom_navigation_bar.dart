@@ -41,7 +41,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   void didUpdateWidget(covariant BottomNavigationBarWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentPath != widget.currentPath) {
-      _viewModel.handlePathChange(widget.currentPath);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _viewModel.handlePathChange(widget.currentPath);
+      });
     }
   }
 
@@ -57,7 +59,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     final provider = Provider.of<NavigationProvider>(context, listen: false);
     final router = GoRouter.of(context);
     _viewModel = NavigationViewModel(provider, router);
-    _viewModel.handlePathChange(widget.currentPath);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewModel.handlePathChange(widget.currentPath);
+    });
   }
 
   /// 设置搜索监听器

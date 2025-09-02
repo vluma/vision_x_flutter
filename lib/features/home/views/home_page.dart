@@ -28,15 +28,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
+    final viewModel = ref.read(homeViewModelProvider.notifier);
     
     return Scaffold(
       appBar: HomeAppBar(
-        selectedCategory: '电影',
-        selectedSource: '热门',
-        selectedSort: 'recommend',
-        onCategoryChanged: (category) {},
-        onSourceChanged: (source) {},
-        onSortChanged: (sort) {},
+        selectedCategory: viewModel.currentCategory,
+        selectedSource: viewModel.currentSource,
+        selectedSort: viewModel.currentSort,
+        onCategoryChanged: (category) => viewModel.changeCategory(category),
+        onSourceChanged: (source) => viewModel.changeSource(source),
+        onSortChanged: (sort) => viewModel.changeSort(sort),
       ),
       body: _buildBody(state),
     );

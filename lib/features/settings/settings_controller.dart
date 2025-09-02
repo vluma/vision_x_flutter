@@ -55,7 +55,7 @@ class SettingsController extends ChangeNotifier {
 
     // 加载功能开关设置
     _yellowFilterEnabled = prefs.getBool('yellow_filter_enabled') ?? true;
-    _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? true;
+    _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? false;
     _doubanEnabled = prefs.getBool('douban_enabled') ?? true;
     
     // 加载广告过滤子选项

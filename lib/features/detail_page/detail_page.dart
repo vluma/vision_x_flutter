@@ -8,7 +8,7 @@ import 'package:vision_x_flutter/features/detail_page/widgets/detail_description
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_cast.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_sources.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/loading_state.dart';
-import 'package:vision_x_flutter/components/swipe_back_gesture.dart';
+
 
 /// 详情页面 - 展示媒体详细信息
 /// 采用MVVM架构，状态管理由DetailViewModel处理
@@ -43,15 +43,12 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SwipeBackGesture(
-      onBackPressed: () => context.pop(),
-      child: Scaffold(
-        appBar: DetailAppBar(
-          title: _viewModel.media?.name ?? '详情页面',
-          onBack: () => context.pop(),
-        ),
-        body: _buildBody(),
+    return Scaffold(
+      appBar: DetailAppBar(
+        title: _viewModel.media?.name ?? '详情页面',
+        onBack: () => context.pop(),
       ),
+      body: _buildBody(),
     );
   }
 
