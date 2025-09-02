@@ -8,6 +8,7 @@ import 'package:vision_x_flutter/features/search/widgets/category_tabs.dart';
 import 'package:vision_x_flutter/features/search/widgets/source_group.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item_skeleton.dart';
+import 'package:vision_x_flutter/features/search/widgets/search_loading_skeleton.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
 
@@ -138,19 +139,7 @@ class _SearchPageContent extends StatelessWidget {
                 if (searchController.isLoading &&
                     searchController.filteredResults.isEmpty)
                   Expanded(
-                    child: ListView.builder(
-                      padding: AppSpacing.pageMargin.copyWith(
-                        top: AppSpacing.md,
-                        bottom: AppSpacing.xl * 2,
-                      ),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: const MediaGridItemSkeleton(),
-                        );
-                      },
-                    ),
+                    child: SearchLoadingSkeleton(isGroupedView: isGroupedView),
                   )
                 else if (searchController.hasSearched &&
                     searchController.filteredResults.isEmpty)

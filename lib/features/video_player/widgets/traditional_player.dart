@@ -96,10 +96,13 @@ class TraditionalPlayer extends StatelessWidget {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.red : Colors.white.withOpacity(0.2),
+                    color:
+                        isSelected ? Colors.red : Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8.0),
                     border: Border.all(
-                      color: isSelected ? Colors.red : Colors.white.withOpacity(0.3),
+                      color: isSelected
+                          ? Colors.red
+                          : Colors.white.withOpacity(0.3),
                     ),
                   ),
                   child: Center(
@@ -108,7 +111,8 @@ class TraditionalPlayer extends StatelessWidget {
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.white,
                         fontSize: 14.0,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -182,7 +186,7 @@ class _DescriptionTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controllerProvider = VideoPlayerControllerProvider.of(context);
-    
+
     if (controllerProvider == null) {
       return const Center(child: Text('加载中...'));
     }
@@ -205,7 +209,7 @@ class _DescriptionTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          
+
           // 基本信息
           if (media.year != null || media.area != null)
             Text(
@@ -215,9 +219,9 @@ class _DescriptionTab extends StatelessWidget {
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               ),
             ),
-          
+
           const SizedBox(height: 10),
-          
+
           // 演职人员信息
           if (media.actors != null || media.director != null) ...[
             if (media.director != null)
@@ -238,7 +242,7 @@ class _DescriptionTab extends StatelessWidget {
               ),
             const SizedBox(height: 10),
           ],
-          
+
           // 描述信息
           if (media.description != null)
             Text(
@@ -248,7 +252,7 @@ class _DescriptionTab extends StatelessWidget {
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
               ),
             ),
-          
+
           // 播放进度
           if (controller.currentProgress.value > 0)
             Padding(

@@ -5,6 +5,7 @@ import 'package:vision_x_flutter/features/history/presentation/providers/history
 import 'package:vision_x_flutter/features/history/presentation/widgets/history_list.dart';
 import 'package:vision_x_flutter/features/history/presentation/widgets/empty_history.dart';
 import 'package:vision_x_flutter/features/history/presentation/widgets/loading_indicator.dart';
+import 'package:vision_x_flutter/features/history/presentation/widgets/history_skeleton_loader.dart';
 
 /// 历史记录页面 - 使用Riverpod重构
 class HistoryPage extends ConsumerStatefulWidget {
@@ -51,7 +52,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     HistoryState historyState,
   ) {
     if (historyState.isLoading && historyState.records.isEmpty) {
-      return const LoadingIndicator();
+      return const HistoryItemSkeletonLoader();
     }
 
     if (historyState.error != null) {
@@ -60,14 +61,17 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     if (historyState.records.isEmpty) {
       return EmptyHistory(
-        onRefresh: () => ref.read(historyNotifierProvider.notifier).refreshHistory(),
+        onRefresh: () =>
+            ref.read(historyNotifierProvider.notifier).refreshHistory(),
       );
     }
 
     return HistoryList(
       records: historyState.records,
-      onRefresh: () => ref.read(historyNotifierProvider.notifier).refreshHistory(),
-      onDelete: (record) => ref.read(historyNotifierProvider.notifier).removeHistory(record),
+      onRefresh: () =>
+          ref.read(historyNotifierProvider.notifier).refreshHistory(),
+      onDelete: (record) =>
+          ref.read(historyNotifierProvider.notifier).removeHistory(record),
       onItemTap: (record) {
         context.push('/history/video', extra: {
           'media': record.media,
@@ -136,7 +140,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     if (confirmed == true) {
       await ref.read(historyNotifierProvider.notifier).clearHistory();
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('已清空所有观看历史')),

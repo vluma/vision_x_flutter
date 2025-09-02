@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
 import 'package:vision_x_flutter/components/custom_card.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item_skeleton.dart';
@@ -58,14 +59,17 @@ class _SourceGroupSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 分组标题骨架
-          Container(
+          _buildSkeletonItem(
             height: 20,
             width: 120,
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: theme.cardTheme.color?.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(4),
-            ),
+            color: theme.cardTheme.color?.withOpacity(0.6),
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
           
           // 分组内容骨架
@@ -104,37 +108,50 @@ class _VideoItemSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 缩略图骨架
-          Container(
+          _buildSkeletonItem(
             height: 100,
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(8),
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+            borderRadius: BorderRadius.circular(8),
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
           
           const SizedBox(height: 8),
           
           // 标题骨架
-          Container(
+          _buildSkeletonItem(
             height: 14,
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(3),
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
           
           const SizedBox(height: 6),
           
           // 副标题骨架
-          Container(
+          _buildSkeletonItem(
             height: 10,
             width: 80,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(3),
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
           
           const SizedBox(height: 6),
@@ -143,21 +160,29 @@ class _VideoItemSkeleton extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
+              _buildSkeletonItem(
                 height: 10,
                 width: 40,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(3),
-                ),
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+              ).animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              ).shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark 
+                    ? Colors.white.withOpacity(0.2) 
+                    : Colors.black.withOpacity(0.1),
               ),
-              Container(
+              _buildSkeletonItem(
                 height: 10,
                 width: 30,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(3),
-                ),
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+              ).animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              ).shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark 
+                    ? Colors.white.withOpacity(0.2) 
+                    : Colors.black.withOpacity(0.1),
               ),
             ],
           ),
@@ -181,37 +206,71 @@ class EmptySearchSkeleton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // 图标骨架
-          Container(
+          _buildSkeletonItem(
             width: 80,
             height: 80,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              shape: BoxShape.circle,
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+            borderRadius: BorderRadius.circular(40),
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
+          
+          const SizedBox(height: 16),
           
           // 文本骨架
-          Container(
+          _buildSkeletonItem(
             height: 20,
             width: 200,
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(4),
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+            borderRadius: BorderRadius.circular(4),
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
           
-          Container(
+          const SizedBox(height: 8),
+          
+          _buildSkeletonItem(
             height: 16,
             width: 150,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(4),
-            ),
+            color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+            borderRadius: BorderRadius.circular(4),
+          ).animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          ).shimmer(
+            duration: 1000.ms,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.2) 
+                : Colors.black.withOpacity(0.1),
           ),
         ],
       ),
     );
   }
+}
+
+/// 通用骨架屏构建器
+Widget _buildSkeletonItem({
+  required double height,
+  required double width,
+  required Color? color,
+  BorderRadius? borderRadius,
+}) {
+  return Container(
+    height: height,
+    width: width,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: borderRadius ?? BorderRadius.circular(3),
+    ),
+  );
 }

@@ -29,7 +29,8 @@ class ShortDramaPlayer extends StatelessWidget {
             scrollDirection: Axis.vertical,
             itemCount: controller.totalEpisodes,
             onPageChanged: controller.changeEpisode,
-            itemBuilder: (context, index) => _buildShortDramaEpisodeItem(index, context),
+            itemBuilder: (context, index) =>
+                _buildShortDramaEpisodeItem(index, context),
           ),
           // 剧集信息卡片
           Positioned(
@@ -62,7 +63,8 @@ class ShortDramaPlayer extends StatelessWidget {
     );
   }
 
-  Widget _buildShortDramaVideoPlayer(Episode episode, int index, BuildContext context) {
+  Widget _buildShortDramaVideoPlayer(
+      Episode episode, int index, BuildContext context) {
     return CustomVideoPlayer(
       key: ValueKey(episode.url),
       media: controller.media,
@@ -70,8 +72,9 @@ class ShortDramaPlayer extends StatelessWidget {
       onProgressUpdate: controller.updateProgress,
       onPlaybackCompleted: controller.playNextEpisode,
       onVideoDurationReceived: controller.setVideoDuration,
-      startPosition: index == controller.currentEpisodeIndex.value 
-          ? controller.currentProgress.value : 0,
+      startPosition: index == controller.currentEpisodeIndex.value
+          ? controller.currentProgress.value
+          : 0,
       isShortDramaMode: true,
       onBackPressed: () => context.pop(),
       onNextEpisode: controller.playNextEpisode,
@@ -261,21 +264,24 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
     return Wrap(
       spacing: 6.0,
       runSpacing: 3.0,
-      children: infoItems.map((item) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-        decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(3.0),
-        ),
-        child: Text(
-          item,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 10.0,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      )).toList(),
+      children: infoItems
+          .map((item) => Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(3.0),
+                ),
+                child: Text(
+                  item,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ))
+          .toList(),
     );
   }
 
@@ -285,11 +291,13 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          blurRadius: 4.0,
-          offset: const Offset(0, 1),
-        )],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4.0,
+            offset: const Offset(0, 1),
+          )
+        ],
       ),
       child: Row(
         children: [
@@ -309,17 +317,23 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
           decoration: BoxDecoration(
-            gradient: isSelected ? const LinearGradient(
-              colors: [Colors.red, Color(0xFFE53E3E)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ) : null,
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Colors.red, Color(0xFFE53E3E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
             borderRadius: BorderRadius.circular(8.0),
-            boxShadow: isSelected ? [BoxShadow(
-              color: Colors.red.withOpacity(0.3),
-              blurRadius: 4.0,
-              offset: const Offset(0, 1),
-            )] : null,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 1),
+                    )
+                  ]
+                : null,
           ),
           child: Text(
             title,
@@ -337,9 +351,12 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
 
   Widget _buildTabContent(ThemeData theme) {
     switch (_selectedTabIndex) {
-      case 0: return _buildEpisodeSelector(theme);
-      case 1: return _buildDescription(theme);
-      default: return const SizedBox();
+      case 0:
+        return _buildEpisodeSelector(theme);
+      case 1:
+        return _buildDescription(theme);
+      default:
+        return const SizedBox();
     }
   }
 
@@ -349,11 +366,13 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          blurRadius: 6.0,
-          offset: const Offset(0, 2),
-        )],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6.0,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +403,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Colors.red, Color(0xFFE53E3E)],
@@ -392,11 +412,13 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [BoxShadow(
-                    color: Colors.red.withOpacity(0.3),
-                    blurRadius: 4.0,
-                    offset: const Offset(0, 1),
-                  )],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 1),
+                    )
+                  ],
                 ),
                 child: Text(
                   '第${widget.currentEpisodeIndex + 1}集',
@@ -434,18 +456,20 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: isSelected ? const LinearGradient(
-                          colors: [Colors.red, Color(0xFFE53E3E)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ) : LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.15),
-                            Colors.white.withOpacity(0.08),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Colors.red, Color(0xFFE53E3E)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.15),
+                                  Colors.white.withOpacity(0.08),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                         borderRadius: BorderRadius.circular(10.0),
                         border: Border.all(
                           color: isSelected
@@ -453,11 +477,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                               : Colors.white.withOpacity(0.2),
                           width: 1.0,
                         ),
-                        boxShadow: isSelected ? [BoxShadow(
-                          color: Colors.red.withOpacity(0.3),
-                          blurRadius: 4.0,
-                          offset: const Offset(0, 1),
-                        )] : null,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.3),
+                                  blurRadius: 4.0,
+                                  offset: const Offset(0, 1),
+                                )
+                              ]
+                            : null,
                       ),
                       child: Center(
                         child: Text(
@@ -465,7 +493,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.white70,
                             fontSize: 13.0,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
                           ),
                         ),
                       ),
@@ -501,11 +530,13 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          blurRadius: 6.0,
-          offset: const Offset(0, 2),
-        )],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6.0,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,15 +593,20 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
       mainAxisSpacing: 12.0,
       childAspectRatio: 2.8,
       children: [
-        _buildStatItem('播放量', '${widget.media.hits}', Icons.play_circle_outline, Colors.blue),
-        _buildStatItem('日播放', '${widget.media.hitsDay}', Icons.trending_up, Colors.green),
-        _buildStatItem('点赞', '${widget.media.up}', Icons.thumb_up_outlined, Colors.orange),
-        _buildStatItem('剧集数', '${widget.media.total}', Icons.video_library, Colors.purple),
+        _buildStatItem('播放量', '${widget.media.hits}', Icons.play_circle_outline,
+            Colors.blue),
+        _buildStatItem(
+            '日播放', '${widget.media.hitsDay}', Icons.trending_up, Colors.green),
+        _buildStatItem(
+            '点赞', '${widget.media.up}', Icons.thumb_up_outlined, Colors.orange),
+        _buildStatItem(
+            '剧集数', '${widget.media.total}', Icons.video_library, Colors.purple),
       ],
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(

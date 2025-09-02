@@ -20,7 +20,8 @@ class EnhancedHlsService {
       debugPrint('正在获取 HLS 内容: $url');
       final content = await hlsParser.fetchHlsContent(url);
       debugPrint('HLS 内容长度: ${content.length} 字符');
-      debugPrint('HLS 内容预览:\n${content.substring(0, min(1000, content.length))}');
+      debugPrint(
+          'HLS 内容预览:\n${content.substring(0, min(1000, content.length))}');
       debugPrint('完整 HLS 内容:\n$content');
 
       // 2. 首先尝试解析为主播放列表，如果失败则作为媒体播放列表处理
@@ -50,18 +51,21 @@ class EnhancedHlsService {
         // 这是主播放列表，需要选择最佳流然后解析媒体播放列表
         debugPrint('发现 ${masterPlaylist.variants.length} 个视频流');
         for (var variant in masterPlaylist.variants) {
-          debugPrint('  流: 带宽=${variant.bandwidth}, 分辨率=${variant.resolution}, URL=${variant.url}');
+          debugPrint(
+              '  流: 带宽=${variant.bandwidth}, 分辨率=${variant.resolution}, URL=${variant.url}');
         }
 
         bestVariant = _selectBestVariant(masterPlaylist.variants);
-        debugPrint('选择最佳流: 带宽=${bestVariant?.bandwidth}, URL=${bestVariant?.url}');
+        debugPrint(
+            '选择最佳流: 带宽=${bestVariant?.bandwidth}, URL=${bestVariant?.url}');
 
         // 4. 解析媒体播放列表（如果有最佳流）
         if (bestVariant != null) {
           try {
             debugPrint('正在解析媒体播放列表: ${bestVariant.url}');
             mediaPlaylist = await hlsParser.parseMediaPlaylist(bestVariant.url);
-            debugPrint('媒体播放列表解析完成: ${mediaPlaylist.segments.length} 个片段, 目标时长=${mediaPlaylist.targetDuration}秒');
+            debugPrint(
+                '媒体播放列表解析完成: ${mediaPlaylist.segments.length} 个片段, 目标时长=${mediaPlaylist.targetDuration}秒');
           } catch (e) {
             // 媒体播放列表解析失败，但主播放列表成功，继续处理
             debugPrint('警告：媒体播放列表解析失败: $e');
@@ -97,7 +101,8 @@ class EnhancedHlsService {
       if (mediaPlaylist != null && mediaPlaylist.segments.isNotEmpty) {
         debugPrint('开始增强分析 TS 片段...');
         try {
-          enhancedTsAnalyses = await _analyzeTsSegmentsEnhanced(mediaPlaylist.segments, url);
+          enhancedTsAnalyses =
+              await _analyzeTsSegmentsEnhanced(mediaPlaylist.segments, url);
           debugPrint('TS 片段增强分析完成，共分析 ${enhancedTsAnalyses.length} 个片段');
         } catch (e) {
           debugPrint('TS 片段增强分析失败: $e');
@@ -177,9 +182,11 @@ class EnhancedHlsService {
           isLive = false;
         } else if (trimmed.startsWith('#EXT-X-KEY')) {
           hasEncryption = true;
-        } else if (trimmed.startsWith('#EXT-X-MEDIA') && trimmed.contains('TYPE=SUBTITLES')) {
+        } else if (trimmed.startsWith('#EXT-X-MEDIA') &&
+            trimmed.contains('TYPE=SUBTITLES')) {
           hasSubtitles = true;
-        } else if (trimmed.startsWith('#EXT-X-MEDIA') && trimmed.contains('TYPE=AUDIO')) {
+        } else if (trimmed.startsWith('#EXT-X-MEDIA') &&
+            trimmed.contains('TYPE=AUDIO')) {
           hasMultipleAudio = true;
         }
       } else if (!trimmed.startsWith('#') && trimmed.isNotEmpty) {
@@ -352,7 +359,8 @@ class EnhancedHlsService {
   }
 
   /// 分析 TS 片段
-  Future<List<TsSegmentAnalysis>> _analyzeTsSegments(List<HlsSegment> segments, String baseUrl) async {
+  Future<List<TsSegmentAnalysis>> _analyzeTsSegments(
+      List<HlsSegment> segments, String baseUrl) async {
     try {
       final tsAnalyzer = TsSegmentAnalyzer();
       final List<String> tsUrls = [];
@@ -379,7 +387,8 @@ class EnhancedHlsService {
       }
 
       // 分析 TS 片段
-      final analyses = await tsAnalyzer.analyzeSegments(tsUrls, sampleSize: 1024 * 20); // 20KB 采样
+      final analyses = await tsAnalyzer.analyzeSegments(tsUrls,
+          sampleSize: 1024 * 20); // 20KB 采样
 
       // 输出分析结果
       for (final analysis in analyses) {
@@ -387,10 +396,12 @@ class EnhancedHlsService {
         debugPrint('  URL: ${analysis.url}');
         debugPrint('  大小: ${analysis.dataSize ~/ 1024} KB');
         debugPrint('  包数: ${analysis.packetCount}');
-        debugPrint('  有效包: ${analysis.validPackets} (${analysis.packetValidity.toStringAsFixed(1)}%)');
+        debugPrint(
+            '  有效包: ${analysis.validPackets} (${analysis.packetValidity.toStringAsFixed(1)}%)');
         debugPrint('  PID 数: ${analysis.uniquePids}');
         debugPrint('  流类型: ${analysis.streamType}');
-        debugPrint('  估算带宽: ${(analysis.estimatedBandwidth / 1000).toStringAsFixed(1)} Kbps');
+        debugPrint(
+            '  估算带宽: ${(analysis.estimatedBandwidth / 1000).toStringAsFixed(1)} Kbps');
       }
 
       return analyses;
@@ -426,7 +437,8 @@ class EnhancedHlsService {
   }
 
   /// 增强分析 TS 片段（新方法）
-  Future<List<EnhancedTsSegmentAnalysis>> _analyzeTsSegmentsEnhanced(List<HlsSegment> segments, String baseUrl) async {
+  Future<List<EnhancedTsSegmentAnalysis>> _analyzeTsSegmentsEnhanced(
+      List<HlsSegment> segments, String baseUrl) async {
     try {
       final tsAnalyzer = TsSegmentAnalyzer();
       final List<String> tsUrls = [];
@@ -453,20 +465,25 @@ class EnhancedHlsService {
       }
 
       // 使用增强分析方法
-      final analyses = await tsAnalyzer.analyzeSegmentsEnhanced(tsUrls, maxSize: 1024 * 1024 * 5); // 5MB 限制
+      final analyses = await tsAnalyzer.analyzeSegmentsEnhanced(tsUrls,
+          maxSize: 1024 * 1024 * 5); // 5MB 限制
 
       // 输出增强分析结果
       debugPrint('增强分析结果汇总:');
       for (int i = 0; i < analyses.length; i++) {
         final analysis = analyses[i];
-        debugPrint('片段 ${i + 1}: 健康度=${analysis.healthDescription}(${analysis.healthScore.toStringAsFixed(1)}分)');
-        debugPrint('  包统计: ${analysis.detailedAnalysis.validPackets}/${analysis.detailedAnalysis.totalPackets}');
+        debugPrint(
+            '片段 ${i + 1}: 健康度=${analysis.healthDescription}(${analysis.healthScore.toStringAsFixed(1)}分)');
+        debugPrint(
+            '  包统计: ${analysis.detailedAnalysis.validPackets}/${analysis.detailedAnalysis.totalPackets}');
         debugPrint('  PID 数量: ${analysis.detailedAnalysis.uniquePids}');
         if (analysis.detailedAnalysis.videoPid != null) {
-          debugPrint('  视频 PID: ${analysis.detailedAnalysis.videoPid!.pid} (${analysis.detailedAnalysis.videoPid!.packetCount} 包)');
+          debugPrint(
+              '  视频 PID: ${analysis.detailedAnalysis.videoPid!.pid} (${analysis.detailedAnalysis.videoPid!.packetCount} 包)');
         }
         if (analysis.detailedAnalysis.audioPid != null) {
-          debugPrint('  音频 PID: ${analysis.detailedAnalysis.audioPid!.pid} (${analysis.detailedAnalysis.audioPid!.packetCount} 包)');
+          debugPrint(
+              '  音频 PID: ${analysis.detailedAnalysis.audioPid!.pid} (${analysis.detailedAnalysis.audioPid!.packetCount} 包)');
         }
       }
 

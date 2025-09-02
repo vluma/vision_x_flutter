@@ -8,3 +8,4 @@ export 'presentation/pages/history_page.dart';
 export 'presentation/widgets/history_list.dart';
 export 'presentation/widgets/empty_history.dart';
 export 'presentation/widgets/loading_indicator.dart';
+export 'presentation/widgets/history_skeleton_loader.dart';
