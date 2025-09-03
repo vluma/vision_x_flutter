@@ -53,8 +53,8 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
               ),
             ),
 
-          // 中央播放按钮 - 只在暂停状态显示
-          if (!widget.playState.isPlaying)
+          // 中央播放按钮 - 只在暂停状态且控制栏可见时显示
+          if (!widget.playState.isPlaying && widget.uiState.controlsVisible)
             Center(
               child: custom_widgets.BigPlayButton(
                 isPlaying: widget.playState.isPlaying,
