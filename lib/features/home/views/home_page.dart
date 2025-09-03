@@ -19,9 +19,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // 初始化加载数据
+    // 初始化加载数据 - 使用异步调度避免阻塞UI
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeViewModelProvider.notifier).loadMovies();
+      Future.microtask(() {
+        ref.read(homeViewModelProvider.notifier).loadMovies();
+      });
     });
   }
 

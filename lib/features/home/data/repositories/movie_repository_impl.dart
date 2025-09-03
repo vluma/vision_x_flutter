@@ -5,15 +5,17 @@ import 'package:vision_x_flutter/services/api_service.dart';
 class MovieRepositoryImpl implements MovieRepository {
   @override
   Future<List<MovieEntity>> getMovies({
-    String? type,
-    String? tag,
+    String type = 'movie',
+    String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
     int pageStart = 0,
   }) async {
     try {
       final movies = await ApiService.getMovies(
-        type: type ?? 'movie',
-        tag: tag ?? '热门',
+        type: type,
+        tag: tag,
+        sort: sort,
         pageLimit: pageLimit,
         pageStart: pageStart,
       );
@@ -42,13 +44,15 @@ class MovieRepositoryImpl implements MovieRepository {
 
   @override
   Future<List<MovieEntity>> refreshMovies({
-    String? type,
-    String? tag,
+    String type = 'movie',
+    String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
   }) {
     return getMovies(
       type: type,
       tag: tag,
+      sort: sort,
       pageLimit: pageLimit,
       pageStart: 0,
     );
@@ -56,14 +60,16 @@ class MovieRepositoryImpl implements MovieRepository {
 
   @override
   Future<List<MovieEntity>> loadMoreMovies({
-    String? type,
-    String? tag,
+    String type = 'movie',
+    String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
     int pageStart = 0,
   }) {
     return getMovies(
       type: type,
       tag: tag,
+      sort: sort,
       pageLimit: pageLimit,
       pageStart: pageStart,
     );

@@ -9,6 +9,7 @@ class MovieRepository {
   Future<List<MovieEntity>> getMovies({
     String type = 'movie',
     String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
     int pageStart = 0,
   }) async {
@@ -16,6 +17,7 @@ class MovieRepository {
       final movies = await ApiService.getMovies(
         type: type,
         tag: tag,
+        sort: sort,
         pageLimit: pageLimit,
         pageStart: pageStart,
       );
@@ -36,19 +38,21 @@ class MovieRepository {
   Future<List<MovieEntity>> refreshMovies({
     String type = 'movie',
     String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
   }) {
-    return getMovies(type: type, tag: tag, pageLimit: pageLimit, pageStart: 0);
+    return getMovies(type: type, tag: tag, sort: sort, pageLimit: pageLimit, pageStart: 0);
   }
 
   /// 加载更多电影
   Future<List<MovieEntity>> loadMoreMovies({
     String type = 'movie',
     String tag = '热门',
+    String sort = 'recommend',
     int pageLimit = 20,
     int pageStart = 0,
   }) {
-    return getMovies(type: type, tag: tag, pageLimit: pageLimit, pageStart: pageStart);
+    return getMovies(type: type, tag: tag, sort: sort, pageLimit: pageLimit, pageStart: pageStart);
   }
 
   /// 从标题中提取年份

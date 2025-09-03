@@ -27,17 +27,19 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   /// 加载首页数据
   Future<void> loadMovies() async {
-    state = HomeLoading();
+    // 使用异步调度确保状态更新不会阻塞UI
+    await Future.microtask(() => state = HomeLoading());
     try {
       final type = _currentCategory == '电影' ? 'movie' : 'tv';
       final movies = await _movieRepository.getMovies(
         type: type,
         tag: _currentSource,
+        sort: _currentSort,
         pageLimit: 20,
       );
-      state = HomeLoaded(movies: movies, hasMore: movies.length >= 20);
+      await Future.microtask(() => state = HomeLoaded(movies: movies, hasMore: movies.length >= 20));
     } catch (e) {
-      state = HomeError('加载失败: $e');
+      await Future.microtask(() => state = HomeError('加载失败: $e'));
     }
   }
 
@@ -48,11 +50,15 @@ class HomeViewModel extends StateNotifier<HomeState> {
       final movies = await _movieRepository.refreshMovies(
         type: type,
         tag: _currentSource,
+        sort: _currentSort,
         pageLimit: 20,
       );
-      state = HomeLoaded(movies: movies, hasMore: movies.length >= 20);
+      await Future.microtask(() => state = HomeLoaded(movies: movies, hasMore: movies.length >= 20));
     } catch (e) {
-      state = HomeError('刷新失败: $e');
+      // 错误处理保持在UI线程之外
+      if (mounted) {
+        await Future.microtask(() => state = HomeError('刷新失败: $e'));
+      }
     }
   }
 
@@ -60,23 +66,24 @@ class HomeViewModel extends StateNotifier<HomeState> {
   Future<void> loadMore() async {
     final currentState = state;
     if (currentState is HomeLoaded && !currentState.isLoadingMore) {
-      state = currentState.copyWith(isLoadingMore: true);
+      await Future.microtask(() => state = currentState.copyWith(isLoadingMore: true));
       try {
         final type = _currentCategory == '电影' ? 'movie' : 'tv';
         final moreMovies = await _movieRepository.loadMoreMovies(
           type: type,
           tag: _currentSource,
+          sort: _currentSort,
           pageLimit: 20,
           pageStart: currentState.movies.length,
         );
         final allMovies = [...currentState.movies, ...moreMovies];
-        state = HomeLoaded(
+        await Future.microtask(() => state = HomeLoaded(
           movies: allMovies,
           hasMore: moreMovies.length >= 20,
           isLoadingMore: false,
-        );
+        ));
       } catch (e) {
-        state = currentState.copyWith(isLoadingMore: false);
+        await Future.microtask(() => state = currentState.copyWith(isLoadingMore: false));
       }
     }
   }
@@ -103,8 +110,6 @@ class HomeViewModel extends StateNotifier<HomeState> {
   Future<void> changeSort(String sort) async {
     if (_currentSort != sort) {
       _currentSort = sort;
-      // Note: Sort functionality would need to be implemented in the repository
-      // For now, we'll reload with current filters
       await loadMovies();
     }
   }
@@ -113,8 +118,13 @@ class HomeViewModel extends StateNotifier<HomeState> {
   void onItemTap(MovieEntity movie, BuildContext context) {
     // 点击电影项时跳转到搜索页面
     // 搜索功能将在后续版本实现
-    searchDataSource.setSearchQuery(movie.title);
-    searchDataSource.setSearchExpanded(true);
+    Future.microtask(() {
+      searchDataSource.setSearchQuery(movie.title);
+      searchDataSource.setSearchExpanded(true);
+    });
     context.push('/search', extra: {'query': movie.title});
   }
+  
+  /// 检查组件是否仍然挂载
+  bool get mounted => state != null;
 }
