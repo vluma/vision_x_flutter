@@ -68,11 +68,11 @@ class HistoryList extends ConsumerWidget {
                 onPressed: () {
                   // 重新添加记录
                   ref.read(historyNotifierProvider.notifier).addHistory(
-                    record.media,
-                    record.episode,
-                    record.progress,
-                    record.duration,
-                  );
+                        record.media,
+                        record.episode,
+                        record.progress,
+                        record.duration,
+                      );
                 },
               ),
             ),
