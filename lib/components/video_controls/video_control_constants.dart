@@ -22,7 +22,7 @@ class VideoControlConstants {
   // 间距配置
   static const double topPadding = 8.0;
   static const double sidePadding = 8.0;
-  static const double bottomPadding = 52.0;
+  static const double bottomPadding = 80.0;
   static const double gestureExcludeTop = 50.0;
   static const double gestureExcludeSide = 50.0;
   static const double gestureExcludeBottom = 100.0;
