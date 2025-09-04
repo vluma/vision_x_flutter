@@ -35,7 +35,6 @@ const _subtleProgressColors = VideoProgressColors(
 
 class _ShortDramaControlsState extends State<ShortDramaControls> {
   bool _isSpeedUpMode = false;
-  bool _isDraggingProgress = false;
 
   @override
   void initState() {
@@ -67,27 +66,6 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
       onLongPressMoveUpdate: _handleLongPressMoveUpdate,
       child: Stack(
         children: [
-          // 添加半透明黑色背景（只在拖动进度条时显示）
-          if (_isDraggingProgress)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 300,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black54,
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
           // 顶部返回按钮
           if (widget.uiState.controlsVisible)
             Positioned(
@@ -166,52 +144,13 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
   }
 
   Widget _buildBottomControls() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 添加时间显示（只在拖动进度条时显示）
-        if (_isDraggingProgress)
-          Text(
-            '${_formatDuration(widget.controller.value.position)} / ${_formatDuration(widget.controller.value.duration)}',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  offset: Offset(1, 1),
-                  blurRadius: 2,
-                  color: Colors.black54,
-                ),
-              ],
-            ),
-          ),
-        if (_isDraggingProgress) const SizedBox(height: 20),
-        custom_widgets.VideoProgressBar(
-          controller: widget.controller,
-          onSeek: widget.onSeek,
-          height: 2,
-          expandedHeight: 6,
-          colors: _subtleProgressColors,
-          onDragStart: () {
-            setState(() {
-              _isDraggingProgress = true;
-            });
-          },
-          onDragEnd: () {
-            setState(() {
-              _isDraggingProgress = false;
-            });
-          },
-        ),
-      ],
+    return custom_widgets.VideoProgressBar(
+      controller: widget.controller,
+      onSeek: widget.onSeek,
+      height: 2,
+      expandedHeight: 6,
+      colors: _subtleProgressColors,
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds.remainder(60);
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   Widget _buildSpeedIndicator() {

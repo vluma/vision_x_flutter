@@ -139,8 +139,6 @@ class VideoProgressBar extends StatefulWidget {
   final double height;
   final double? expandedHeight;
   final ValueChanged<double>? onSeek;
-  final VoidCallback? onDragStart;
-  final VoidCallback? onDragEnd;
 
   const VideoProgressBar({
     super.key,
@@ -149,8 +147,6 @@ class VideoProgressBar extends StatefulWidget {
     this.height = 4.0,
     this.expandedHeight,
     this.onSeek,
-    this.onDragStart,
-    this.onDragEnd,
   });
 
   @override
@@ -184,14 +180,8 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
         child: _CustomVideoProgressIndicator(
           controller: _controller,
           colors: widget.colors,
-          onDragStart: () {
-            _onDragStart();
-            widget.onDragStart?.call();
-          },
-          onDragEnd: () {
-            _onDragEnd();
-            widget.onDragEnd?.call();
-          },
+          onDragStart: _onDragStart,
+          onDragEnd: _onDragEnd,
         ),
       ),
     );
