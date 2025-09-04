@@ -320,7 +320,7 @@ class _ProgressBarPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, paint);
 
     // Draw buffered part
-    final double? bufferedEnd = value.isInitialized
+    final double? bufferedEnd = value.isInitialized && value.buffered.isNotEmpty
         ? value.buffered.last.end.inMilliseconds /
             value.duration.inMilliseconds
         : 0.0;

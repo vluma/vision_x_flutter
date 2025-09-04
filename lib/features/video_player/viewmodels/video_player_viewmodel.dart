@@ -16,6 +16,7 @@ class VideoPlayerController {
   final ValueNotifier<int> _currentEpisodeIndex;
   final ValueNotifier<int?> _videoDuration;
   final ValueNotifier<bool> _isShortDramaMode;
+  final ValueNotifier<bool> _isInfoCardExpanded; // 添加信息卡片展开状态
 
   // 数据
   late final Source _currentSource;
@@ -29,7 +30,8 @@ class VideoPlayerController {
         _currentProgress = ValueNotifier(startPosition),
         _currentEpisodeIndex = ValueNotifier(0),
         _videoDuration = ValueNotifier(null),
-        _isShortDramaMode = ValueNotifier(false) {
+        _isShortDramaMode = ValueNotifier(false),
+        _isInfoCardExpanded = ValueNotifier(false) { // 初始化信息卡片为折叠状态
     _initialize();
   }
 
@@ -39,6 +41,7 @@ class VideoPlayerController {
   ValueListenable<int> get currentEpisodeIndex => _currentEpisodeIndex;
   ValueListenable<int?> get videoDuration => _videoDuration;
   ValueListenable<bool> get isShortDramaMode => _isShortDramaMode;
+  ValueListenable<bool> get isInfoCardExpanded => _isInfoCardExpanded; // 添加getter
   PageController get pageController => _pageController;
 
   int get totalEpisodes => _currentSource.episodes.length;
@@ -114,12 +117,28 @@ class VideoPlayerController {
     // TODO: 实现预加载逻辑
   }
 
+  /// 切换信息卡片展开/折叠状态
+  void toggleInfoCard() {
+    _isInfoCardExpanded.value = !_isInfoCardExpanded.value;
+  }
+
+  /// 设置信息卡片为展开状态
+  void expandInfoCard() {
+    _isInfoCardExpanded.value = true;
+  }
+
+  /// 设置信息卡片为折叠状态
+  void collapseInfoCard() {
+    _isInfoCardExpanded.value = false;
+  }
+
   void dispose() {
     _currentEpisode.dispose();
     _currentProgress.dispose();
     _currentEpisodeIndex.dispose();
     _videoDuration.dispose();
     _isShortDramaMode.dispose();
+    _isInfoCardExpanded.dispose(); // 添加释放资源
     _pageController.dispose();
   }
 }
