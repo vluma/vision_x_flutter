@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
-import 'package:vision_x_flutter/components/video_controls/video_controls.dart';
-import 'package:vision_x_flutter/components/video_controls/video_control_models.dart'
+import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_controls.dart';
+import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_control_models.dart'
     as models;
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/services/enhanced_video_service.dart';
