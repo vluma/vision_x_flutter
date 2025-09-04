@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:vision_x_flutter/core/themes/spacing.dart';
 import 'video_control_constants.dart';
 import 'video_control_models.dart';
 import 'video_control_widgets.dart' as custom_widgets;
@@ -24,6 +25,13 @@ class ShortDramaControls extends StatefulWidget {
   @override
   State<ShortDramaControls> createState() => _ShortDramaControlsState();
 }
+
+// 定义一套更浅的白灰色调进度条颜色
+const _subtleProgressColors = VideoProgressColors(
+  playedColor: Color(0xFFEEEEEE), // 已播放部分使用非常浅的灰色
+  bufferedColor: Color(0xFFDDDDDD), // 缓冲部分使用浅灰色
+  backgroundColor: Color(0xFFCCCCCC), // 背景使用更浅的灰色
+);
 
 class _ShortDramaControlsState extends State<ShortDramaControls> {
   bool _isSpeedUpMode = false;
@@ -83,9 +91,9 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
 
           // 底部控制栏 - 始终显示进度条和时间
           Positioned(
-            bottom: 0,
-            left: 16,
-            right: 16,
+            bottom: VideoControlConstants.bottomPadding,
+            left: AppSpacing.screenPadding,
+            right: AppSpacing.screenPadding,
             child: _buildBottomControls(),
           ),
 
@@ -139,6 +147,9 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
     return custom_widgets.VideoProgressBar(
       controller: widget.controller,
       onSeek: widget.onSeek,
+      height: 2,
+      expandedHeight: 6,
+      colors: _subtleProgressColors,
     );
   }
 
