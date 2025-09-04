@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/features/history/domain/entities/history_record.dart';
 import 'package:intl/intl.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 
 /// 适配HistoryRecordEntity的历史记录项组件
 class HistoryItemAdapter extends StatelessWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 
 /// 加载状态组件
 /// 显示加载动画和提示信息

@@ -9,7 +9,7 @@ import 'package:vision_x_flutter/components/video_controls/video_control_models.
     as models;
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/services/enhanced_video_service.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 // 添加HLS解析器服务导入
 import 'package:vision_x_flutter/services/hls_parser_service.dart';
 import 'dart:io';

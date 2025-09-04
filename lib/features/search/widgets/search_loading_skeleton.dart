@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item_skeleton.dart';
 
 /// 搜索页面加载骨架屏组件
@@ -63,15 +63,17 @@ class _SourceGroupSkeleton extends StatelessWidget {
             height: 20,
             width: 120,
             color: theme.cardTheme.color?.withOpacity(0.6),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           // 分组内容骨架
           GridView.builder(
             shrinkWrap: true,
@@ -87,7 +89,7 @@ class _SourceGroupSkeleton extends StatelessWidget {
               return _VideoItemSkeleton();
             },
           ),
-          
+
           const SizedBox(height: 8),
         ],
       ),
@@ -113,49 +115,55 @@ class _VideoItemSkeleton extends StatelessWidget {
             width: double.infinity,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
             borderRadius: BorderRadius.circular(8),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           const SizedBox(height: 8),
-          
+
           // 标题骨架
           _buildSkeletonItem(
             height: 14,
             width: double.infinity,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           const SizedBox(height: 6),
-          
+
           // 副标题骨架
           _buildSkeletonItem(
             height: 10,
             width: 80,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           const SizedBox(height: 6),
-          
+
           // 元数据骨架
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -164,26 +172,30 @@ class _VideoItemSkeleton extends StatelessWidget {
                 height: 10,
                 width: 40,
                 color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              ).animate(
-                onPlay: (controller) => controller.repeat(reverse: true),
-              ).shimmer(
-                duration: 1000.ms,
-                color: theme.brightness == Brightness.dark 
-                    ? Colors.white.withOpacity(0.2) 
-                    : Colors.black.withOpacity(0.1),
-              ),
+              )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
+                  .shimmer(
+                    duration: 1000.ms,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.1),
+                  ),
               _buildSkeletonItem(
                 height: 10,
                 width: 30,
                 color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-              ).animate(
-                onPlay: (controller) => controller.repeat(reverse: true),
-              ).shimmer(
-                duration: 1000.ms,
-                color: theme.brightness == Brightness.dark 
-                    ? Colors.white.withOpacity(0.2) 
-                    : Colors.black.withOpacity(0.1),
-              ),
+              )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
+                  .shimmer(
+                    duration: 1000.ms,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.1),
+                  ),
             ],
           ),
         ],
@@ -211,47 +223,53 @@ class EmptySearchSkeleton extends StatelessWidget {
             height: 80,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
             borderRadius: BorderRadius.circular(40),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           const SizedBox(height: 16),
-          
+
           // 文本骨架
           _buildSkeletonItem(
             height: 20,
             width: 200,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
             borderRadius: BorderRadius.circular(4),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
-          
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
+
           const SizedBox(height: 8),
-          
+
           _buildSkeletonItem(
             height: 16,
             width: 150,
             color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
             borderRadius: BorderRadius.circular(4),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).shimmer(
-            duration: 1000.ms,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withOpacity(0.2) 
-                : Colors.black.withOpacity(0.1),
-          ),
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(reverse: true),
+              )
+              .shimmer(
+                duration: 1000.ms,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.1),
+              ),
         ],
       ),
     );

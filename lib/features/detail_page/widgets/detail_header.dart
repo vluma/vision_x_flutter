@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 
 /// 详情页面头部组件
 /// 显示海报和基本信息
@@ -20,9 +20,9 @@ class DetailHeader extends StatelessWidget {
         children: [
           // 海报
           _buildPoster(context),
-          
+
           const SizedBox(width: 16),
-          
+
           // 基本信息
           Expanded(
             child: _buildInfoSection(context),
@@ -66,13 +66,13 @@ class DetailHeader extends StatelessWidget {
         Text(
           media.name ?? '未知名称',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 12),
-        
+
         // 基本信息列表
         _buildInfoList(context),
       ],
@@ -88,8 +88,8 @@ class DetailHeader extends StatelessWidget {
           Text(
             '$label: $value',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[700],
-            ),
+                  color: Colors.grey[700],
+                ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

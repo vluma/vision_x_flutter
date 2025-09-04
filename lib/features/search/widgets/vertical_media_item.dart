@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
 
 /// 垂直媒体项组件 - 分组模式
@@ -63,7 +63,8 @@ class VerticalMediaItem extends StatelessWidget {
   }
 
   // 构建图片容器（带评分和详情按钮）
-  Widget _buildImageContainer(BuildContext context, String? imageUrl, bool isDarkMode) {
+  Widget _buildImageContainer(
+      BuildContext context, String? imageUrl, bool isDarkMode) {
     final theme = Theme.of(context);
 
     return Container(
@@ -72,7 +73,8 @@ class VerticalMediaItem extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
+            color: theme.shadowColor?.withOpacity(0.1) ??
+                Colors.black.withOpacity(0.1),
             blurRadius: 2,
           ),
         ],

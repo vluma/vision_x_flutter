@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 
 /// 历史记录项的骨架加载占位符
 class HistoryItemSkeletonLoader extends StatelessWidget {
