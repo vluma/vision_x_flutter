@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
-
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 
 /// 加载骨架屏组件
 class LoadingSkeleton extends StatelessWidget {
@@ -41,7 +40,8 @@ class _VideoItemSkeleton extends StatelessWidget {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Container(
                 width: double.infinity,
                 color: isDarkMode ? Colors.grey[700] : Colors.grey[300],

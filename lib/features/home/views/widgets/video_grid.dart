@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/core/themes/colors.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 
@@ -43,7 +43,7 @@ class _VideoGridState extends State<VideoGrid> {
   @override
   void didUpdateWidget(covariant VideoGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // 检测数据是否刷新或排序，如果是则滚动到顶部
     if (_shouldScrollToTop(oldWidget.movies, widget.movies)) {
       _scrollToTop();
@@ -51,18 +51,20 @@ class _VideoGridState extends State<VideoGrid> {
     _previousMovies = widget.movies;
   }
 
-  bool _shouldScrollToTop(List<DoubanMovie> oldMovies, List<DoubanMovie> newMovies) {
+  bool _shouldScrollToTop(
+      List<DoubanMovie> oldMovies, List<DoubanMovie> newMovies) {
     // 如果数据完全刷新（长度变化或内容完全不同）
     if (oldMovies.length != newMovies.length) {
       return true;
     }
-    
+
     // 如果排序可能发生变化（第一个元素不同）
-    if (oldMovies.isNotEmpty && newMovies.isNotEmpty && 
+    if (oldMovies.isNotEmpty &&
+        newMovies.isNotEmpty &&
         oldMovies.first.id != newMovies.first.id) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -198,7 +200,8 @@ class _VideoItem extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.darkBackground.withValues(alpha: 0.5),
+                            color:
+                                AppColors.darkBackground.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(

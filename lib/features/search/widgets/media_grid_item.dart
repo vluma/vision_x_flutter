@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
-import 'package:vision_x_flutter/components/loading_animation.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
 
 /// 媒体网格项组件 - 聚合模式
@@ -31,7 +31,7 @@ class MediaGridItem extends StatelessWidget {
           children: [
             // 海报图片
             _buildImageContainer(context, imageUrl, isDarkMode),
-            
+
             // 内容信息
             _buildContent(context, theme, isDarkMode),
           ],
@@ -41,7 +41,8 @@ class MediaGridItem extends StatelessWidget {
   }
 
   // 构建图片容器
-  Widget _buildImageContainer(BuildContext context, String? imageUrl, bool isDarkMode) {
+  Widget _buildImageContainer(
+      BuildContext context, String? imageUrl, bool isDarkMode) {
     final theme = Theme.of(context);
     return Container(
       width: 70,
@@ -51,7 +52,8 @@ class MediaGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
+            color: theme.shadowColor?.withOpacity(0.1) ??
+                Colors.black.withOpacity(0.1),
             blurRadius: 2,
           ),
         ],
@@ -100,12 +102,12 @@ class MediaGridItem extends StatelessWidget {
           children: [
             // 标题和基本信息
             _buildTitleAndInfo(theme, isDarkMode),
-            
+
             // 简介
             _buildDescription(context, isDarkMode),
-            
+
             const SizedBox(height: 2),
-            
+
             // 底部信息
             Flexible(
               child: _buildBottomInfo(theme, isDarkMode),
@@ -157,7 +159,10 @@ class MediaGridItem extends StatelessWidget {
               color: theme.textTheme.bodySmall?.color,
             ),
           ),
-        if (media.year != null && media.year!.isNotEmpty && media.area != null && media.area!.isNotEmpty)
+        if (media.year != null &&
+            media.year!.isNotEmpty &&
+            media.area != null &&
+            media.area!.isNotEmpty)
           Text(
             ' · ',
             style: TextStyle(
@@ -287,7 +292,8 @@ class MediaGridItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
             minimumSize: const Size(0, 0),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            foregroundColor: theme.textButtonTheme.style?.foregroundColor?.resolve({}),
+            foregroundColor:
+                theme.textButtonTheme.style?.foregroundColor?.resolve({}),
           ),
           child: const Text(
             '详情',

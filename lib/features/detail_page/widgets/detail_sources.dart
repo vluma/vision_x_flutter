@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/data/models/media_detail.dart';
-import 'package:vision_x_flutter/components/custom_card.dart';
+import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 
 /// 详情页面播放源组件
 /// 显示所有播放源和剧集列表
@@ -24,11 +24,11 @@ class DetailSources extends StatelessWidget {
           Text(
             '播放源',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 12),
-          
+
           // 显示所有播放源
           ..._buildSourceSections(context),
         ],
@@ -53,9 +53,10 @@ class DetailSources extends StatelessWidget {
     return media.surces.asMap().entries.map((entry) {
       final source = entry.value;
       final index = entry.key;
-      
+
       return Padding(
-        padding: EdgeInsets.only(bottom: index == media.surces.length - 1 ? 0 : 12),
+        padding:
+            EdgeInsets.only(bottom: index == media.surces.length - 1 ? 0 : 12),
         child: _buildSourceSection(context, source),
       );
     }).toList();
@@ -72,11 +73,11 @@ class DetailSources extends StatelessWidget {
           Text(
             '${source.name} (${source.episodes.length}个视频)',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
-          
+
           // 剧集列表
           _buildEpisodesGrid(context, source.episodes),
         ],
