@@ -1,6 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'video_control_constants.dart';
+import 'package:video_player/video_player.dart' as vp;
+
+/// 视频控制组件常量
+class VideoControlConstants {
+  // 尺寸
+  static const double backButtonSize = 24.0;
+  static const double playButtonSize = 24.0;
+  static const double pauseIconSize = 64.0;
+  static const double lockButtonSize = 24.0;
+  static const double controlButtonSize = 24.0;
+  
+  // 颜色
+  static const Color iconColor = Colors.white;
+  static const Color progressBackgroundColor = Colors.white24;
+  static const Color progressBufferedColor = Colors.white38;
+  static const Color progressPlayedColor = Colors.white;
+  
+  // 样式
+  static const TextStyle timeStyle = TextStyle(
+    color: Colors.white,
+    fontSize: 12.0,
+  );
+  
+  // 渐变背景
+  static const BoxDecoration gradientDecoration = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Colors.black54, Colors.transparent],
+    ),
+  );
+  
+  // 进度条颜色
+  static const VideoProgressColors progressColors = VideoProgressColors(
+    backgroundColor: progressBackgroundColor,
+    bufferedColor: progressBufferedColor,
+    playedColor: progressPlayedColor,
+  );
+}
 
 /// 返回按钮组件
 class BackButton extends StatelessWidget {
@@ -76,7 +113,7 @@ class BigPlayButton extends StatelessWidget {
       child: Icon(
         isPlaying ? Icons.pause : Icons.play_arrow,
         size: size,
-        color: color.withValues(alpha: 0.7),
+        color: color.withOpacity(0.7),
       ),
     );
   }
@@ -132,9 +169,22 @@ class TimeDisplay extends StatelessWidget {
   }
 }
 
+/// 进度条颜色
+class VideoProgressColors {
+  final Color backgroundColor;
+  final Color bufferedColor;
+  final Color playedColor;
+
+  const VideoProgressColors({
+    required this.backgroundColor,
+    required this.bufferedColor,
+    required this.playedColor,
+  });
+}
+
 /// 进度条组件
 class VideoProgressBar extends StatefulWidget {
-  final VideoPlayerController controller;
+  final vp.VideoPlayerController controller;
   final VideoProgressColors colors;
   final double height;
   final double? expandedHeight;
@@ -159,7 +209,7 @@ class VideoProgressBar extends StatefulWidget {
 
 class _VideoProgressBarState extends State<VideoProgressBar> {
   bool _isDragging = false;
-  late VideoPlayerController _controller;
+  late vp.VideoPlayerController _controller;
 
   @override
   void initState() {
@@ -192,6 +242,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
             _onDragEnd();
             widget.onDragEnd?.call();
           },
+          onSeek: widget.onSeek,
         ),
       ),
     );
@@ -215,16 +266,18 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
 }
 
 class _CustomVideoProgressIndicator extends StatefulWidget {
-  final VideoPlayerController controller;
+  final vp.VideoPlayerController controller;
   final VideoProgressColors colors;
   final VoidCallback onDragStart;
   final VoidCallback onDragEnd;
+  final ValueChanged<double>? onSeek;
 
   const _CustomVideoProgressIndicator({
     required this.controller,
     required this.colors,
     required this.onDragStart,
     required this.onDragEnd,
+    this.onSeek,
   });
 
   @override
@@ -255,18 +308,23 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
 
   @override
   Widget build(BuildContext context) {
-    VideoPlayerController controller = widget.controller;
+    vp.VideoPlayerController controller = widget.controller;
 
     void seekToRelativePosition(Offset globalPosition) {
       final box = context.findRenderObject() as RenderBox;
       final offset = box.globalToLocal(globalPosition);
       final double relative = (offset.dx / box.size.width).clamp(0.0, 1.0);
-      controller.seekTo(
-        Duration(
-          milliseconds:
-              (controller.value.duration.inMilliseconds * relative).round(),
-        ),
-      );
+      
+      if (widget.onSeek != null) {
+        widget.onSeek!(relative);
+      } else {
+        controller.seekTo(
+          Duration(
+            milliseconds:
+                (controller.value.duration.inMilliseconds * relative).round(),
+          ),
+        );
+      }
     }
 
     return GestureDetector(
@@ -296,7 +354,7 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
 }
 
 class _ProgressBarPainter extends CustomPainter {
-  final VideoPlayerController controller;
+  final vp.VideoPlayerController controller;
   final VideoProgressColors colors;
 
   _ProgressBarPainter({
@@ -320,11 +378,10 @@ class _ProgressBarPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, paint);
 
     // Draw buffered part
-    final double? bufferedEnd = value.isInitialized && value.buffered.isNotEmpty
-        ? value.buffered.last.end.inMilliseconds /
-            value.duration.inMilliseconds
-        : 0.0;
-    if (bufferedEnd != null && bufferedEnd > 0) {
+    if (value.isInitialized && value.buffered.isNotEmpty) {
+      final double bufferedEnd = value.buffered.last.end.inMilliseconds /
+          value.duration.inMilliseconds;
+      
       paint.color = colors.bufferedColor;
       canvas.drawRect(
         Offset.zero & Size(size.width * bufferedEnd, size.height),
@@ -333,14 +390,13 @@ class _ProgressBarPainter extends CustomPainter {
     }
 
     // Draw played part
-    if (value.isInitialized) {
+    if (value.isInitialized && value.duration.inMilliseconds > 0) {
       paint.color = colors.playedColor;
+      final double playedPart = value.position.inMilliseconds / 
+          value.duration.inMilliseconds;
+      
       canvas.drawRect(
-        Offset.zero &
-            Size(
-              size.width * value.position.inMilliseconds / value.duration.inMilliseconds,
-              size.height,
-            ),
+        Offset.zero & Size(size.width * playedPart, size.height),
         paint,
       );
     }
