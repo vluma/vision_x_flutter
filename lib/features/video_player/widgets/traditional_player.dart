@@ -96,13 +96,14 @@ class TraditionalPlayer extends StatelessWidget {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color:
-                        isSelected ? Colors.red : Colors.white.withOpacity(0.2),
+                    color: isSelected
+                        ? Colors.red
+                        : Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8.0),
                     border: Border.all(
                       color: isSelected
                           ? Colors.red
-                          : Colors.white.withOpacity(0.3),
+                          : Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Center(
@@ -158,7 +159,8 @@ class TraditionalPlayer extends StatelessWidget {
         ],
         indicatorColor: theme.colorScheme.primary,
         labelColor: theme.colorScheme.primary,
-        unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+        unselectedLabelColor:
+            theme.colorScheme.onSurface.withValues(alpha: 0.6),
       ),
     );
   }
@@ -216,7 +218,8 @@ class _DescriptionTab extends StatelessWidget {
               '${media.year ?? ''} ${media.area ?? ''}',
               style: TextStyle(
                 fontSize: 14,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                color:
+                    theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
             ),
 
@@ -249,7 +252,8 @@ class _DescriptionTab extends StatelessWidget {
               media.description!,
               style: TextStyle(
                 fontSize: 14,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                color:
+                    theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
             ),
 

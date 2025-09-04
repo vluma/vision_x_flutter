@@ -21,7 +21,7 @@ class _MediaGridItemSkeletonState extends State<MediaGridItemSkeleton> {
           _buildSkeletonItem(
             width: 70,
             height: 100,
-            color: theme.cardTheme.color?.withOpacity(0.7),
+            color: theme.cardTheme.color?.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(10),
           )
               .animate(
@@ -30,8 +30,8 @@ class _MediaGridItemSkeletonState extends State<MediaGridItemSkeleton> {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
           Expanded(
             child: Padding(
@@ -44,32 +44,32 @@ class _MediaGridItemSkeletonState extends State<MediaGridItemSkeleton> {
                   _buildSkeletonItem(
                       height: 14,
                       width: double.infinity,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   _buildSkeletonItem(
                       height: 12,
                       width: 100,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   _buildSkeletonItem(
                       height: 10,
                       width: 70,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   _buildSkeletonItem(
                       height: 10,
                       width: 40,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   _buildSkeletonItem(
                       height: 10,
                       width: double.infinity,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   _buildSkeletonItem(
                       height: 10,
                       width: double.infinity * 0.6,
-                      color: theme.cardTheme.color?.withOpacity(0.5)),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                   const SizedBox(height: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,11 +77,11 @@ class _MediaGridItemSkeletonState extends State<MediaGridItemSkeleton> {
                       _buildSkeletonItem(
                           height: 9,
                           width: 50,
-                          color: theme.cardTheme.color?.withOpacity(0.5)),
+                          color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                       _buildSkeletonItem(
                           height: 10,
                           width: 20,
-                          color: theme.cardTheme.color?.withOpacity(0.5)),
+                          color: theme.cardTheme.color?.withValues(alpha: 0.5)),
                     ],
                   ),
                 ],
@@ -113,8 +113,8 @@ class _MediaGridItemSkeletonState extends State<MediaGridItemSkeleton> {
         .shimmer(
           duration: 1000.ms,
           color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withOpacity(0.2)
-              : Colors.black.withOpacity(0.1),
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.1),
         );
   }
 }

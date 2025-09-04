@@ -5,7 +5,7 @@ import '../../providers/settings_provider.dart';
 import '../../widgets/settings_card.dart';
 
 /// 功能开关设置区块
-/// 
+///
 /// 用于控制应用的各种功能开关
 class FeatureSwitchSection extends ConsumerWidget {
   /// 构造函数
@@ -27,7 +27,8 @@ class FeatureSwitchSection extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                bottom:
+                    BorderSide(color: isDark ? Colors.white12 : Colors.black12),
               ),
             ),
             child: Row(
@@ -71,7 +72,8 @@ class FeatureSwitchSection extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                bottom:
+                    BorderSide(color: isDark ? Colors.white12 : Colors.black12),
               ),
             ),
             child: Row(
@@ -95,7 +97,7 @@ class FeatureSwitchSection extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
+                              color: Colors.orange.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -123,7 +125,9 @@ class FeatureSwitchSection extends ConsumerWidget {
                       Text(
                         '注意：此功能为Beta版本，可能导致未知问题',
                         style: TextStyle(
-                          color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                          color: isDark
+                              ? Colors.orange.shade200
+                              : Colors.orange.shade800,
                           fontSize: 11,
                         ),
                       ),
@@ -141,13 +145,14 @@ class FeatureSwitchSection extends ConsumerWidget {
             ),
           ),
           // 广告过滤子选项
-          if (settingsState.settings.adFilterEnabled) ...[ 
+          if (settingsState.settings.adFilterEnabled) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                  bottom: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12),
                 ),
               ),
               child: Row(
@@ -171,7 +176,7 @@ class FeatureSwitchSection extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.2),
+                                color: Colors.orange.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -199,7 +204,9 @@ class FeatureSwitchSection extends ConsumerWidget {
                         Text(
                           '注意：Beta功能，可能导致未知问题',
                           style: TextStyle(
-                            color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                            color: isDark
+                                ? Colors.orange.shade200
+                                : Colors.orange.shade800,
                             fontSize: 11,
                           ),
                         ),
@@ -240,7 +247,7 @@ class FeatureSwitchSection extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.2),
+                                color: Colors.orange.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -268,7 +275,9 @@ class FeatureSwitchSection extends ConsumerWidget {
                         Text(
                           '注意：Beta功能，可能导致未知问题',
                           style: TextStyle(
-                            color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                            color: isDark
+                                ? Colors.orange.shade200
+                                : Colors.orange.shade800,
                             fontSize: 11,
                           ),
                         ),

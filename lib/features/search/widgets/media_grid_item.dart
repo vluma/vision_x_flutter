@@ -52,8 +52,8 @@ class MediaGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withOpacity(0.1) ??
-                Colors.black.withOpacity(0.1),
+            color: theme.shadowColor?.withValues(alpha: 0.1) ??
+                Colors.black.withValues(alpha: 0.1),
             blurRadius: 2,
           ),
         ],
@@ -68,7 +68,7 @@ class MediaGridItem extends StatelessWidget {
                 fit: BoxFit.cover,
                 placeholder: (context, url) => const LoadingAnimation(),
                 errorWidget: (context, url, error) => Container(
-                  color: theme.cardTheme.color?.withOpacity(0.7),
+                  color: theme.cardTheme.color?.withValues(alpha: 0.7),
                   child: const Center(
                     child: Icon(
                       Icons.movie,
@@ -78,7 +78,7 @@ class MediaGridItem extends StatelessWidget {
                 ),
               )
             : Container(
-                color: theme.cardTheme.color?.withOpacity(0.7),
+                color: theme.cardTheme.color?.withValues(alpha: 0.7),
                 child: const Center(
                   child: Icon(
                     Icons.movie,
@@ -186,7 +186,7 @@ class MediaGridItem extends StatelessWidget {
             margin: const EdgeInsets.only(left: 8),
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(3),
             ),
             child: Text(
@@ -232,7 +232,7 @@ class MediaGridItem extends StatelessWidget {
             margin: const EdgeInsets.only(left: 10),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: theme.cardTheme.color?.withOpacity(0.7),
+              color: theme.cardTheme.color?.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

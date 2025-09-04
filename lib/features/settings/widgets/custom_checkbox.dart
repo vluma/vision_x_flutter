@@ -41,7 +41,7 @@ class CustomCheckbox extends StatelessWidget {
                 boxShadow: [
                   if (value)
                     BoxShadow(
-                      color: activeColor.withOpacity(0.3),
+                      color: activeColor.withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

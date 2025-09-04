@@ -73,8 +73,8 @@ class VerticalMediaItem extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withOpacity(0.1) ??
-                Colors.black.withOpacity(0.1),
+            color: theme.shadowColor?.withValues(alpha: 0.1) ??
+                Colors.black.withValues(alpha: 0.1),
             blurRadius: 2,
           ),
         ],
@@ -92,7 +92,7 @@ class VerticalMediaItem extends StatelessWidget {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => const LoadingAnimation(),
                     errorWidget: (context, url, error) => Container(
-                      color: theme.cardTheme.color?.withOpacity(0.7),
+                      color: theme.cardTheme.color?.withValues(alpha: 0.7),
                       child: const Center(
                         child: Icon(
                           Icons.movie,
@@ -102,7 +102,7 @@ class VerticalMediaItem extends StatelessWidget {
                     ),
                   )
                 : Container(
-                    color: theme.cardTheme.color?.withOpacity(0.7),
+                    color: theme.cardTheme.color?.withValues(alpha: 0.7),
                     child: const Center(
                       child: Icon(
                         Icons.movie,
@@ -120,7 +120,7 @@ class VerticalMediaItem extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Row(
@@ -197,7 +197,7 @@ class VerticalMediaItem extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(left: 6),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(2),
             ),
             child: Text(

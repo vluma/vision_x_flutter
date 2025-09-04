@@ -39,14 +39,15 @@ class NavigationContainer extends StatelessWidget {
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        borderRadius:
+            BorderRadius.circular(NavBarConstants.containerBorderRadius),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
           width: NavBarConstants.borderWidth,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2.0,
           ),
@@ -79,12 +80,16 @@ class NavigationContainer extends StatelessWidget {
                 final squeeze = 1.0 - (0.05 * intensity);
 
                 // 确保动画完成时完全恢复正常
-                final finalScaleX = distance < 0.001 ? 1.0 : springScale.clamp(0.9, 1.1);
-                final finalScaleY = distance < 0.001 ? 1.0 : squeeze.clamp(0.92, 1.08);
+                final finalScaleX =
+                    distance < 0.001 ? 1.0 : springScale.clamp(0.9, 1.1);
+                final finalScaleY =
+                    distance < 0.001 ? 1.0 : squeeze.clamp(0.92, 1.08);
 
                 // 限制最大形变防止超出范围
-                final clampedWidth = (isSearchExpanded ? 0.0 : selectBgWidth * 0.9).toDouble();
-                final clampedHeight = (NavBarConstants.selectedContainerHeight * 0.95).toDouble();
+                final clampedWidth =
+                    (isSearchExpanded ? 0.0 : selectBgWidth * 0.9).toDouble();
+                final clampedHeight =
+                    (NavBarConstants.selectedContainerHeight * 0.95).toDouble();
 
                 return Align(
                   alignment: alignment,
@@ -97,15 +102,16 @@ class NavigationContainer extends StatelessWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 2.0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
-                            NavBarConstants.selectedContainerBorderRadius * 0.95),
+                            NavBarConstants.selectedContainerBorderRadius *
+                                0.95),
                         color: theme.brightness == Brightness.dark
-                            ? AppColors.bottomNavSelectedItem.withOpacity(
-                                NavBarConstants.selectedItemAlphaDark)
+                            ? AppColors.bottomNavSelectedItem.withValues(
+                                alpha: NavBarConstants.selectedItemAlphaDark)
                             : theme.primaryColor
-                                .withOpacity(NavBarConstants.commonAlpha),
+                                .withValues(alpha: NavBarConstants.commonAlpha),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.primaryColor.withOpacity(0.25),
+                            color: theme.primaryColor.withValues(alpha: 0.25),
                             blurRadius: 10.0,
                             offset: const Offset(0, 2),
                             spreadRadius: 0.5,
@@ -131,7 +137,8 @@ class NavigationContainer extends StatelessWidget {
               child: isSearchExpanded
                   ? MenuButton(
                       onTap: () {
-                        final currentPath = GoRouterState.of(context).uri.toString();
+                        final currentPath =
+                            GoRouterState.of(context).uri.toString();
                         viewModel.toggleSearch(currentPath);
                       },
                     )

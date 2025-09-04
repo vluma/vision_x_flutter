@@ -62,7 +62,7 @@ class _SourceGroupSkeleton extends StatelessWidget {
           _buildSkeletonItem(
             height: 20,
             width: 120,
-            color: theme.cardTheme.color?.withOpacity(0.6),
+            color: theme.cardTheme.color?.withValues(alpha: 0.6),
           )
               .animate(
                 onPlay: (controller) => controller.repeat(reverse: true),
@@ -70,8 +70,8 @@ class _SourceGroupSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           // 分组内容骨架
@@ -122,8 +122,8 @@ class _VideoItemSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           const SizedBox(height: 8),
@@ -140,8 +140,8 @@ class _VideoItemSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           const SizedBox(height: 6),
@@ -158,8 +158,8 @@ class _VideoItemSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           const SizedBox(height: 6),
@@ -179,8 +179,8 @@ class _VideoItemSkeleton extends StatelessWidget {
                   .shimmer(
                     duration: 1000.ms,
                     color: theme.brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.1),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.1),
                   ),
               _buildSkeletonItem(
                 height: 10,
@@ -193,8 +193,8 @@ class _VideoItemSkeleton extends StatelessWidget {
                   .shimmer(
                     duration: 1000.ms,
                     color: theme.brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.1),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.1),
                   ),
             ],
           ),
@@ -230,8 +230,8 @@ class EmptySearchSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           const SizedBox(height: 16),
@@ -249,8 +249,8 @@ class EmptySearchSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
 
           const SizedBox(height: 8),
@@ -267,8 +267,8 @@ class EmptySearchSkeleton extends StatelessWidget {
               .shimmer(
                 duration: 1000.ms,
                 color: theme.brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
               ),
         ],
       ),

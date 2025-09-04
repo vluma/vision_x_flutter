@@ -106,7 +106,7 @@ class FeatureSwitchSection extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.2),
+                                color: Colors.orange.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -134,7 +134,9 @@ class FeatureSwitchSection extends StatelessWidget {
                         Text(
                           '注意：此功能为Beta版本，可能导致未知问题',
                           style: TextStyle(
-                            color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                            color: isDark
+                                ? Colors.orange.shade200
+                                : Colors.orange.shade800,
                             fontSize: 11,
                           ),
                         ),
@@ -174,7 +176,8 @@ class FeatureSwitchSection extends StatelessWidget {
                               Text(
                                 '通过元数据过滤广告',
                                 style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
                                   fontSize: 14,
                                 ),
                               ),
@@ -183,7 +186,7 @@ class FeatureSwitchSection extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.2),
+                                  color: Colors.orange.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -211,7 +214,9 @@ class FeatureSwitchSection extends StatelessWidget {
                           Text(
                             '注意：Beta功能，可能导致未知问题',
                             style: TextStyle(
-                              color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                              color: isDark
+                                  ? Colors.orange.shade200
+                                  : Colors.orange.shade800,
                               fontSize: 11,
                             ),
                           ),
@@ -243,7 +248,8 @@ class FeatureSwitchSection extends StatelessWidget {
                               Text(
                                 '通过分辨率过滤广告',
                                 style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
                                   fontSize: 14,
                                 ),
                               ),
@@ -252,7 +258,7 @@ class FeatureSwitchSection extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.2),
+                                  color: Colors.orange.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -280,7 +286,9 @@ class FeatureSwitchSection extends StatelessWidget {
                           Text(
                             '注意：Beta功能，可能导致未知问题',
                             style: TextStyle(
-                              color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                              color: isDark
+                                  ? Colors.orange.shade200
+                                  : Colors.orange.shade800,
                               fontSize: 11,
                             ),
                           ),

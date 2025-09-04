@@ -32,14 +32,15 @@ class SearchContainer extends StatelessWidget {
       height: NavBarConstants.containerHeight,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(NavBarConstants.containerBorderRadius),
+        borderRadius:
+            BorderRadius.circular(NavBarConstants.containerBorderRadius),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
           width: NavBarConstants.borderWidth,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2.0,
           ),
@@ -60,14 +61,16 @@ class SearchContainer extends StatelessWidget {
           child: isSearchExpanded
               ? GestureDetector(
                   onTap: () {
-                    final currentPath = GoRouterState.of(context).uri.toString();
+                    final currentPath =
+                        GoRouterState.of(context).uri.toString();
                     viewModel.toggleSearch(currentPath);
                   },
                   child: SearchField(controller: searchController),
                 )
               : SearchButton(
                   onTap: () {
-                    final currentPath = GoRouterState.of(context).uri.toString();
+                    final currentPath =
+                        GoRouterState.of(context).uri.toString();
                     viewModel.toggleSearch(currentPath);
                   },
                   isExpanded: isSearchExpanded,

@@ -142,7 +142,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   void initState() {
     super.initState();
     // 获取父组件中的控制器实例
-    final ShortDramaPlayer parent = context.findAncestorWidgetOfExactType<ShortDramaPlayer>()!;
+    final ShortDramaPlayer parent =
+        context.findAncestorWidgetOfExactType<ShortDramaPlayer>()!;
     _controller = parent.controller;
   }
 
@@ -209,7 +210,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         child: Row(
           children: [
             // 添加媒体封面图片
-            if (widget.media.poster != null && widget.media.poster!.isNotEmpty) ...[
+            if (widget.media.poster != null &&
+                widget.media.poster!.isNotEmpty) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(4.0),
                 child: CachedNetworkImage(
@@ -220,14 +222,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                   placeholder: (context, url) => Container(
                     width: 32.0,
                     height: 32.0,
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     child: const Center(
                       child: SizedBox(
                         width: 16.0,
                         height: 16.0,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.0,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white30),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white30),
                         ),
                       ),
                     ),
@@ -235,7 +238,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                   errorWidget: (context, url, error) => Container(
                     width: 32.0,
                     height: 32.0,
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     child: const Icon(
                       Icons.movie,
                       color: Colors.white70,
@@ -279,7 +282,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
           child: Row(
             children: [
               // 添加媒体封面图片
-              if (widget.media.poster != null && widget.media.poster!.isNotEmpty) ...[
+              if (widget.media.poster != null &&
+                  widget.media.poster!.isNotEmpty) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4.0),
                   child: CachedNetworkImage(
@@ -290,14 +294,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                     placeholder: (context, url) => Container(
                       width: 32.0,
                       height: 32.0,
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                       child: const Center(
                         child: SizedBox(
                           width: 16.0,
                           height: 16.0,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.0,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white30),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white30),
                           ),
                         ),
                       ),
@@ -305,7 +310,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                     errorWidget: (context, url, error) => Container(
                       width: 32.0,
                       height: 32.0,
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                       child: const Icon(
                         Icons.movie,
                         color: Colors.white70,
@@ -340,7 +345,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                 width: 32.0,
                 height: 32.0,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: IconButton(
@@ -415,7 +420,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4.0,
             offset: const Offset(0, 1),
           )
@@ -451,7 +456,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
+                      color: Colors.red.withValues(alpha: 0.3),
                       blurRadius: 4.0,
                       offset: const Offset(0, 1),
                     )
@@ -493,7 +498,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 6.0,
             offset: const Offset(0, 2),
           )
@@ -539,7 +544,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                   borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
+                      color: Colors.red.withValues(alpha: 0.3),
                       blurRadius: 4.0,
                       offset: const Offset(0, 1),
                     )
@@ -560,7 +565,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12.0),
               ),
               padding: const EdgeInsets.all(16.0),
@@ -589,8 +594,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                               )
                             : LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.15),
-                                  Colors.white.withOpacity(0.08),
+                                  Colors.white.withValues(alpha: 0.15),
+                                  Colors.white.withValues(alpha: 0.08),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -598,14 +603,14 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                         borderRadius: BorderRadius.circular(10.0),
                         border: Border.all(
                           color: isSelected
-                              ? Colors.red.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.2),
+                              ? Colors.red.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.2),
                           width: 1.0,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: Colors.red.withOpacity(0.3),
+                                  color: Colors.red.withValues(alpha: 0.3),
                                   blurRadius: 4.0,
                                   offset: const Offset(0, 1),
                                 )
@@ -658,7 +663,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 6.0,
             offset: const Offset(0, 2),
           )
@@ -737,12 +742,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.0),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -753,7 +761,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
               Container(
                 padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6.0),
                 ),
                 child: Icon(icon, color: color, size: 16.0),
@@ -763,7 +771,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                     fontSize: 12.0,
                     fontWeight: FontWeight.w500,
                   ),
