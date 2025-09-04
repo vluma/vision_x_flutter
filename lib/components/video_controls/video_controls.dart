@@ -8,7 +8,6 @@ import 'normal_controls.dart';
 /// 统一的视频控制器，根据模式自动选择合适的控制界面
 class UnifiedVideoControls extends StatelessWidget {
   final VideoPlayerController controller;
-  final VideoPlayState playState;
   final UIState uiState;
   final String? title;
   final String? episodeTitle;
@@ -28,7 +27,6 @@ class UnifiedVideoControls extends StatelessWidget {
   const UnifiedVideoControls({
     super.key,
     required this.controller,
-    required this.playState,
     required this.uiState,
     this.title,
     this.episodeTitle,
@@ -51,7 +49,6 @@ class UnifiedVideoControls extends StatelessWidget {
       case ControlMode.shortDrama:
         return ShortDramaControls(
           controller: controller,
-          playState: playState,
           uiState: uiState,
           onPlayPause: onPlayPause,
           onBack: onBack,
@@ -61,7 +58,6 @@ class UnifiedVideoControls extends StatelessWidget {
       case ControlMode.fullScreen:
         return FullScreenControls(
           controller: controller,
-          playState: playState,
           uiState: uiState,
           title: title,
           onPlayPause: onPlayPause,
@@ -74,7 +70,6 @@ class UnifiedVideoControls extends StatelessWidget {
       case ControlMode.normal:
         return NormalControls(
           controller: controller,
-          playState: playState,
           uiState: uiState,
           title: title,
           onPlayPause: onPlayPause,
@@ -136,18 +131,11 @@ class VideoControlsConfig {
 
 /// 简化的状态管理器
 class VideoControlsState extends ChangeNotifier {
-  VideoPlayState _playState = const VideoPlayState();
   UIState _uiState = const UIState();
   VideoControlsConfig _config = const VideoControlsConfig();
 
-  VideoPlayState get playState => _playState;
   UIState get uiState => _uiState;
   VideoControlsConfig get config => _config;
-
-  void updatePlayState(VideoPlayState newState) {
-    _playState = newState;
-    notifyListeners();
-  }
 
   void updateUIState(UIState newState) {
     _uiState = newState;
@@ -159,11 +147,6 @@ class VideoControlsState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void togglePlayPause() {
-    _playState = _playState.copyWith(isPlaying: !_playState.isPlaying);
-    notifyListeners();
-  }
-
   void toggleControlsVisibility() {
     _uiState = _uiState.copyWith(controlsVisible: !_uiState.controlsVisible);
     notifyListeners();
@@ -171,16 +154,6 @@ class VideoControlsState extends ChangeNotifier {
 
   void toggleLock() {
     _uiState = _uiState.copyWith(isLocked: !_uiState.isLocked);
-    notifyListeners();
-  }
-
-  void updateCurrentPosition(Duration position) {
-    _playState = _playState.copyWith(currentPosition: position);
-    notifyListeners();
-  }
-
-  void updateSpeed(double speed) {
-    _playState = _playState.copyWith(playbackSpeed: speed);
     notifyListeners();
   }
 }
@@ -214,28 +187,14 @@ class _VideoPlayerWithUnifiedControlsState
     _controlsState.updateConfig(widget.config);
 
     _controller.initialize().then((_) {
-      _updatePlayState();
       _controller.play();
     });
-
-    _controller.addListener(_updatePlayState);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_updatePlayState);
     _controller.dispose();
     super.dispose();
-  }
-
-  void _updatePlayState() {
-    _controlsState.updatePlayState(VideoPlayState(
-      isPlaying: _controller.value.isPlaying,
-      currentPosition: _controller.value.position,
-      totalDuration: _controller.value.duration,
-      isBuffering: _controller.value.isBuffering,
-      playbackSpeed: _controller.value.playbackSpeed,
-    ));
   }
 
   void _handleSeek(double position) {
@@ -261,11 +220,10 @@ class _VideoPlayerWithUnifiedControlsState
                       builder: (context, child) {
                         return UnifiedVideoControls(
                           controller: _controller,
-                          playState: _controlsState.playState,
                           uiState: _controlsState.uiState,
                           controlMode: _controlsState.config.mode,
                           onPlayPause: () {
-                            _controlsState.playState.isPlaying
+                            _controller.value.isPlaying
                                 ? _controller.pause()
                                 : _controller.play();
                           },

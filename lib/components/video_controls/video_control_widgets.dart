@@ -73,18 +73,10 @@ class BigPlayButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          isPlaying ? Icons.pause : Icons.play_arrow,
-          size: size * 0.6,
-          color: color,
-        ),
+      child: Icon(
+        isPlaying ? Icons.pause : Icons.play_arrow,
+        size: size,
+        color: color.withValues(alpha: 0.7),
       ),
     );
   }

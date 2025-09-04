@@ -7,7 +7,6 @@ import 'video_control_widgets.dart' as custom_widgets;
 /// 短剧模式控制组件
 class ShortDramaControls extends StatefulWidget {
   final VideoPlayerController controller;
-  final VideoPlayState playState;
   final UIState uiState;
   final VoidCallback? onPlayPause;
   final VoidCallback? onBack;
@@ -16,7 +15,6 @@ class ShortDramaControls extends StatefulWidget {
   const ShortDramaControls({
     super.key,
     required this.controller,
-    required this.playState,
     required this.uiState,
     this.onPlayPause,
     this.onBack,
@@ -29,7 +27,27 @@ class ShortDramaControls extends StatefulWidget {
 
 class _ShortDramaControlsState extends State<ShortDramaControls> {
   bool _isSpeedUpMode = false;
-  
+
+  @override
+  void initState() {
+    super.initState();
+    // 监听播放器状态变化
+    widget.controller.addListener(_onPlayerStateChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onPlayerStateChanged);
+    super.dispose();
+  }
+
+  void _onPlayerStateChanged() {
+    // 强制重建UI以响应播放状态变化
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -54,10 +72,11 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
             ),
 
           // 中央播放按钮 - 只在暂停状态且控制栏可见时显示
-          if (!widget.playState.isPlaying && widget.uiState.controlsVisible)
+          if (!widget.controller.value.isPlaying &&
+              widget.uiState.controlsVisible)
             Center(
               child: custom_widgets.BigPlayButton(
-                isPlaying: widget.playState.isPlaying,
+                isPlaying: widget.controller.value.isPlaying,
                 onPressed: widget.onPlayPause,
               ),
             ),
@@ -93,18 +112,18 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
   void _handleLongPressStart(LongPressStartDetails details) {
     final screenWidth = MediaQuery.of(context).size.width;
     final tapPosition = details.localPosition.dx;
-    
+
     // 右半部分长按
     if (tapPosition > screenWidth / 2) {
       setState(() {
         _isSpeedUpMode = true;
       });
-      
+
       // 如果暂停状态，先开始播放
-      if (!widget.playState.isPlaying) {
+      if (!widget.controller.value.isPlaying) {
         widget.controller.play();
       }
-      
+
       widget.controller.setPlaybackSpeed(2.0);
     }
   }
@@ -151,12 +170,13 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
             Row(
               children: [
                 custom_widgets.TimeDisplay(
-                  currentTime: widget.playState.formattedCurrentTime,
-                  totalTime: widget.playState.formattedTotalTime,
+                  currentTime:
+                      _formatDuration(widget.controller.value.position),
+                  totalTime: _formatDuration(widget.controller.value.duration),
                 ),
                 const Spacer(),
                 custom_widgets.PlayPauseButton(
-                  isPlaying: widget.playState.isPlaying,
+                  isPlaying: widget.controller.value.isPlaying,
                   onPressed: widget.onPlayPause,
                 ),
               ],
@@ -176,8 +196,14 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
 
   Widget _buildSpeedIndicator() {
     return custom_widgets.Indicator(
-      text: '${widget.playState.playbackSpeed.toStringAsFixed(1)}x',
+      text: '${widget.controller.value.playbackSpeed.toStringAsFixed(1)}x',
       icon: Icons.speed,
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.toString().padLeft(2, '0');
+    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 }
