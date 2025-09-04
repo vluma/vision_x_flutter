@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/data/repositories/video_player_repository_impl.dart';
 import 'package:vision_x_flutter/features/video_player/domain/models/video_player_models.dart';
 import 'package:vision_x_flutter/features/video_player/domain/repositories/video_player_repository.dart';
@@ -12,7 +12,8 @@ final videoPlayerRepositoryProvider = Provider<VideoPlayerRepository>((ref) {
 });
 
 /// 视频播放器配置提供者
-final videoPlayerConfigProvider = StateNotifierProvider.family<VideoPlayerConfigNotifier, VideoPlayerConfig, MediaDetail>(
+final videoPlayerConfigProvider = StateNotifierProvider.family<
+    VideoPlayerConfigNotifier, VideoPlayerConfig, MediaDetail>(
   (ref, media) => VideoPlayerConfigNotifier(
     VideoPlayerConfig(
       isShortDramaMode: _checkShortDramaMode(media.category, media.type),
@@ -22,7 +23,8 @@ final videoPlayerConfigProvider = StateNotifierProvider.family<VideoPlayerConfig
 );
 
 /// 视频播放器状态提供者
-final videoPlayerStateProvider = StateNotifierProvider.family<VideoPlayerNotifier, VideoPlayState, VideoPlayerParams>(
+final videoPlayerStateProvider = StateNotifierProvider.family<
+    VideoPlayerNotifier, VideoPlayState, VideoPlayerParams>(
   (ref, params) => VideoPlayerNotifier(
     repository: ref.watch(videoPlayerRepositoryProvider),
     media: params.media,
@@ -32,7 +34,8 @@ final videoPlayerStateProvider = StateNotifierProvider.family<VideoPlayerNotifie
 );
 
 /// 视频播放器UI状态提供者
-final videoPlayerUIStateProvider = StateNotifierProvider<VideoPlayerUINotifier, VideoPlayerUIState>(
+final videoPlayerUIStateProvider =
+    StateNotifierProvider<VideoPlayerUINotifier, VideoPlayerUIState>(
   (ref) => VideoPlayerUINotifier(),
 );
 
@@ -65,11 +68,11 @@ class VideoPlayerParams {
 /// 检查是否为短剧模式
 bool _checkShortDramaMode(String? category, String? type) {
   if (category == null || type == null) return false;
-  
+
   // 根据分类和类型判断是否为短剧模式
   final isShortVideo = category.contains('短视频') || type.contains('短视频');
   final isShortDrama = category.contains('短剧') || type.contains('短剧');
-  
+
   return isShortVideo || isShortDrama;
 }
 

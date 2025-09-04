@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vision_x_flutter/data/models/history_record.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/history_record.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 class HistoryService extends ChangeNotifier {
   static const String _historyKey = 'watch_history';
   static const int _maxHistoryCount = 100; // 最大历史记录数
 
   static final HistoryService _instance = HistoryService._internal();
-  
+
   // 添加一个简单的回调列表
   static final List<Function()> _refreshCallbacks = [];
 
@@ -39,13 +39,15 @@ class HistoryService extends ChangeNotifier {
   }
 
   // 添加观看记录
-  Future<void> addHistory(MediaDetail media, Episode episode, int progress, [int? duration]) async {
+  Future<void> addHistory(MediaDetail media, Episode episode, int progress,
+      [int? duration]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final history = await getHistory();
 
       // 检查是否已存在相同媒体的记录，如果存在则更新
-      final existingIndex = history.indexWhere((record) => record.media.id == media.id);
+      final existingIndex =
+          history.indexWhere((record) => record.media.id == media.id);
 
       final newRecord = HistoryRecord(
         media: media,
@@ -72,10 +74,10 @@ class HistoryService extends ChangeNotifier {
       final historyJson = history.map((record) => record.toJson()).toList();
       await prefs.setStringList(
           _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
-      
+
       // 通知监听者数据已更新
       notifyListeners();
-      
+
       // 通知刷新回调
       _notifyRefreshCallbacks();
     } catch (e) {
@@ -104,7 +106,7 @@ class HistoryService extends ChangeNotifier {
 
       // 按观看时间排序，最新的在最上面
       historyList.sort((a, b) => b.watchedAt.compareTo(a.watchedAt));
-      
+
       return historyList;
     } catch (e) {
       debugPrint('获取历史记录失败: $e');
@@ -122,10 +124,10 @@ class HistoryService extends ChangeNotifier {
       final historyJson = history.map((record) => record.toJson()).toList();
       await prefs.setStringList(
           _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
-      
+
       // 通知监听者数据已更新
       notifyListeners();
-      
+
       // 通知刷新回调
       _notifyRefreshCallbacks();
     } catch (e) {
@@ -139,10 +141,10 @@ class HistoryService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_historyKey);
-      
+
       // 通知监听者数据已更新
       notifyListeners();
-      
+
       // 通知刷新回调
       _notifyRefreshCallbacks();
     } catch (e) {
@@ -153,7 +155,8 @@ class HistoryService extends ChangeNotifier {
 
   // 更新观看进度
   Future<void> updateHistoryProgress(
-      MediaDetail media, Episode episode, int progress, [int? duration]) async {
+      MediaDetail media, Episode episode, int progress,
+      [int? duration]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final history = await getHistory();
@@ -174,10 +177,10 @@ class HistoryService extends ChangeNotifier {
         final historyJson = history.map((record) => record.toJson()).toList();
         await prefs.setStringList(
             _historyKey, historyJson.map((item) => jsonEncode(item)).toList());
-        
+
         // 通知监听者数据已更新
         notifyListeners();
-        
+
         // 通知刷新回调
         _notifyRefreshCallbacks();
       }
@@ -193,7 +196,7 @@ class HistoryService extends ChangeNotifier {
       // 重新读取数据并通知监听者
       await getHistory();
       notifyListeners();
-      
+
       // 通知刷新回调
       _notifyRefreshCallbacks();
     } catch (e) {

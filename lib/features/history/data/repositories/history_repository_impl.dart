@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/history/domain/entities/history_record.dart';
 import 'package:vision_x_flutter/features/history/domain/repositories/history_repository.dart';
 
@@ -55,7 +55,8 @@ class HistoryRepositoryImpl implements HistoryRepository {
       final history = await getHistory();
 
       // 检查是否已存在相同媒体的记录，如果存在则更新
-      final existingIndex = history.indexWhere((record) => record.media.id == media.id);
+      final existingIndex =
+          history.indexWhere((record) => record.media.id == media.id);
 
       final newRecord = HistoryRecordEntity(
         media: media,
@@ -144,13 +145,15 @@ class HistoryRepositoryImpl implements HistoryRepository {
 
   Future<void> _saveHistory(
       SharedPreferences prefs, List<HistoryRecordEntity> history) async {
-    final historyJson = history.map((record) => jsonEncode({
-          'media': record.media.toJson(),
-          'episode': record.episode.toJson(),
-          'watchedAt': record.watchedAt.toIso8601String(),
-          'progress': record.progress,
-          'duration': record.duration,
-        })).toList();
+    final historyJson = history
+        .map((record) => jsonEncode({
+              'media': record.media.toJson(),
+              'episode': record.episode.toJson(),
+              'watchedAt': record.watchedAt.toIso8601String(),
+              'progress': record.progress,
+              'duration': record.duration,
+            }))
+        .toList();
 
     await prefs.setStringList(_historyKey, historyJson);
   }

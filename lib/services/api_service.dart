@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/home/models/douban_movie.dart';
-import '../data/models/media_detail.dart';
+import '../shared/models/media_detail.dart';
 
 /// 搜索数据状态管理类，处理搜索查询和UI状态
 class SearchDataSource extends ChangeNotifier {

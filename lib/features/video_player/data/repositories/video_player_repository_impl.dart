@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/domain/repositories/video_player_repository.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/services/hls_parser_service.dart';
@@ -15,19 +15,19 @@ class VideoPlayerRepositoryImpl implements VideoPlayerRepository {
   VideoPlayerRepositoryImpl({
     HistoryService? historyService,
     HlsParserService? hlsParserService,
-  }) : _historyService = historyService ?? HistoryService(),
-       _hlsParserService = hlsParserService ?? HlsParserService();
+  })  : _historyService = historyService ?? HistoryService(),
+        _hlsParserService = hlsParserService ?? HlsParserService();
 
   @override
   Future<String> getVideoUrl(MediaDetail media, Episode episode) async {
     // 获取基础URL用于拼接可能不完整的视频URL
     final baseUrl = media.apiUrl ?? '';
-    
+
     // 处理可能不完整的视频URL
     final resolvedUrl = baseUrl.isNotEmpty
         ? _resolveIncompleteUrl(episode.url, baseUrl)
         : episode.url;
-        
+
     return resolvedUrl;
   }
 
@@ -35,10 +35,9 @@ class VideoPlayerRepositoryImpl implements VideoPlayerRepository {
   Future<String> processVideoUrl(String url, String baseUrl) async {
     try {
       // 处理可能不完整的视频URL
-      final resolvedUrl = baseUrl.isNotEmpty
-          ? _resolveIncompleteUrl(url, baseUrl)
-          : url;
-      
+      final resolvedUrl =
+          baseUrl.isNotEmpty ? _resolveIncompleteUrl(url, baseUrl) : url;
+
       // 判断是否为HLS流
       if (_isHlsStream(resolvedUrl)) {
         // 检查广告过滤是否启用
@@ -77,7 +76,8 @@ class VideoPlayerRepositoryImpl implements VideoPlayerRepository {
   }
 
   @override
-  Future<void> savePlayHistory(MediaDetail media, Episode episode, int position, int duration) async {
+  Future<void> savePlayHistory(
+      MediaDetail media, Episode episode, int position, int duration) async {
     try {
       await _historyService.addHistory(media, episode, position, duration);
     } catch (e) {
@@ -86,9 +86,11 @@ class VideoPlayerRepositoryImpl implements VideoPlayerRepository {
   }
 
   @override
-  Future<void> updatePlayProgress(MediaDetail media, Episode episode, int position, int duration) async {
+  Future<void> updatePlayProgress(
+      MediaDetail media, Episode episode, int position, int duration) async {
     try {
-      await _historyService.updateHistoryProgress(media, episode, position, duration);
+      await _historyService.updateHistoryProgress(
+          media, episode, position, duration);
     } catch (e) {
       debugPrint('更新播放进度失败: $e');
     }
@@ -100,7 +102,8 @@ class VideoPlayerRepositoryImpl implements VideoPlayerRepository {
     return {
       'ad_filter_enabled': prefs.getBool('ad_filter_enabled') ?? true,
       'auto_next_episode': prefs.getBool('auto_next_episode') ?? true,
-      'default_playback_speed': prefs.getDouble('default_playback_speed') ?? 1.0,
+      'default_playback_speed':
+          prefs.getDouble('default_playback_speed') ?? 1.0,
     };
   }
 

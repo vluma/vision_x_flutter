@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_controls.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_control_models.dart'
     as models;

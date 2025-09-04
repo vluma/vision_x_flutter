@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vision_x_flutter/features/history/data/repositories/history_repository_impl.dart';
 import 'package:vision_x_flutter/features/history/domain/entities/history_record.dart';
 import 'package:vision_x_flutter/features/history/domain/repositories/history_repository.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 // 仓库提供者
 final historyRepositoryProvider = Provider<HistoryRepository>((ref) {
@@ -42,7 +42,7 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
 
   Future<void> loadHistory() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final records = await _repository.getHistory();
       state = state.copyWith(
@@ -102,7 +102,8 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
     int? duration,
   ]) async {
     try {
-      await _repository.updateHistoryProgress(media, episode, progress, duration);
+      await _repository.updateHistoryProgress(
+          media, episode, progress, duration);
       await loadHistory(); // 重新加载以更新UI
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -115,7 +116,8 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
 }
 
 // 历史记录状态提供者
-final historyNotifierProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
+final historyNotifierProvider =
+    StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
   final repository = ref.watch(historyRepositoryProvider);
   return HistoryNotifier(repository);
 });

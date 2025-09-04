@@ -1,4 +1,4 @@
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 class HistoryRecordEntity {
   final MediaDetail media;

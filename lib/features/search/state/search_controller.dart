@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/services/content_filter_service.dart';
 
@@ -46,13 +46,13 @@ class SearchPageController extends ChangeNotifier {
           // 当收到部分结果时更新UI
           if (currentSearchId == _searchId) {
             tempResults.addAll(results);
-            
+
             // 应用内容过滤
             final filteredResults = await ContentFilterService.filterYellowContent(
-              tempResults,
-              (media) => '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}'
-            );
-            
+                tempResults,
+                (media) =>
+                    '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}');
+
             _mediaResults = List.from(filteredResults);
             _filteredResults = List.from(filteredResults);
             _aggregatedResults = _aggregateMedia(filteredResults);
@@ -206,7 +206,7 @@ class SearchPageController extends ChangeNotifier {
   Future<void> filterResults(String category) async {
     _selectedCategory = category;
     List<MediaDetail> categoryResults;
-    
+
     if (category == '全部') {
       categoryResults = List.from(_mediaResults);
     } else {
@@ -216,9 +216,9 @@ class SearchPageController extends ChangeNotifier {
 
     // 应用内容过滤
     _filteredResults = await ContentFilterService.filterYellowContent(
-      categoryResults,
-      (media) => '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}'
-    );
+        categoryResults,
+        (media) =>
+            '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}');
 
     // 应用当前排序
     _sortResults();

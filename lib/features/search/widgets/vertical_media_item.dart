@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 垂直媒体项组件 - 分组模式
 class VerticalMediaItem extends StatelessWidget {

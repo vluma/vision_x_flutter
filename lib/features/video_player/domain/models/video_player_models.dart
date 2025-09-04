@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 视频播放状态模型
 class VideoPlayState {
@@ -96,7 +96,7 @@ class VideoPlayerConfig {
   final String? episodeTitle;
   final int currentEpisodeIndex;
   final int totalEpisodes;
-  
+
   // 进度更新间隔
   static const Duration progressUpdateInterval = Duration(seconds: 30);
 

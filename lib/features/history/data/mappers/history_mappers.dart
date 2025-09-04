@@ -1,4 +1,4 @@
-import 'package:vision_x_flutter/data/models/history_record.dart' as old;
+import 'package:vision_x_flutter/shared/models/history_record.dart' as old;
 import 'package:vision_x_flutter/features/history/domain/entities/history_record.dart';
 
 /// 历史记录数据映射器

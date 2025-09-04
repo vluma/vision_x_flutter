@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 详情页面状态枚举
 enum DetailState {
-  loading,    // 加载中
-  success,    // 加载成功
-  error,      // 加载失败
+  loading, // 加载中
+  success, // 加载成功
+  error, // 加载失败
 }
 
 /// 详情页面视图模型
@@ -58,7 +58,7 @@ class DetailViewModel with ChangeNotifier {
   /// 刷新详情数据
   Future<void> refresh() async {
     if (mediaId == null) return;
-    
+
     try {
       _state = DetailState.loading;
       notifyListeners();
@@ -85,4 +85,8 @@ class DetailViewModel with ChangeNotifier {
     }
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }
