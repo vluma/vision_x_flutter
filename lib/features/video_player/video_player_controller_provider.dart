@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/features/video_player/video_player_controller.dart';
+import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
 
 /// 视频播放控制器提供者
 /// 用于在widget树中传递控制器
@@ -13,7 +13,8 @@ class VideoPlayerControllerProvider extends InheritedWidget {
   });
 
   static VideoPlayerControllerProvider? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<VideoPlayerControllerProvider>();
+    return context
+        .dependOnInheritedWidgetOfExactType<VideoPlayerControllerProvider>();
   }
 
   @override

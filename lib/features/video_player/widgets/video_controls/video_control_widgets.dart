@@ -149,11 +149,14 @@ class VideoProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return VideoProgressIndicator(
-      controller,
-      allowScrubbing: true,
-      padding: EdgeInsets.zero,
-      colors: colors,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(height / 2),
+      child: VideoProgressIndicator(
+        controller,
+        allowScrubbing: true,
+        padding: EdgeInsets.zero,
+        colors: colors,
+      ),
     );
   }
 }

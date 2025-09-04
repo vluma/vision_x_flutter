@@ -84,14 +84,10 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
           // 底部控制栏 - 始终显示进度条和时间
           Positioned(
             bottom: 0,
-            left: 0,
-            right: 0,
+            left: 16,
+            right: 16,
             child: _buildBottomControls(),
           ),
-
-          // 快进/快退指示器
-          if (widget.uiState.showSeekIndicator)
-            Center(child: _buildSeekIndicator()),
 
           // 速度指示器
           if (_isSpeedUpMode)
@@ -140,57 +136,9 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
   }
 
   Widget _buildBottomControls() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: VideoControlConstants.sidePadding,
-        vertical: 16.0,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 进度条 - 始终显示
-            custom_widgets.VideoProgressBar(
-              controller: widget.controller,
-              onSeek: widget.onSeek,
-            ),
-            const SizedBox(height: 8.0),
-            // 时间和播放按钮 - 始终显示
-            Row(
-              children: [
-                custom_widgets.TimeDisplay(
-                  currentTime:
-                      _formatDuration(widget.controller.value.position),
-                  totalTime: _formatDuration(widget.controller.value.duration),
-                ),
-                const Spacer(),
-                custom_widgets.PlayPauseButton(
-                  isPlaying: widget.controller.value.isPlaying,
-                  onPressed: widget.onPlayPause,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSeekIndicator() {
-    return const custom_widgets.Indicator(
-      text: '快进',
-      icon: Icons.fast_forward,
+    return custom_widgets.VideoProgressBar(
+      controller: widget.controller,
+      onSeek: widget.onSeek,
     );
   }
 
@@ -199,11 +147,5 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
       text: '${widget.controller.value.playbackSpeed.toStringAsFixed(1)}x',
       icon: Icons.speed,
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.toString().padLeft(2, '0');
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
   }
 }
