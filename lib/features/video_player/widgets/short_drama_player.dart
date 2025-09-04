@@ -39,12 +39,26 @@ class ShortDramaPlayer extends StatelessWidget {
 
   /// 构建剧集页面视图
   Widget _buildEpisodePageView() {
-    return PageView.builder(
-      controller: controller.pageController,
-      scrollDirection: Axis.vertical,
-      itemCount: controller.totalEpisodes,
-      onPageChanged: controller.changeEpisode,
-      itemBuilder: (context, index) => _buildEpisodeItem(index, context),
+    return ValueListenableBuilder<int>(
+      valueListenable: controller.currentEpisodeIndex,
+      builder: (context, currentIndex, child) {
+        // 当剧集索引变化时，同步更新PageView的位置
+        if (controller.pageController.hasClients && 
+            controller.pageController.page?.round() != currentIndex) {
+          controller.pageController.animateToPage(
+            currentIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+        return PageView.builder(
+          controller: controller.pageController,
+          scrollDirection: Axis.vertical,
+          itemCount: controller.totalEpisodes,
+          onPageChanged: controller.changeEpisode,
+          itemBuilder: (context, index) => _buildEpisodeItem(index, context),
+        );
+      },
     );
   }
 
@@ -60,24 +74,31 @@ class ShortDramaPlayer extends StatelessWidget {
 
   /// 构建视频播放器
   Widget _buildVideoPlayer(Episode episode, int index, BuildContext context) {
-    return CustomVideoPlayer(
-      key: ValueKey(episode.url),
-      media: controller.media,
-      episode: episode,
-      onProgressUpdate: controller.updateProgress,
-      onPlaybackCompleted: controller.playNextEpisode,
-      onVideoDurationReceived: controller.setVideoDuration,
-      startPosition: index == controller.currentEpisodeIndex.value
-          ? controller.currentProgress.value
-          : 0,
-      isShortDramaMode: true,
-      onBackPressed: () => context.pop(),
-      onNextEpisode: controller.playNextEpisode,
-      onPrevEpisode: controller.playPrevEpisode,
-      onEpisodeChanged: controller.changeEpisode,
-      currentEpisodeIndex: index,
-      totalEpisodes: controller.totalEpisodes,
-      onPreloadNextEpisode: controller.preloadNextEpisode,
+    return ValueListenableBuilder<Episode>(
+      valueListenable: controller.currentEpisode,
+      builder: (context, currentEpisode, child) {
+        return CustomVideoPlayer(
+          key: ValueKey(currentEpisode.url), // 使用当前剧集URL作为key以确保更新
+          media: controller.media,
+          episode: currentEpisode,
+          onProgressUpdate: controller.updateProgress,
+          onPlaybackCompleted: () {
+            controller.playNextEpisode();
+          },
+          onVideoDurationReceived: controller.setVideoDuration,
+          startPosition: index == controller.currentEpisodeIndex.value
+              ? controller.currentProgress.value
+              : 0,
+          isShortDramaMode: true,
+          onBackPressed: () => context.pop(),
+          onNextEpisode: controller.playNextEpisode,
+          onPrevEpisode: controller.playPrevEpisode,
+          onEpisodeChanged: controller.changeEpisode,
+          currentEpisodeIndex: index,
+          totalEpisodes: controller.totalEpisodes,
+          onPreloadNextEpisode: controller.preloadNextEpisode,
+        );
+      },
     );
   }
 
@@ -152,14 +173,46 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
     return ValueListenableBuilder<bool>(
       valueListenable: _controller.isInfoCardExpanded,
       builder: (context, isExpanded, child) {
-        return isExpanded ? _buildExpandedCard() : _buildCollapsedCard();
+        // 使用AnimatedSwitcher添加切换动画
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            // 对展开和折叠状态使用不同的动画
+            if (child.key == const ValueKey('expanded')) {
+              // 展开动画：从底部向上滑出 + 淡入效果
+              return FadeTransition(
+                opacity: animation,
+                child: SizeTransition(
+                  sizeFactor: animation,
+                  axisAlignment: -1.0, // 从底部开始
+                  child: child,
+                ),
+              );
+            } else {
+              // 折叠动画：向底部滑入
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            }
+          },
+          child: isExpanded 
+            ? _buildExpandedCard(key: const ValueKey('expanded')) 
+            : _buildCollapsedCard(key: const ValueKey('collapsed')),
+        );
       },
     );
   }
 
   /// 构建展开状态卡片
-  Widget _buildExpandedCard() {
+  Widget _buildExpandedCard({Key? key}) {
     return Container(
+      key: key,
       height: MediaQuery.of(context).size.height * 0.75,
       width: double.infinity,
       decoration: _buildCardDecoration(roundedTopOnly: true),
@@ -168,10 +221,11 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   }
 
   /// 构建折叠状态卡片
-  Widget _buildCollapsedCard() {
+  Widget _buildCollapsedCard({Key? key}) {
     final safeAreaBottom = MediaQuery.of(context).padding.bottom;
 
     return Container(
+      key: key,
       color: const Color(0xFF0A0A0A),
       child: Container(
         height: 44.0,
@@ -202,178 +256,189 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
 
   /// 构建卡片头部
   Widget _buildHeader() {
-    return GestureDetector(
-      onTap: _toggleExpanded,
-      child: Container(
-        height: 44.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          children: [
-            // 添加媒体封面图片
-            if (widget.media.poster != null &&
-                widget.media.poster!.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4.0),
-                child: CachedNetworkImage(
-                  imageUrl: widget.media.poster!,
-                  width: 32.0,
-                  height: 32.0,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: 32.0,
-                    height: 32.0,
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    child: const Center(
-                      child: SizedBox(
-                        width: 16.0,
-                        height: 16.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white30),
+    return ValueListenableBuilder<int>(
+      valueListenable: _controller.currentEpisodeIndex,
+      builder: (context, currentIndex, child) {
+        final episodeTitle = _controller.currentSource.episodes[currentIndex].title;
+        return GestureDetector(
+          onTap: _toggleExpanded,
+          child: Container(
+            height: 44.0,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                // 添加媒体封面图片
+                if (widget.media.poster != null &&
+                    widget.media.poster!.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4.0),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.media.poster!,
+                      width: 32.0,
+                      height: 32.0,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: 32.0,
+                        height: 32.0,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 16.0,
+                            height: 16.0,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white30),
+                            ),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: 32.0,
+                        height: 32.0,
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        child: const Icon(
+                          Icons.movie,
+                          color: Colors.white70,
+                          size: 16.0,
                         ),
                       ),
                     ),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 32.0,
-                    height: 32.0,
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    child: const Icon(
-                      Icons.movie,
-                      color: Colors.white70,
-                      size: 16.0,
+                  const SizedBox(width: 8.0),
+                ],
+                Expanded(
+                  child: Text(
+                    '${widget.media.name ?? '未知剧集'} - ${(episodeTitle != null && episodeTitle.isNotEmpty) ? episodeTitle : '第${currentIndex + 1}集'}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.normal,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8.0),
-            ],
-            Expanded(
-              child: Text(
-                '${widget.media.name ?? '未知剧集'} - 第${widget.currentEpisodeIndex + 1}集',
-                style: const TextStyle(
+                Icon(
+                  _isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
                   color: Colors.white,
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.normal,
+                  size: 20.0,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              ],
             ),
-            Icon(
-              _isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-              color: Colors.white,
-              size: 20.0,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 
   /// 构建展开内容
   Widget _buildExpandedContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 12.0),
-          child: Row(
-            children: [
-              // 添加媒体封面图片
-              if (widget.media.poster != null &&
-                  widget.media.poster!.isNotEmpty) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4.0),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.media.poster!,
-                    width: 32.0,
-                    height: 32.0,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      width: 32.0,
-                      height: 32.0,
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 16.0,
-                          height: 16.0,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.0,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white30),
+    return ValueListenableBuilder<int>(
+      valueListenable: _controller.currentEpisodeIndex,
+      builder: (context, currentIndex, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 12.0),
+              child: Row(
+                children: [
+                  // 添加媒体封面图片
+                  if (widget.media.poster != null &&
+                      widget.media.poster!.isNotEmpty) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.media.poster!,
+                        width: 32.0,
+                        height: 32.0,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 32.0,
+                          height: 32.0,
+                          color: Colors.grey.withValues(alpha: 0.3),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 16.0,
+                              height: 16.0,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white30),
+                              ),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 32.0,
+                          height: 32.0,
+                          color: Colors.grey.withValues(alpha: 0.3),
+                          child: const Icon(
+                            Icons.movie,
+                            color: Colors.white70,
+                            size: 16.0,
                           ),
                         ),
                       ),
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 32.0,
-                      height: 32.0,
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      child: const Icon(
-                        Icons.movie,
-                        color: Colors.white70,
-                        size: 16.0,
-                      ),
+                    const SizedBox(width: 8.0),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.media.name ?? '未知剧集',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4.0),
+                        _buildBasicInfoRow(),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8.0),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.media.name ?? '未知剧集',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  Container(
+                    width: 32.0,
+                    height: 32.0,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6.0),
                     ),
-                    const SizedBox(height: 4.0),
-                    _buildBasicInfoRow(),
-                  ],
-                ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      iconSize: 16.0,
+                      onPressed: _toggleExpanded,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                width: 32.0,
-                height: 32.0,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6.0),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  iconSize: 16.0,
-                  onPressed: _toggleExpanded,
-                  padding: EdgeInsets.zero,
-                ),
+            ),
+            const SizedBox(height: 8.0),
+            Container(height: 0.3, color: Colors.white24),
+            const SizedBox(height: 16.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildTabBar(),
+            ),
+            const SizedBox(height: 16.0),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildTabContent(currentIndex),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8.0),
-        Container(height: 0.3, color: Colors.white24),
-        const SizedBox(height: 16.0),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: _buildTabBar(),
-        ),
-        const SizedBox(height: 16.0),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: _buildTabContent(),
-          ),
-        ),
-        const SizedBox(height: 16.0),
-      ],
+            ),
+            const SizedBox(height: 16.0),
+          ],
+        );
+      }
     );
   }
 
@@ -478,10 +543,10 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   }
 
   /// 构建标签内容
-  Widget _buildTabContent() {
+  Widget _buildTabContent(int currentIndex) {
     switch (_selectedTabIndex) {
       case 0:
-        return _buildEpisodeSelector();
+        return _buildEpisodeSelector(currentIndex);
       case 1:
         return _buildDescription();
       default:
@@ -490,7 +555,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   }
 
   /// 构建剧集选择器
-  Widget _buildEpisodeSelector() {
+  Widget _buildEpisodeSelector(int currentIndex) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -551,7 +616,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                   ],
                 ),
                 child: Text(
-                  '第${widget.currentEpisodeIndex + 1}集',
+                  '第${currentIndex + 1}集',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11.0,
@@ -578,7 +643,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                 ),
                 itemCount: widget.totalEpisodes,
                 itemBuilder: (context, index) {
-                  final isSelected = index == widget.currentEpisodeIndex;
+                  final isSelected = index == currentIndex;
                   return GestureDetector(
                     onTap: () {
                       widget.onEpisodeChanged(index);
