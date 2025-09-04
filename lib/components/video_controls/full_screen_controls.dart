@@ -7,7 +7,6 @@ import 'video_control_widgets.dart' as custom_widgets;
 /// 全屏模式控制组件
 class FullScreenControls extends StatelessWidget {
   final VideoPlayerController controller;
-  final VideoPlayState playState;
   final UIState uiState;
   final String? title;
   final VoidCallback? onPlayPause;
@@ -19,7 +18,6 @@ class FullScreenControls extends StatelessWidget {
   const FullScreenControls({
     super.key,
     required this.controller,
-    required this.playState,
     required this.uiState,
     this.title,
     this.onPlayPause,
@@ -50,7 +48,7 @@ class FullScreenControls extends StatelessWidget {
         if (uiState.showBigPlayButton)
           Center(
             child: custom_widgets.BigPlayButton(
-              isPlaying: playState.isPlaying,
+              isPlaying: controller.value.isPlaying,
               onPressed: onPlayPause,
             ),
           ),
@@ -169,13 +167,13 @@ class FullScreenControls extends StatelessWidget {
           Row(
             children: [
               custom_widgets.PlayPauseButton(
-                isPlaying: playState.isPlaying,
+                isPlaying: controller.value.isPlaying,
                 onPressed: onPlayPause,
               ),
               const SizedBox(width: 16.0),
               custom_widgets.TimeDisplay(
-                currentTime: playState.formattedCurrentTime,
-                totalTime: playState.formattedTotalTime,
+                currentTime: _formatDuration(controller.value.position),
+                totalTime: _formatDuration(controller.value.duration),
               ),
               const Spacer(),
               custom_widgets.ControlButton(
@@ -221,5 +219,11 @@ class FullScreenControls extends StatelessWidget {
       text: '${uiState.currentSpeed.toStringAsFixed(1)}x',
       icon: Icons.speed,
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.toString().padLeft(2, '0');
+    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 }

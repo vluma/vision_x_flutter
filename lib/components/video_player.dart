@@ -309,16 +309,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       aspectRatio: _videoPlayer.value.aspectRatio,
       systemOverlaysAfterFullScreen: SystemUiOverlay.values,
       playbackSpeeds: VideoPlayerConfig.playbackSpeeds,
-      customControls: UnifiedVideoControls(
+      customControls: _DynamicVideoControls(
         controller: _videoPlayer,
-        playState: models.VideoPlayState(
-          isPlaying: _videoPlayer.value.isPlaying,
-          currentPosition: _videoPlayer.value.position,
-          totalDuration: _videoPlayer.value.duration,
-          isBuffering: _videoPlayer.value.isBuffering,
-          playbackSpeed: _videoPlayer.value.playbackSpeed,
-        ),
-        uiState: const models.UIState(),
         controlMode: widget.isShortDramaMode
             ? ControlMode.shortDrama
             : ControlMode.normal,
@@ -833,5 +825,78 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     });
 
     super.dispose();
+  }
+}
+
+/// 动态视频控制器，能够响应播放状态变化
+class _DynamicVideoControls extends StatefulWidget {
+  final VideoPlayerController controller;
+  final ControlMode controlMode;
+  final String? title;
+  final String? episodeTitle;
+  final int currentEpisodeIndex;
+  final int totalEpisodes;
+  final VoidCallback? onPlayPause;
+  final VoidCallback? onBack;
+  final VoidCallback? onNextEpisode;
+  final VoidCallback? onPrevEpisode;
+  final ValueChanged<double>? onSeek;
+
+  const _DynamicVideoControls({
+    required this.controller,
+    required this.controlMode,
+    this.title,
+    this.episodeTitle,
+    this.currentEpisodeIndex = 0,
+    this.totalEpisodes = 0,
+    this.onPlayPause,
+    this.onBack,
+    this.onNextEpisode,
+    this.onPrevEpisode,
+    this.onSeek,
+  });
+
+  @override
+  State<_DynamicVideoControls> createState() => _DynamicVideoControlsState();
+}
+
+class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onPlayerStateChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onPlayerStateChanged);
+    super.dispose();
+  }
+
+  void _onPlayerStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return UnifiedVideoControls(
+      controller: widget.controller,
+      uiState: models.UIState(
+        controlsVisible: true,
+        showBigPlayButton: !widget.controller.value.isPlaying,
+      ),
+      controlMode: widget.controlMode,
+      title: widget.title,
+      episodeTitle: widget.episodeTitle,
+      currentEpisodeIndex: widget.currentEpisodeIndex,
+      totalEpisodes: widget.totalEpisodes,
+      onPlayPause: widget.onPlayPause,
+      onBack: widget.onBack,
+      onNextEpisode: widget.onNextEpisode,
+      onPrevEpisode: widget.onPrevEpisode,
+      onSeek: widget.onSeek,
+    );
   }
 }
