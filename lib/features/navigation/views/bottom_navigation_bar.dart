@@ -85,7 +85,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         : NavBarConstants.minColumnWidth;
 
     final viewInsets = MediaQuery.of(context).viewInsets;
-    final bottomPadding = MediaQuery.of(context).padding.bottom +
+    final bottomPadding =
         viewInsets.bottom +
         NavBarConstants.bottomPaddingOffset;
 
