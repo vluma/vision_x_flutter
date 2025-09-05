@@ -10,12 +10,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         
-        // 使用Flutter的默认配置
-        if let appDelegate = UIApplication.shared.delegate as? FlutterAppDelegate {
-            appDelegate.window = window
-        }
+        // 使用FlutterViewController作为根视图控制器
+        let flutterViewController = FlutterViewController(project: nil, nibName: nil, bundle: nil)
+        let navigationController = UINavigationController(rootViewController: flutterViewController)
+        navigationController.isNavigationBarHidden = true
         
+        window.rootViewController = navigationController
         self.window = window
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
