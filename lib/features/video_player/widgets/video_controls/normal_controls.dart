@@ -85,7 +85,8 @@ class NormalControls extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back,
+                color: VideoControlConstants.iconColor),
             onPressed: onBack,
           ),
           const SizedBox(width: 16.0),
@@ -126,7 +127,6 @@ class NormalControls extends StatelessWidget {
             controller: controller,
             onSeek: onSeek,
           ),
-          const SizedBox(height: 8.0),
           // 控制按钮
           Row(
             children: [
@@ -147,7 +147,6 @@ class NormalControls extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8.0),
         ],
       ),
     );

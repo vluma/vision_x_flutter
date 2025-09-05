@@ -14,7 +14,7 @@ class VideoControlConstants {
 
   // UI尺寸配置
   static const double backButtonSize = 30.0;
-  static const double playButtonSize = 40.0;
+  static const double playButtonSize = 24.0;
   static const double controlButtonSize = 24.0;
   static const double pauseIconSize = 80.0;
   static const double lockButtonSize = 30.0;
@@ -23,7 +23,7 @@ class VideoControlConstants {
   // 间距配置
   static const double topPadding = 8.0;
   static const double sidePadding = 8.0;
-  static const double bottomPadding = 80.0;
+  static const double bottomPadding = 56.0;
   static const double gestureExcludeTop = 50.0;
   static const double gestureExcludeSide = 50.0;
   static const double gestureExcludeBottom = 100.0;

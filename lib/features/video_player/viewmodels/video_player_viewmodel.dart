@@ -17,6 +17,7 @@ class VideoPlayerController {
   final ValueNotifier<int?> _videoDuration;
   final ValueNotifier<bool> _isShortDramaMode;
   final ValueNotifier<bool> _isInfoCardExpanded; // 添加信息卡片展开状态
+  final ValueNotifier<double> _playbackSpeed; // 添加播放速度状态
 
   // 数据
   late final Source _currentSource;
@@ -31,7 +32,8 @@ class VideoPlayerController {
         _currentEpisodeIndex = ValueNotifier(0),
         _videoDuration = ValueNotifier(null),
         _isShortDramaMode = ValueNotifier(false),
-        _isInfoCardExpanded = ValueNotifier(false) { // 初始化信息卡片为折叠状态
+        _isInfoCardExpanded = ValueNotifier(false), // 初始化信息卡片为折叠状态
+        _playbackSpeed = ValueNotifier(1.0) { // 初始化播放速度为1.0
     _initialize();
   }
 
@@ -42,6 +44,7 @@ class VideoPlayerController {
   ValueListenable<int?> get videoDuration => _videoDuration;
   ValueListenable<bool> get isShortDramaMode => _isShortDramaMode;
   ValueListenable<bool> get isInfoCardExpanded => _isInfoCardExpanded; // 添加getter
+  ValueListenable<double> get playbackSpeed => _playbackSpeed; // 添加播放速度getter
   PageController get pageController => _pageController;
 
   int get totalEpisodes => _currentSource.episodes.length;
@@ -132,6 +135,11 @@ class VideoPlayerController {
     _isInfoCardExpanded.value = false;
   }
 
+  /// 设置播放速度
+  void setPlaybackSpeed(double speed) {
+    _playbackSpeed.value = speed;
+  }
+
   void dispose() {
     _currentEpisode.dispose();
     _currentProgress.dispose();
@@ -139,6 +147,7 @@ class VideoPlayerController {
     _videoDuration.dispose();
     _isShortDramaMode.dispose();
     _isInfoCardExpanded.dispose(); // 添加释放资源
+    _playbackSpeed.dispose(); // 释放播放速度资源
     _pageController.dispose();
   }
 }

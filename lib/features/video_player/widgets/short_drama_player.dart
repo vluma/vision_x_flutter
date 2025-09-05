@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // 添加foundation导入
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -43,7 +44,7 @@ class ShortDramaPlayer extends StatelessWidget {
       valueListenable: controller.currentEpisodeIndex,
       builder: (context, currentIndex, child) {
         // 当剧集索引变化时，同步更新PageView的位置
-        if (controller.pageController.hasClients && 
+        if (controller.pageController.hasClients &&
             controller.pageController.page?.round() != currentIndex) {
           controller.pageController.animateToPage(
             currentIndex,
@@ -201,9 +202,9 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
               );
             }
           },
-          child: isExpanded 
-            ? _buildExpandedCard(key: const ValueKey('expanded')) 
-            : _buildCollapsedCard(key: const ValueKey('collapsed')),
+          child: isExpanded
+              ? _buildExpandedCard(key: const ValueKey('expanded'))
+              : _buildCollapsedCard(key: const ValueKey('collapsed')),
         );
       },
     );
@@ -257,91 +258,15 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   /// 构建卡片头部
   Widget _buildHeader() {
     return ValueListenableBuilder<int>(
-      valueListenable: _controller.currentEpisodeIndex,
-      builder: (context, currentIndex, child) {
-        final episodeTitle = _controller.currentSource.episodes[currentIndex].title;
-        return GestureDetector(
-          onTap: _toggleExpanded,
-          child: Container(
-            height: 44.0,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                // 添加媒体封面图片
-                if (widget.media.poster != null &&
-                    widget.media.poster!.isNotEmpty) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.0),
-                    child: CachedNetworkImage(
-                      imageUrl: widget.media.poster!,
-                      width: 32.0,
-                      height: 32.0,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        width: 32.0,
-                        height: 32.0,
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        child: const Center(
-                          child: SizedBox(
-                            width: 16.0,
-                            height: 16.0,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.0,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white30),
-                            ),
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        width: 32.0,
-                        height: 32.0,
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        child: const Icon(
-                          Icons.movie,
-                          color: Colors.white70,
-                          size: 16.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                ],
-                Expanded(
-                  child: Text(
-                    '${widget.media.name ?? '未知剧集'} - ${(episodeTitle != null && episodeTitle.isNotEmpty) ? episodeTitle : '第${currentIndex + 1}集'}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.normal,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Icon(
-                  _isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                  color: Colors.white,
-                  size: 20.0,
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-    );
-  }
-
-  /// 构建展开内容
-  Widget _buildExpandedContent() {
-    return ValueListenableBuilder<int>(
-      valueListenable: _controller.currentEpisodeIndex,
-      builder: (context, currentIndex, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 12.0),
+        valueListenable: _controller.currentEpisodeIndex,
+        builder: (context, currentIndex, child) {
+          final episodeTitle =
+              _controller.currentSource.episodes[currentIndex].title;
+          return GestureDetector(
+            onTap: _toggleExpanded,
+            child: Container(
+              height: 44.0,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
                   // 添加媒体封面图片
@@ -364,8 +289,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                               height: 16.0,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.0,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white30),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white30),
                               ),
                             ),
                           ),
@@ -385,61 +310,144 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                     const SizedBox(width: 8.0),
                   ],
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.media.name ?? '未知剧集',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4.0),
-                        _buildBasicInfoRow(),
-                      ],
+                    child: Text(
+                      '${widget.media.name ?? '未知剧集'} - ${(episodeTitle != null && episodeTitle.isNotEmpty) ? episodeTitle : '第${currentIndex + 1}集'}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Container(
-                    width: 32.0,
-                    height: 32.0,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      iconSize: 16.0,
-                      onPressed: _toggleExpanded,
-                      padding: EdgeInsets.zero,
-                    ),
+                  Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    color: Colors.white,
+                    size: 20.0,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 8.0),
-            Container(height: 0.3, color: Colors.white24),
-            const SizedBox(height: 16.0),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildTabBar(),
-            ),
-            const SizedBox(height: 16.0),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: _buildTabContent(currentIndex),
+          );
+        });
+  }
+
+  /// 构建展开内容
+  Widget _buildExpandedContent() {
+    return ValueListenableBuilder<int>(
+        valueListenable: _controller.currentEpisodeIndex,
+        builder: (context, currentIndex, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.only(left: 16.0, right: 16.0, top: 12.0),
+                child: Row(
+                  children: [
+                    // 添加媒体封面图片
+                    if (widget.media.poster != null &&
+                        widget.media.poster!.isNotEmpty) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4.0),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.media.poster!,
+                          width: 32.0,
+                          height: 32.0,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 32.0,
+                            height: 32.0,
+                            color: Colors.grey.withValues(alpha: 0.3),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 16.0,
+                                height: 16.0,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white30),
+                                ),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 32.0,
+                            height: 32.0,
+                            color: Colors.grey.withValues(alpha: 0.3),
+                            child: const Icon(
+                              Icons.movie,
+                              color: Colors.white70,
+                              size: 16.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.media.name ?? '未知剧集',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4.0),
+                          _buildBasicInfoRow(),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 32.0,
+                      height: 32.0,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        iconSize: 16.0,
+                        onPressed: _toggleExpanded,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-          ],
-        );
-      }
-    );
+              const SizedBox(height: 8.0),
+              Container(height: 0.3, color: Colors.white24),
+              const SizedBox(height: 16.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildPlaybackSpeedRow(),
+              ),
+              const SizedBox(height: 12.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildTabBar(),
+              ),
+              const SizedBox(height: 16.0),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _buildTabContent(currentIndex),
+                ),
+              ),
+              const SizedBox(height: 16.0),
+            ],
+          );
+        });
   }
 
   Widget _buildBasicInfoRow() {
@@ -501,6 +509,32 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
     );
   }
 
+  /// 构建倍速播放按钮行
+  Widget _buildPlaybackSpeedRow() {
+    final speeds = [0.75, 1.0, 1.25, 1.5, 2.0, 3.0];
+    return Container(
+      padding: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4.0,
+            offset: const Offset(0, 1),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.speed, size: 16.0, color: Colors.white70),
+          const SizedBox(width: 8.0),
+          ...speeds.map((speed) => _buildSpeedButton(speed)),
+        ],
+      ),
+    );
+  }
+
   /// 构建标签按钮
   Widget _buildTabButton(String title, int index) {
     final isSelected = _selectedTabIndex == index;
@@ -535,6 +569,39 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
               color: isSelected ? Colors.white : Colors.white70,
               fontSize: 14.0,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建倍速按钮
+  Widget _buildSpeedButton(double speed) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _controller.setPlaybackSpeed(speed);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6.0),
+            color: _controller.playbackSpeed.value == speed
+                ? Colors.red.withValues(alpha: 0.3)
+                : Colors.transparent,
+          ),
+          child: Text(
+            '${speed}x',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _controller.playbackSpeed.value == speed
+                  ? Colors.red
+                  : Colors.white70,
+              fontSize: 12.0,
+              fontWeight: _controller.playbackSpeed.value == speed
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
