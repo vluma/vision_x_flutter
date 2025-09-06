@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
 
 // 媒体详情数据模型
 class MediaDetail {

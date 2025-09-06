@@ -1,5 +1,6 @@
 /// 导航按钮组件
 /// 单个导航标签按钮的UI组件
+library;
 
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/features/navigation/models/nav_bar_constants.dart';

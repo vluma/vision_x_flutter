@@ -1,5 +1,6 @@
 /// 底部导航栏组件
 /// 主导航栏组件，整合所有导航功能
+library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

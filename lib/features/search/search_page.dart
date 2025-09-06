@@ -81,7 +81,7 @@ class _SearchPageContent extends StatelessWidget {
     return Consumer<SearchPageController>(
       builder: (context, searchController, child) {
         List<String> sortedCategories = ['全部'];
-        Set<String> otherCategories = Set<String>();
+        Set<String> otherCategories = <String>{};
 
         for (var media in searchController.mediaResults) {
           if (media.type != null && media.type!.isNotEmpty) {

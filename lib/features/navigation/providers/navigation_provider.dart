@@ -1,5 +1,6 @@
 /// 导航提供者
 /// 使用ChangeNotifier管理导航状态
+library;
 
 import 'package:flutter/material.dart';
 import '../states/navigation_state.dart';

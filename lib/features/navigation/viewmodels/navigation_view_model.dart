@@ -1,5 +1,6 @@
 /// 导航视图模型
 /// 处理导航相关的业务逻辑
+library;
 
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/services/api_service.dart';

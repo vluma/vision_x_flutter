@@ -1,5 +1,6 @@
 /// 搜索容器组件
 /// 包含搜索功能的容器
+library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

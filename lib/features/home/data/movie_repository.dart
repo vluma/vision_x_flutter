@@ -1,5 +1,6 @@
 /// 电影数据仓库
 /// 负责电影数据的获取和管理
+library;
 
 import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
 import 'package:vision_x_flutter/services/api_service.dart';

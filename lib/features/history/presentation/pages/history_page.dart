@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/history/presentation/providers/history_providers.dart';
 import 'package:vision_x_flutter/features/history/presentation/widgets/history_list.dart';
 import 'package:vision_x_flutter/features/history/presentation/widgets/empty_history.dart';
-import 'package:vision_x_flutter/features/history/presentation/widgets/loading_indicator.dart';
 import 'package:vision_x_flutter/features/history/presentation/widgets/history_skeleton_loader.dart';
 
 /// 历史记录页面 - 使用Riverpod重构

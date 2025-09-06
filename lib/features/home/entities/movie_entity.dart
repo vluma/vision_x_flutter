@@ -1,5 +1,6 @@
 /// 电影实体类
 /// 定义电影数据的核心结构
+library;
 
 class MovieEntity {
   final String id;

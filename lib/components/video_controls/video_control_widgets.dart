@@ -9,11 +9,11 @@ class BackButton extends StatelessWidget {
   final Color color;
 
   const BackButton({
-    Key? key,
+    super.key,
     this.onPressed,
     this.size = VideoControlConstants.backButtonSize,
     this.color = VideoControlConstants.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +34,12 @@ class PlayPauseButton extends StatelessWidget {
   final Color color;
 
   const PlayPauseButton({
-    Key? key,
+    super.key,
     required this.isPlaying,
     this.onPressed,
     this.size = VideoControlConstants.playButtonSize,
     this.color = VideoControlConstants.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +62,12 @@ class BigPlayButton extends StatelessWidget {
   final Color color;
 
   const BigPlayButton({
-    Key? key,
+    super.key,
     required this.isPlaying,
     this.onPressed,
     this.size = VideoControlConstants.pauseIconSize,
     this.color = VideoControlConstants.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -98,12 +98,12 @@ class LockButton extends StatelessWidget {
   final Color color;
 
   const LockButton({
-    Key? key,
+    super.key,
     required this.isLocked,
     this.onPressed,
     this.size = VideoControlConstants.lockButtonSize,
     this.color = VideoControlConstants.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -125,11 +125,11 @@ class TimeDisplay extends StatelessWidget {
   final TextStyle? style;
 
   const TimeDisplay({
-    Key? key,
+    super.key,
     required this.currentTime,
     required this.totalTime,
     this.style,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -148,12 +148,12 @@ class VideoProgressBar extends StatelessWidget {
   final ValueChanged<double>? onSeek;
 
   const VideoProgressBar({
-    Key? key,
+    super.key,
     required this.controller,
     this.colors = VideoControlConstants.progressColors,
     this.height = 4.0,
     this.onSeek,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -175,13 +175,13 @@ class ControlButton extends StatelessWidget {
   final String? tooltip;
 
   const ControlButton({
-    Key? key,
+    super.key,
     required this.icon,
     this.onPressed,
     this.size = VideoControlConstants.controlButtonSize,
     this.color = VideoControlConstants.iconColor,
     this.tooltip,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,9 +200,9 @@ class GradientBackground extends StatelessWidget {
   final Widget child;
 
   const GradientBackground({
-    Key? key,
+    super.key,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -221,12 +221,12 @@ class Indicator extends StatelessWidget {
   final Color textColor;
 
   const Indicator({
-    Key? key,
+    super.key,
     required this.text,
     required this.icon,
     this.backgroundColor = Colors.black54,
     this.textColor = Colors.white,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

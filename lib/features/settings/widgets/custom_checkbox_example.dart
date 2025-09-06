@@ -68,7 +68,8 @@ class _CustomCheckboxExampleState extends State<CustomCheckboxExample> {
             const Text(
               '当前选择状态：',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),n            const SizedBox(height: 10),
+            ),        
+            const SizedBox(height: 10),
             ..._checkboxStates.entries.map((entry) => Text(
                   '${entry.key}: ${entry.value ? "已选择" : "未选择"}',
                   style: const TextStyle(fontSize: 14),

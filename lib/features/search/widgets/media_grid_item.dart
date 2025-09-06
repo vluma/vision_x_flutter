@@ -51,7 +51,7 @@ class MediaGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
+            color: theme.shadowColor.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
             blurRadius: 2,
           ),
         ],
@@ -205,7 +205,7 @@ class MediaGridItem extends StatelessWidget {
         if (media.score != null && media.score!.isNotEmpty)
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.star,
                 size: 14,
                 color: Colors.amber,

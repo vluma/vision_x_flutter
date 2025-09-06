@@ -85,8 +85,4 @@ class DetailViewModel with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }

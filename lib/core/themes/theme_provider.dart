@@ -7,11 +7,11 @@ class ThemeProvider extends InheritedWidget {
   final Function(int) updateTheme;
 
   const ThemeProvider({
-    Key? key,
+    super.key,
     required this.selectedTheme,
     required this.updateTheme,
-    required Widget child,
-  }) : super(child: child, key: key);
+    required super.child,
+  });
 
   @override
   bool updateShouldNotify(ThemeProvider oldWidget) {

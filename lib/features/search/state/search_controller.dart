@@ -157,7 +157,7 @@ class SearchPageController extends ChangeNotifier {
 
   /// 更新分类列表并返回排序后的分类
   List<String> _updateCategories() {
-    Set<String> categories = Set<String>();
+    Set<String> categories = <String>{};
     for (var media in _mediaResults) {
       if (media.type != null && media.type!.isNotEmpty) {
         categories.add(media.type!);
@@ -165,7 +165,7 @@ class SearchPageController extends ChangeNotifier {
     }
 
     // 排序分类
-    final sortedCategories = ['全部']..addAll(categories.toList()..sort());
+    final sortedCategories = ['全部', ...categories.toList()..sort()];
 
     // 如果当前选中的分类不在新分类列表中，则重置为"全部"
     if (_selectedCategory != '全部' && !categories.contains(_selectedCategory)) {
@@ -180,13 +180,13 @@ class SearchPageController extends ChangeNotifier {
 
   /// 获取排序后的分类列表（供UI使用）
   List<String> getSortedCategories() {
-    Set<String> categories = Set<String>();
+    Set<String> categories = <String>{};
     for (var media in _mediaResults) {
       if (media.type != null && media.type!.isNotEmpty) {
         categories.add(media.type!);
       }
     }
-    return ['全部']..addAll(categories.toList()..sort());
+    return ['全部', ...categories.toList()..sort()];
   }
 
   /// 按来源分组结果

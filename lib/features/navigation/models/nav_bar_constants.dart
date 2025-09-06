@@ -1,5 +1,6 @@
 /// 导航栏常量配置
 /// 包含所有导航相关的尺寸、动画、颜色等常量
+library;
 
 import 'package:flutter/material.dart';
 import '../states/navigation_state.dart';

@@ -17,7 +17,7 @@ class ApiClient {
     try {
       final response = await _httpClient
           .get(Uri.parse('$baseUrl/$endpoint'), headers: headers)
-          .timeout(Duration(seconds: AppConstants.apiTimeoutSeconds));
+          .timeout(const Duration(seconds: AppConstants.apiTimeoutSeconds));
       
       return _processResponse(response);
     } catch (e) {
@@ -37,7 +37,7 @@ class ApiClient {
             headers: {...?headers, 'Content-Type': 'application/json'},
             body: jsonEncode(body),
           )
-          .timeout(Duration(seconds: AppConstants.apiTimeoutSeconds));
+          .timeout(const Duration(seconds: AppConstants.apiTimeoutSeconds));
       
       return _processResponse(response);
     } catch (e) {

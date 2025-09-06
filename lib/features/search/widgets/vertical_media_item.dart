@@ -72,7 +72,7 @@ class VerticalMediaItem extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
+            color: theme.shadowColor.withOpacity(0.1) ?? Colors.black.withOpacity(0.1),
             blurRadius: 2,
           ),
         ],

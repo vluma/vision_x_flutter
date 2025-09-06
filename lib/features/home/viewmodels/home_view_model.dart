@@ -14,7 +14,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
   String _currentSource = '热门';
   String _currentSort = 'recommend';
 
-  HomeViewModel(this._movieRepository) : super(HomeInitial());
+  HomeViewModel(this._movieRepository) : super(const HomeInitial());
 
   /// 获取当前分类
   String get currentCategory => _currentCategory;
@@ -27,7 +27,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   /// 加载首页数据
   Future<void> loadMovies() async {
-    state = HomeLoading();
+    state = const HomeLoading();
     try {
       final type = _currentCategory == '电影' ? 'movie' : 'tv';
       final movies = await _movieRepository.getMovies(

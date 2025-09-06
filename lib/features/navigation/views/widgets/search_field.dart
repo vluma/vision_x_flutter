@@ -1,5 +1,6 @@
 /// 搜索输入框组件
 /// 搜索功能的文本输入UI组件
+library;
 
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/services/api_service.dart';

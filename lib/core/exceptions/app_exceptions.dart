@@ -14,42 +14,35 @@ abstract class AppException implements Exception {
 
 /// 网络异常
 class NetworkException extends AppException {
-  NetworkException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  NetworkException(super.message, {super.code, super.details});
 }
 
 /// API异常
 class ApiException extends AppException {
-  ApiException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  ApiException(super.message, {super.code, super.details});
 }
 
 /// 认证异常
 class AuthException extends AppException {
-  AuthException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  AuthException(super.message, {super.code, super.details});
 }
 
 /// 缓存异常
 class CacheException extends AppException {
-  CacheException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  CacheException(super.message, {super.code, super.details});
 }
 
 /// 数据解析异常
 class ParseException extends AppException {
-  ParseException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  ParseException(super.message, {super.code, super.details});
 }
 
 /// 权限异常
 class PermissionException extends AppException {
-  PermissionException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  PermissionException(super.message, {super.code, super.details});
 }
 
 /// 未找到资源异常
 class NotFoundException extends AppException {
-  NotFoundException(String message, {String? code, dynamic details})
-      : super(message, code: code, details: details);
+  NotFoundException(super.message, {super.code, super.details});
 }

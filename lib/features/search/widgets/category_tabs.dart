@@ -23,7 +23,7 @@ class CategoryTabs extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
+    return SizedBox(
       height: 40.0,
       width: double.infinity,
       child: ListView.builder(

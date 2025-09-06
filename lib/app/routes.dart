@@ -38,8 +38,8 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/',
               pageBuilder: (BuildContext context, GoRouterState state) {
-                return CupertinoPage(
-                child: const HomePage(),
+                return const CupertinoPage(
+                child: HomePage(),
               );
               },
               routes: <RouteBase>[
@@ -72,8 +72,8 @@ final GoRouter router = GoRouter(
                     ),
                   );
                     }
-                    return CupertinoPage(
-                    child: const Scaffold(
+                    return const CupertinoPage(
+                    child: Scaffold(
                       body: Center(
                         child: Text('视频信息不完整'),
                       ),
@@ -91,8 +91,8 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/history',
               pageBuilder: (BuildContext context, GoRouterState state) {
-                return CupertinoPage(
-                child: const HistoryPage(),
+                return const CupertinoPage(
+                child: HistoryPage(),
               );
               },
               routes: <RouteBase>[
@@ -124,8 +124,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),
@@ -143,8 +143,8 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/settings',
               pageBuilder: (BuildContext context, GoRouterState state) {
-                return CupertinoPage(
-                child: const SettingsPage(),
+                return const CupertinoPage(
+                child: SettingsPage(),
               );
               },
               routes: <RouteBase>[
@@ -176,8 +176,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),
@@ -195,8 +195,8 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/search',
               pageBuilder: (BuildContext context, GoRouterState state) {
-                return CupertinoPage(
-                child: const SearchPage(),
+                return const CupertinoPage(
+                child: SearchPage(),
               );
               },
               routes: <RouteBase>[
@@ -228,8 +228,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),
