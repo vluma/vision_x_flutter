@@ -1,5 +1,6 @@
 /// 底部导航栏组件
 /// 主导航栏组件，整合所有导航功能
+library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -85,7 +86,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         : NavBarConstants.minColumnWidth;
 
     final viewInsets = MediaQuery.of(context).viewInsets;
-    final bottomPadding = MediaQuery.of(context).padding.bottom +
+    final bottomPadding =
         viewInsets.bottom +
         NavBarConstants.bottomPaddingOffset;
 

@@ -8,7 +8,7 @@ import 'package:vision_x_flutter/features/settings/settings_page.dart';
 import 'package:vision_x_flutter/features/main_page.dart';
 import 'package:vision_x_flutter/features/search/search_page.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_page.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -39,8 +39,8 @@ final GoRouter router = GoRouter(
               path: '/',
               pageBuilder: (BuildContext context, GoRouterState state) {
                 return CupertinoPage(
-                child: const HomePage(),
-              );
+                  child: const HomePage(),
+                );
               },
               routes: <RouteBase>[
                 GoRoute(
@@ -65,20 +65,20 @@ final GoRouter router = GoRouter(
                         extra['episode'] is Episode) {
                       final startPosition = extra['startPosition'] as int? ?? 0;
                       return CupertinoPage(
-                    child: VideoPlayerPage(
-                      media: extra['media'] as MediaDetail,
-                      episode: extra['episode'] as Episode,
-                      startPosition: startPosition,
-                    ),
-                  );
+                        child: VideoPlayerPage(
+                          media: extra['media'] as MediaDetail,
+                          episode: extra['episode'] as Episode,
+                          startPosition: startPosition,
+                        ),
+                      );
                     }
                     return CupertinoPage(
-                    child: const Scaffold(
-                      body: Center(
-                        child: Text('视频信息不完整'),
+                      child: const Scaffold(
+                        body: Center(
+                          child: Text('视频信息不完整'),
+                        ),
                       ),
-                    ),
-                  );
+                    );
                   },
                 ),
               ],
@@ -92,8 +92,8 @@ final GoRouter router = GoRouter(
               path: '/history',
               pageBuilder: (BuildContext context, GoRouterState state) {
                 return CupertinoPage(
-                child: const HistoryPage(),
-              );
+                  child: const HistoryPage(),
+                );
               },
               routes: <RouteBase>[
                 GoRoute(
@@ -102,10 +102,10 @@ final GoRouter router = GoRouter(
                     final id = state.pathParameters['id']!;
                     final extra = state.extra;
                     return CupertinoPage(
-                    child: extra is MediaDetail
-                        ? DetailPage(id: id, media: extra)
-                        : DetailPage(id: id),
-                  );
+                      child: extra is MediaDetail
+                          ? DetailPage(id: id, media: extra)
+                          : DetailPage(id: id),
+                    );
                   },
                 ),
                 GoRoute(
@@ -124,8 +124,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),
@@ -144,8 +144,8 @@ final GoRouter router = GoRouter(
               path: '/settings',
               pageBuilder: (BuildContext context, GoRouterState state) {
                 return CupertinoPage(
-                child: const SettingsPage(),
-              );
+                  child: const SettingsPage(),
+                );
               },
               routes: <RouteBase>[
                 GoRoute(
@@ -176,8 +176,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),
@@ -196,8 +196,8 @@ final GoRouter router = GoRouter(
               path: '/search',
               pageBuilder: (BuildContext context, GoRouterState state) {
                 return CupertinoPage(
-                child: const SearchPage(),
-              );
+                  child: const SearchPage(),
+                );
               },
               routes: <RouteBase>[
                 GoRoute(
@@ -228,8 +228,8 @@ final GoRouter router = GoRouter(
                         ),
                       );
                     }
-                    return CupertinoPage(
-                      child: const Scaffold(
+                    return const CupertinoPage(
+                      child: Scaffold(
                         body: Center(
                           child: Text('视频信息不完整'),
                         ),

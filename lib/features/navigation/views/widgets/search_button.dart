@@ -1,5 +1,6 @@
 /// 搜索按钮组件
 /// 搜索功能的UI组件
+library;
 
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/features/navigation/models/nav_bar_constants.dart';

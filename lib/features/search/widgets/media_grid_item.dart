@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 媒体网格项组件 - 聚合模式
 class MediaGridItem extends StatelessWidget {
@@ -52,8 +52,8 @@ class MediaGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor?.withValues(alpha: 0.1) ??
-                Colors.black.withValues(alpha: 0.1),
+            color: theme.shadowColor?.withOpacity(0.1) ??
+                Colors.black.withOpacity(0.1),
             blurRadius: 2,
           ),
         ],
@@ -210,7 +210,7 @@ class MediaGridItem extends StatelessWidget {
         if (media.score != null && media.score!.isNotEmpty)
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.star,
                 size: 14,
                 color: Colors.amber,

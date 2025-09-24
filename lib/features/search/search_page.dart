@@ -10,7 +10,7 @@ import 'package:vision_x_flutter/features/search/widgets/media_grid_item.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item_skeleton.dart';
 import 'package:vision_x_flutter/features/search/widgets/search_loading_skeleton.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -81,7 +81,7 @@ class _SearchPageContent extends StatelessWidget {
     return Consumer<SearchPageController>(
       builder: (context, searchController, child) {
         List<String> sortedCategories = ['全部'];
-        Set<String> otherCategories = Set<String>();
+        Set<String> otherCategories = <String>{};
 
         for (var media in searchController.mediaResults) {
           if (media.type != null && media.type!.isNotEmpty) {
@@ -115,17 +115,18 @@ class _SearchPageContent extends StatelessWidget {
               title: Text('搜索结果(${searchController.filteredResults.length})'),
               actions: [
                 IconButton(
-                  icon: Icon(isGroupedView ? Icons.view_list : Icons.view_module),
+                  icon:
+                      Icon(isGroupedView ? Icons.view_list : Icons.view_module),
                   onPressed: onToggleViewMode,
                   tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
                 ),
                 SortPopupMenu(onSortChanged: searchController.updateSortBy),
               ],
               bottom: PreferredSize(
-                preferredSize: Size.fromHeight(
-                  searchController.isLoading || (sortedCategories.length - 1) <= 1
-                      ? 0.0
-                      : 40.0),
+                preferredSize: Size.fromHeight(searchController.isLoading ||
+                        (sortedCategories.length - 1) <= 1
+                    ? 0.0
+                    : 40.0),
                 child: CategoryTabs(
                   categories: sortedCategories,
                   selectedCategory: searchController.selectedCategory,

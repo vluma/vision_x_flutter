@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_controls.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_control_models.dart'
     as models;
@@ -97,11 +97,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   final HlsParserService _hlsParserService = HlsParserService();
 
   // 播放状态数据
-  bool _isPlaying = false;
-  Duration _currentPosition = Duration.zero;
-  Duration _totalDuration = Duration.zero;
-  bool _isBuffering = false;
-  double _playbackSpeed = 1.0;
+  final bool _isPlaying = false;
+  final Duration _currentPosition = Duration.zero;
+  final Duration _totalDuration = Duration.zero;
+  final bool _isBuffering = false;
+  final double _playbackSpeed = 1.0;
 
   // 错误处理
   String? _errorMessage;
@@ -369,7 +369,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                       return child;
                     } else {
                       // 加载中
-                      return LoadingAnimation(
+                      return const LoadingAnimation(
                         showBackground: true,
                         backgroundColor: Colors.black,
                         sizeRatio: 0.2,
@@ -626,23 +626,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                   },
                 ),
               // 处理状态信息
-              Column(
+              const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const LoadingAnimation(
+                  LoadingAnimation(
                     showBackground: false,
                     sizeRatio: 0.2,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     '正在准备视频...',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     '请稍候，这可能需要几秒钟',
                     style: TextStyle(
                       color: Colors.white54,
@@ -683,7 +683,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                       return child;
                     } else {
                       // 加载中
-                      return LoadingAnimation(
+                      return const LoadingAnimation(
                         showBackground: true,
                         backgroundColor: Colors.black,
                         sizeRatio: 0.2,

@@ -1,5 +1,6 @@
 /// 导航容器组件
 /// 包含导航按钮和选中指示器的容器
+library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 详情页面简介组件
 /// 显示媒体描述信息
@@ -11,7 +11,7 @@ class DetailDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final description = media.description ?? media.content ?? '暂无简介';
-    
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -20,16 +20,16 @@ class DetailDescription extends StatelessWidget {
           Text(
             '简介',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.6,
-              color: Colors.grey[800],
-            ),
+                  height: 1.6,
+                  color: Colors.grey[800],
+                ),
             textAlign: TextAlign.justify,
           ),
         ],

@@ -66,7 +66,7 @@ class FeatureSwitchSection extends StatelessWidget {
                     ),
                   ),
                   Switch(
-                    activeColor: Theme.of(context).primaryColor,
+                    activeThumbColor: Theme.of(context).primaryColor,
                     value: controller.yellowFilterEnabled,
                     onChanged: (bool value) {
                       controller.updateYellowFilter(value);
@@ -144,7 +144,7 @@ class FeatureSwitchSection extends StatelessWidget {
                     ),
                   ),
                   Switch(
-                    activeColor: Theme.of(context).primaryColor,
+                    activeThumbColor: Theme.of(context).primaryColor,
                     value: controller.adFilterEnabled,
                     onChanged: (bool value) {
                       controller.updateAdFilter(value);
@@ -224,7 +224,7 @@ class FeatureSwitchSection extends StatelessWidget {
                       ),
                     ),
                     Switch(
-                      activeColor: Theme.of(context).primaryColor,
+                      activeThumbColor: Theme.of(context).primaryColor,
                       value: controller.adFilterByMetadata,
                       onChanged: (bool value) {
                         controller.updateAdFilterByMetadata(value);
@@ -296,7 +296,7 @@ class FeatureSwitchSection extends StatelessWidget {
                       ),
                     ),
                     Switch(
-                      activeColor: Theme.of(context).primaryColor,
+                      activeThumbColor: Theme.of(context).primaryColor,
                       value: controller.adFilterByResolution,
                       onChanged: (bool value) {
                         controller.updateAdFilterByResolution(value);

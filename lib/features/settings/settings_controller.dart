@@ -247,8 +247,4 @@ class SettingsController extends ChangeNotifier {
     await prefs.setInt('selected_theme', _selectedTheme);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }

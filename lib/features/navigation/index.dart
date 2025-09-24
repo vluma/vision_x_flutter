@@ -1,5 +1,6 @@
 /// 导航模块入口文件
 /// 导出导航模块的所有公共API
+library;
 
 // 模型层
 export 'models/nav_bar_constants.dart';

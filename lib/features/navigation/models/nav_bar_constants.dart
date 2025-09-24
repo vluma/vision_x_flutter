@@ -1,20 +1,21 @@
 /// 导航栏常量配置
 /// 包含所有导航相关的尺寸、动画、颜色等常量
+library;
 
 import 'package:flutter/material.dart';
 import '../states/navigation_state.dart';
 
 class NavBarConstants {
   // 尺寸常量
-  static const double containerHeight = 56.0;
-  static const double containerBorderRadius = 28.0;
-  static const double selectedContainerHeight = 48.0;
-  static const double selectedContainerBorderRadius = 24.0;
+  static const double containerHeight = 64.0;
+  static const double containerBorderRadius = containerHeight / 2;
+  static const double selectedContainerHeight = containerHeight - 8.0;
+  static const double selectedContainerBorderRadius = selectedContainerHeight / 2;
   static const double iconSize = 24.0;
   static const double paddingAll = 4.0;
   static const double borderWidth = 0.5;
   static const double horizontalPadding = 16.0;
-  static const double bottomPaddingOffset = 16.0;
+  static const double bottomPaddingOffset = 20.0;
   static const double maxColumnWidthOffset = 100.0;
   static const double minColumnWidth = 100.0;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/detail_page/detail_view_model.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_app_bar.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_header.dart';
@@ -8,7 +8,6 @@ import 'package:vision_x_flutter/features/detail_page/widgets/detail_description
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_cast.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/detail_sources.dart';
 import 'package:vision_x_flutter/features/detail_page/widgets/loading_state.dart';
-
 
 /// 详情页面 - 展示媒体详细信息
 /// 采用MVVM架构，状态管理由DetailViewModel处理

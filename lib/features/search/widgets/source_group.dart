@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/search/widgets/vertical_media_item.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item.dart';
 

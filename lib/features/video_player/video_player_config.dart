@@ -1,13 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 视频播放页面配置常量
 class VideoPlayerConfig {
   // 页面过渡动画
   static const Duration pageTransitionDuration = Duration(milliseconds: 300);
   static const Duration episodeChangeDelay = Duration(milliseconds: 500);
-  static const Duration shortDramaEpisodeChangeDelay = Duration(milliseconds: 100);
+  static const Duration shortDramaEpisodeChangeDelay =
+      Duration(milliseconds: 100);
 
   // 视频比例
   static const double videoAspectRatio = 16 / 9;
@@ -37,8 +37,11 @@ class VideoPlayerConfig {
   static const Color dividerColor = Color(0x40FFFFFF); // white with 25% opacity
 
   // 渐变颜色
-  static const List<Color> primaryGradient = [Color(0xFFE53E3E), Color(0xFFC53030)];
-  
+  static const List<Color> primaryGradient = [
+    Color(0xFFE53E3E),
+    Color(0xFFC53030)
+  ];
+
   // 动画配置
   static const Duration animationDuration = Duration(milliseconds: 300);
   static const Curve animationCurve = Curves.easeInOut;
@@ -49,9 +52,10 @@ class VideoPlayerUtils {
   /// 检查是否为短剧模式
   static bool isShortDramaMode(String? category, String? type) {
     const shortDramaCategory = '短剧';
-    return (category != null && 
-            (category.contains(shortDramaCategory) || category == shortDramaCategory)) ||
-           (type != null && 
+    return (category != null &&
+            (category.contains(shortDramaCategory) ||
+                category == shortDramaCategory)) ||
+        (type != null &&
             (type.contains(shortDramaCategory) || type == shortDramaCategory));
   }
 

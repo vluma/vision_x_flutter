@@ -153,7 +153,7 @@ class NormalControls extends StatelessWidget {
   }
 
   Widget _buildSeekIndicator() {
-    return custom_widgets.Indicator(
+    return const custom_widgets.Indicator(
       text: '快进',
       icon: Icons.fast_forward,
     );

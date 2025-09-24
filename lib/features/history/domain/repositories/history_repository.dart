@@ -1,5 +1,5 @@
 import 'package:vision_x_flutter/features/history/domain/entities/history_record.dart';
-import 'package:vision_x_flutter/data/models/media_detail.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
 /// 历史记录仓库接口
 abstract class HistoryRepository {
