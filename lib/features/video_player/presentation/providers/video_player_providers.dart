@@ -27,9 +27,7 @@ final videoPlayerStateProvider = StateNotifierProvider.family<
     VideoPlayerNotifier, VideoPlayState, VideoPlayerParams>(
   (ref, params) => VideoPlayerNotifier(
     repository: ref.watch(videoPlayerRepositoryProvider),
-    media: params.media,
-    episode: params.episode,
-    startPosition: params.startPosition,
+    params: params,
   ),
 );
 
@@ -52,18 +50,6 @@ final currentEpisodeIndexProvider = StateProvider.family<int, MediaDetail>(
 /// 视频时长提供者
 final videoDurationProvider = StateProvider<int?>((ref) => null);
 
-/// 视频播放器参数
-class VideoPlayerParams {
-  final MediaDetail media;
-  final Episode episode;
-  final int startPosition;
-
-  VideoPlayerParams({
-    required this.media,
-    required this.episode,
-    this.startPosition = 0,
-  });
-}
 
 /// 检查是否为短剧模式
 bool _checkShortDramaMode(String? category, String? type) {

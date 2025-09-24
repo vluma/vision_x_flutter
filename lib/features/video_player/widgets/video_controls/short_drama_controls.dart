@@ -193,16 +193,6 @@ class _ShortDramaControlsState extends State<ShortDramaControls> {
           height: 2,
           expandedHeight: 6,
           colors: _subtleProgressColors,
-          onDragStart: () {
-            setState(() {
-              _isDraggingProgress = true;
-            });
-          },
-          onDragEnd: () {
-            setState(() {
-              _isDraggingProgress = false;
-            });
-          },
         ),
       ],
     );

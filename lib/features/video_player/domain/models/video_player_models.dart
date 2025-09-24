@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 
+/// 视频播放器参数
+class VideoPlayerParams {
+  final MediaDetail media;
+  final Episode episode;
+  final int startPosition;
+
+  VideoPlayerParams({
+    required this.media,
+    required this.episode,
+    this.startPosition = 0,
+  });
+}
+
 /// 视频播放状态模型
 class VideoPlayState {
   final bool isPlaying;
