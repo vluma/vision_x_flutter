@@ -25,6 +25,8 @@ dependencies:
   flutter_animate: ^4.5.0
   freezed_annotation: ^2.4.1
   get_it: ^8.2.0
+  window_size: ^0.1.0
+  window_manager: ^0.5.1
 
 dev_dependencies:
   flutter_test:

@@ -136,6 +136,7 @@ class UIState {
   final bool showSeekIndicator;
   final bool showSpeedIndicator;
   final double currentSpeed;
+  final bool isFullScreen; // 添加全屏状态属性
 
   const UIState({
     this.controlsVisible = true,
@@ -144,6 +145,7 @@ class UIState {
     this.showSeekIndicator = false,
     this.showSpeedIndicator = false,
     this.currentSpeed = 1.0,
+    this.isFullScreen = false, // 初始化全屏状态为false
   });
 
   UIState copyWith({
@@ -153,6 +155,7 @@ class UIState {
     bool? showSeekIndicator,
     bool? showSpeedIndicator,
     double? currentSpeed,
+    bool? isFullScreen, // 添加全屏状态参数
   }) {
     return UIState(
       controlsVisible: controlsVisible ?? this.controlsVisible,
@@ -161,6 +164,7 @@ class UIState {
       showSeekIndicator: showSeekIndicator ?? this.showSeekIndicator,
       showSpeedIndicator: showSpeedIndicator ?? this.showSpeedIndicator,
       currentSpeed: currentSpeed ?? this.currentSpeed,
+      isFullScreen: isFullScreen ?? this.isFullScreen, // 复制全屏状态
     );
   }
 }

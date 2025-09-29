@@ -45,9 +45,14 @@ class UnifiedVideoControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 根据全屏状态和控制界面可见性决定是否隐藏鼠标指针
+    final shouldHideCursor = uiState.isFullScreen && !uiState.controlsVisible;
+    
+    Widget controlsWidget;
+    
     switch (controlMode) {
       case ControlMode.shortDrama:
-        return ShortDramaControls(
+        controlsWidget = ShortDramaControls(
           controller: controller,
           uiState: uiState,
           onPlayPause: onPlayPause,
@@ -56,7 +61,7 @@ class UnifiedVideoControls extends StatelessWidget {
         );
 
       case ControlMode.fullScreen:
-        return FullScreenControls(
+        controlsWidget = FullScreenControls(
           controller: controller,
           uiState: uiState,
           title: title,
@@ -68,7 +73,7 @@ class UnifiedVideoControls extends StatelessWidget {
         );
 
       case ControlMode.normal:
-        return NormalControls(
+        controlsWidget = NormalControls(
           controller: controller,
           uiState: uiState,
           title: title,
@@ -78,6 +83,16 @@ class UnifiedVideoControls extends StatelessWidget {
           onSeek: onSeek,
         );
     }
+    
+    // 只在全屏且控制界面隐藏时隐藏鼠标指针
+    if (shouldHideCursor) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.none, // 隐藏鼠标指针
+        child: controlsWidget,
+      );
+    }
+    
+    return controlsWidget;
   }
 }
 

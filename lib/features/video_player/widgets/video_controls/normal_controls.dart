@@ -53,7 +53,7 @@ class NormalControls extends StatelessWidget {
             bottom: 0,
             left: 0,
             right: 0,
-            child: _buildBottomControls(),
+            child: _buildBottomControls(context),
           ),
 
         // 快进/快退指示器
@@ -103,7 +103,10 @@ class NormalControls extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomControls() {
+  Widget _buildBottomControls(BuildContext context) {
+    // 获取ChewieController状态以确定是否处于全屏模式
+    final isFullScreen = uiState.isFullScreen;
+    
     return Container(
       height: VideoControlConstants.bottomPadding,
       padding: const EdgeInsets.symmetric(
@@ -141,9 +144,9 @@ class NormalControls extends StatelessWidget {
               ),
               const Spacer(),
               custom_widgets.ControlButton(
-                icon: Icons.fullscreen,
+                icon: isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
                 onPressed: onToggleFullScreen,
-                tooltip: '全屏',
+                tooltip: isFullScreen ? '退出全屏' : '全屏',
               ),
             ],
           ),

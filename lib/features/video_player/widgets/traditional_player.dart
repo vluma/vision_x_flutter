@@ -102,7 +102,7 @@ class TraditionalPlayer extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.0),
                     border: Border.all(
                       color: isSelected
-                          ? Colors.red
+                          ? const Color.fromARGB(255, 22, 19, 19)
                           : Colors.white.withValues(alpha: 0.3),
                     ),
                   ),

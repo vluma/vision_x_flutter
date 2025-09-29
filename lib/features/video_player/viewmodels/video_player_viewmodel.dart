@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_config.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
 
 /// 视频播放页面控制器
 /// 负责状态管理、业务逻辑和事件处理
@@ -117,7 +118,13 @@ class VideoPlayerController {
   /// 预加载下一集
   void preloadNextEpisode() {
     if (!canPlayNext) return;
-    // TODO: 实现预加载逻辑
+    
+    // 获取下一集
+    final nextEpisodeIndex = _currentEpisodeIndex.value + 1;
+    final nextEpisode = _currentSource.episodes[nextEpisodeIndex];
+    
+    // 调用性能管理器进行预加载
+    VideoPlayerPerformance.preloadEpisode(nextEpisode.url);
   }
 
   /// 切换信息卡片展开/折叠状态

@@ -1,28 +1,49 @@
 import 'package:flutter/foundation.dart';
+import 'package:video_player/video_player.dart';
 
 /// 视频播放性能优化管理器
 class VideoPlayerPerformance {
   /// 预加载管理器
-  static final Map<String, bool> _preloadedEpisodes = {};
+  static final Map<String, VideoPlayerController> _preloadedEpisodes = {};
 
   /// 预加载剧集
   static Future<void> preloadEpisode(String episodeUrl) async {
+    // 检查是否已经预加载
     if (_preloadedEpisodes.containsKey(episodeUrl)) {
       return;
     }
 
-    _preloadedEpisodes[episodeUrl] = true;
-    
-    // TODO: 实现实际的预加载逻辑
-    // 可以在这里添加视频缓冲、资源预加载等逻辑
-    if (kDebugMode) {
-      print('预加载剧集: $episodeUrl');
+    try {
+      // 创建视频播放控制器并初始化
+      final controller = VideoPlayerController.networkUrl(Uri.parse(episodeUrl));
+      await controller.initialize();
+      
+      // 保存控制器以便后续使用
+      _preloadedEpisodes[episodeUrl] = controller;
+      
+      if (kDebugMode) {
+        print('预加载剧集成功: $episodeUrl');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('预加载剧集失败: $episodeUrl, 错误: $e');
+      }
     }
+  }
+
+  /// 获取预加载的视频控制器
+  static VideoPlayerController? getPreloadedController(String episodeUrl) {
+    return _preloadedEpisodes[episodeUrl];
   }
 
   /// 清理预加载缓存
   static void clearPreloadCache() {
+    // 释放所有预加载的控制器
+    for (final controller in _preloadedEpisodes.values) {
+      controller.dispose();
+    }
     _preloadedEpisodes.clear();
+    
     if (kDebugMode) {
       print('清理预加载缓存');
     }
@@ -120,9 +141,9 @@ class VideoPlayerNetworkOptimizer {
   static String adjustVideoQuality(bool goodNetwork) {
     return goodNetwork ? '高清' : '标清';
   }
-
-  /// 预加载策略
-  static int getPreloadBufferSize(bool goodNetwork) {
-    return goodNetwork ? 3 : 1;
+  
+  /// 预估预加载所需时间（毫秒）
+  static int estimatePreloadTime(bool goodNetwork) {
+    return goodNetwork ? 2000 : 5000; // 网络好时2秒，网络差时5秒
   }
 }

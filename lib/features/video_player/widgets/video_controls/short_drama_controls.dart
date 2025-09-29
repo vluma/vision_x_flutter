@@ -26,11 +26,11 @@ class ShortDramaControls extends StatefulWidget {
   State<ShortDramaControls> createState() => _ShortDramaControlsState();
 }
 
-// 定义一套更浅的白灰色调进度条颜色
+// 定义一套更明显的进度条颜色
 const _subtleProgressColors = VideoProgressColors(
-  playedColor: Color(0xFFEEEEEE), // 已播放部分使用非常浅的灰色
-  bufferedColor: Color(0xFFDDDDDD), // 缓冲部分使用浅灰色
-  backgroundColor: Color(0xFFCCCCCC), // 背景使用更浅的灰色
+  playedColor: Color(0xFFFFFFFF), // 已播放部分使用纯白色
+  bufferedColor: Color(0xFFAAAAAA), // 缓冲部分使用中灰色
+  backgroundColor: Color(0xFF666666), // 背景使用深灰色
 );
 
 class _ShortDramaControlsState extends State<ShortDramaControls> {

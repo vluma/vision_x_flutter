@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' as ui; // 添加ui库导入以使用SystemMouseCursors
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
@@ -16,6 +17,11 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// 条件导入window_size包，仅在桌面端使用
+import 'package:window_size/window_size.dart'
+    if (dart.library.html) 'package:window_size/noop_window_size.dart';
+import 'package:vision_x_flutter/core/utils/window_manager.dart';
 
 // MARK: - 视频播放器配置
 class VideoPlayerConfig {
@@ -113,7 +119,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    _initializePlayer();
+    // 添加一个微任务来注册点击事件处理器
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializePlayer();
+    });
   }
 
   Future<void> _initializePlayer() async {
@@ -326,6 +335,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
           }
         },
         onBack: widget.onBackPressed,
+        onToggleFullScreen: () {
+          debugPrint('CustomVideoPlayer: onToggleFullScreen callback called');
+          toggleFullScreen();
+        },
         onNextEpisode: widget.onNextEpisode,
         onPrevEpisode: widget.onPrevEpisode,
         onSeek: (position) {
@@ -339,6 +352,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       placeholder:
           widget.media.poster != null ? _buildPosterPlaceholder() : null,
     );
+    
+    // 添加点击播放器区域的事件监听
+    _chewieController.addListener(_handlePlayerTap);
+  }
+
+  // 处理播放器区域点击事件
+  void _handlePlayerTap() {
+    // 这个方法会在Chewie控制器状态改变时被调用
+    // 我们需要监听特定的点击事件
   }
 
   // 构建海报占位符
@@ -534,22 +556,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_errorMessage != null) {
-      return _buildErrorWidget();
+  // 处理键盘事件
+  void _handleKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+      _togglePlayPause();
     }
+  }
 
-    if (!_isPlayerInitialized) {
-      return _buildLoadingWidget();
+  // 切换播放/暂停状态
+  void _togglePlayPause() {
+    if (_videoPlayer.value.isPlaying) {
+      pause();
+    } else {
+      play();
     }
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Chewie(
-        controller: _chewieController,
-      ),
-    );
   }
 
   Widget _buildErrorWidget() {
@@ -781,12 +801,76 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     }
   }
 
-  void toggleFullScreen() {
+  void toggleFullScreen() async {
+    debugPrint('CustomVideoPlayer: toggleFullScreen called');
     _chewieController.toggleFullScreen();
+    
+    // 在桌面端同时切换窗口全屏
+    _toggleWindowFullScreen();
   }
 
   void exitFullScreen() {
+    debugPrint('CustomVideoPlayer: exitFullScreen called');
     _chewieController.exitFullScreen();
+    
+    // 在桌面端同时退出窗口全屏
+    _setWindowFullScreen(false);
+  }
+
+  /// 切换窗口全屏状态（仅桌面端）
+  void _toggleWindowFullScreen() {
+    debugPrint('CustomVideoPlayer: _toggleWindowFullScreen called, isDesktop=${_isDesktopPlatform()}');
+    // 只在桌面平台执行
+    if (_isDesktopPlatform()) {
+      debugPrint('CustomVideoPlayer: Calling WindowManager.toggleFullScreen()');
+      WindowManager.toggleFullScreen();
+    } else {
+      debugPrint('CustomVideoPlayer: Not a desktop platform, skipping window full screen');
+    }
+  }
+
+  /// 设置窗口全屏状态（仅桌面端）
+  void _setWindowFullScreen(bool fullScreen) {
+    debugPrint('CustomVideoPlayer: _setWindowFullScreen called, fullScreen=$fullScreen, isDesktop=${_isDesktopPlatform()}');
+    // 只在桌面平台执行
+    if (_isDesktopPlatform()) {
+      debugPrint('CustomVideoPlayer: Calling WindowManager.setFullScreen($fullScreen)');
+      WindowManager.setFullScreen(fullScreen);
+    } else {
+      debugPrint('CustomVideoPlayer: Not a desktop platform, skipping window full screen');
+    }
+  }
+
+  /// 检查是否为桌面平台
+  bool _isDesktopPlatform() {
+    final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+    debugPrint('CustomVideoPlayer: _isDesktopPlatform result: $isDesktop (kIsWeb=$kIsWeb, Platform.isWindows=${Platform.isWindows}, Platform.isMacOS=${Platform.isMacOS}, Platform.isLinux=${Platform.isLinux})');
+    return isDesktop;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return _buildErrorWidget();
+    }
+
+    if (!_isPlayerInitialized) {
+      return _buildLoadingWidget();
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Focus(
+        autofocus: true,
+        child: RawKeyboardListener(
+          focusNode: FocusNode()..requestFocus(),
+          onKey: _handleKeyEvent,
+          child: Chewie(
+            controller: _chewieController,
+          ),
+        ),
+      ),
+    );
   }
 
   // MARK: - 数据获取方法
@@ -838,6 +922,7 @@ class _DynamicVideoControls extends StatefulWidget {
   final int totalEpisodes;
   final VoidCallback? onPlayPause;
   final VoidCallback? onBack;
+  final VoidCallback? onToggleFullScreen; // 添加全屏切换回调
   final VoidCallback? onNextEpisode;
   final VoidCallback? onPrevEpisode;
   final ValueChanged<double>? onSeek;
@@ -851,6 +936,7 @@ class _DynamicVideoControls extends StatefulWidget {
     this.totalEpisodes = 0,
     this.onPlayPause,
     this.onBack,
+    this.onToggleFullScreen, // 添加全屏切换回调参数
     this.onNextEpisode,
     this.onPrevEpisode,
     this.onSeek,
@@ -861,15 +947,40 @@ class _DynamicVideoControls extends StatefulWidget {
 }
 
 class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
+  bool _controlsVisible = true;
+  Timer? _hideTimer;
+  bool _isFullScreen = false;
+  ChewieController? _chewieController;
+  
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_onPlayerStateChanged);
+    // 初始化时启动隐藏计时器
+    _startHideTimer();
   }
-
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 在didChangeDependencies中获取并保存chewieController的引用
+    _chewieController = ChewieController.of(context);
+    if (_chewieController != null) {
+      _isFullScreen = _chewieController!.isFullScreen;
+      _chewieController!.addListener(_onFullScreenChanged);
+    }
+  }
+  
   @override
   void dispose() {
     widget.controller.removeListener(_onPlayerStateChanged);
+    
+    // 使用保存的引用而不是重新获取
+    if (_chewieController != null) {
+      _chewieController!.removeListener(_onFullScreenChanged);
+    }
+    
+    _hideTimer?.cancel();
     super.dispose();
   }
 
@@ -878,25 +989,87 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
       setState(() {});
     }
   }
-
+  
+  void _onFullScreenChanged() {
+    // 使用保存的引用
+    if (_chewieController != null && mounted) {
+      setState(() {
+        _isFullScreen = _chewieController!.isFullScreen;
+      });
+    }
+  }
+  
+  void _startHideTimer() {
+    _hideTimer?.cancel();
+    // 3秒后隐藏控制界面
+    _hideTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _controlsVisible = false;
+        });
+      }
+    });
+  }
+  
+  void _showControls() {
+    setState(() {
+      _controlsVisible = true;
+    });
+    _startHideTimer();
+  }
+  
   @override
   Widget build(BuildContext context) {
-    return UnifiedVideoControls(
-      controller: widget.controller,
-      uiState: models.UIState(
-        controlsVisible: true,
-        showBigPlayButton: !widget.controller.value.isPlaying,
+    return MouseRegion(
+      cursor: _isFullScreen && !_controlsVisible 
+          ? SystemMouseCursors.none // 全屏且控制界面隐藏时隐藏鼠标指针
+          : SystemMouseCursors.basic, // 其他情况下显示默认光标
+      onEnter: (_) => _showControls(), // 鼠标进入时显示控制界面
+      onHover: (event) {
+        // 只有在全屏模式下才处理鼠标悬停事件
+        if (_isFullScreen) {
+          _showControls();
+        }
+      },
+      child: GestureDetector(
+        onTap: () {
+          // 点击播放区域时，如果是在桌面端，则切换播放/暂停状态
+          if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+            if (widget.controller.value.isPlaying) {
+              widget.controller.pause();
+              // 保持控制界面显示
+              _showControls();
+            } else {
+              widget.controller.play();
+              // 重新开始隐藏计时器
+              _startHideTimer();
+            }
+          }
+          // 对于非桌面端，保持原有逻辑
+          else {
+            _showControls();
+          }
+        },
+        child: UnifiedVideoControls(
+          controller: widget.controller,
+          uiState: models.UIState(
+            controlsVisible: _controlsVisible,
+            showBigPlayButton: !widget.controller.value.isPlaying,
+            isFullScreen: _isFullScreen, // 传递全屏状态
+          ),
+          controlMode: widget.controlMode,
+          title: widget.title,
+          episodeTitle: widget.episodeTitle,
+          currentEpisodeIndex: widget.currentEpisodeIndex,
+          totalEpisodes: widget.totalEpisodes,
+          onPlayPause: widget.onPlayPause,
+          onBack: widget.onBack,
+          onToggleFullScreen: widget.onToggleFullScreen, // 确保传递全屏切换回调
+          onNextEpisode: widget.onNextEpisode,
+          onPrevEpisode: widget.onPrevEpisode,
+          onSeek: widget.onSeek,
+        ),
       ),
-      controlMode: widget.controlMode,
-      title: widget.title,
-      episodeTitle: widget.episodeTitle,
-      currentEpisodeIndex: widget.currentEpisodeIndex,
-      totalEpisodes: widget.totalEpisodes,
-      onPlayPause: widget.onPlayPause,
-      onBack: widget.onBack,
-      onNextEpisode: widget.onNextEpisode,
-      onPrevEpisode: widget.onPrevEpisode,
-      onSeek: widget.onSeek,
     );
   }
 }
