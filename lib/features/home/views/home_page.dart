@@ -7,6 +7,10 @@ import 'package:vision_x_flutter/features/home/views/widgets/home_app_bar.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/loading_skeleton.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
 import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
+import 'package:vision_x_flutter/shared/utilities/platform_adapter.dart';
+
+// 条件导入桌面端主页
+import 'home_page_desktop.dart' if (dart.library.io) 'home_page_desktop.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -29,6 +33,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 根据平台选择使用移动端或桌面端主页
+    if (PlatformAdapter.isDesktop) {
+      return const HomePageDesktop();
+    } else {
+      return _buildMobileHome();
+    }
+  }
+
+  Widget _buildMobileHome() {
     final state = ref.watch(homeViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
     
