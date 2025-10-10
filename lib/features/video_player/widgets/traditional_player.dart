@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:vision_x_flutter/features/video_player/widgets/video_player.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
@@ -43,23 +42,28 @@ class TraditionalPlayer extends StatelessWidget {
   }
 
   Widget _buildCustomVideoPlayer(BuildContext context) {
-    return CustomVideoPlayer(
-      key: ValueKey(controller.currentEpisode.value.url),
-      media: controller.media,
-      episode: controller.currentEpisode.value,
-      onProgressUpdate: controller.updateProgress,
-      onPlaybackCompleted: controller.playNextEpisode,
-      onVideoDurationReceived: controller.setVideoDuration,
-      startPosition: controller.currentProgress.value,
-      isShortDramaMode: false,
-      onShowEpisodeSelector: () => _showEpisodeSelector(context),
-      onBackPressed: () => context.pop(),
-      onNextEpisode: controller.playNextEpisode,
-      onPrevEpisode: controller.playPrevEpisode,
-      onEpisodeChanged: controller.changeEpisode,
-      currentEpisodeIndex: controller.currentEpisodeIndex.value,
-      totalEpisodes: controller.totalEpisodes,
-      onPreloadNextEpisode: controller.preloadNextEpisode,
+    return ValueListenableBuilder<Episode>(
+      valueListenable: controller.currentEpisode,
+      builder: (context, currentEpisode, child) {
+        return CustomVideoPlayer(
+          key: ValueKey(currentEpisode.url), // 添加key确保组件正确重建
+          media: controller.media,
+          episode: currentEpisode,
+          onProgressUpdate: controller.updateProgress,
+          onPlaybackCompleted: controller.playNextEpisode,
+          onVideoDurationReceived: controller.setVideoDuration,
+          startPosition: controller.currentProgress.value,
+          isShortDramaMode: false,
+          onShowEpisodeSelector: () => _showEpisodeSelector(context),
+          onBackPressed: () => context.pop(),
+          onNextEpisode: controller.playNextEpisode,
+          onPrevEpisode: controller.playPrevEpisode,
+          onEpisodeChanged: controller.changeEpisode,
+          currentEpisodeIndex: controller.currentEpisodeIndex.value,
+          totalEpisodes: controller.totalEpisodes,
+          onPreloadNextEpisode: controller.preloadNextEpisode,
+        );
+      },
     );
   }
 
@@ -201,6 +205,75 @@ class _DescriptionTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 剧集选择器移到最上方
+          if (controller.currentSource.episodes.length > 1) ...[
+            Text(
+              '剧集选择',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 100,
+              child: ValueListenableBuilder<int>(
+                  valueListenable: controller.currentEpisodeIndex,
+                  builder: (context, currentEpisodeIndex, child) {
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        childAspectRatio: 1.5,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      itemCount: controller.currentSource.episodes.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final isSelected = index == currentEpisodeIndex;
+                        return GestureDetector(
+                          onTap: () {
+                            // 切换剧集
+                            controller.changeEpisode(index);
+                            // 同时更新页面控制器，确保页面切换同步
+                            controller.pageController.jumpToPage(index);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.cardColor.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.dividerColor,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.textTheme.bodyMedium?.color,
+                                  fontSize: 14.0,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // 媒体标题
           Text(
             media.name ?? '未知影片',
@@ -226,7 +299,7 @@ class _DescriptionTab extends StatelessWidget {
           const SizedBox(height: 10),
 
           // 演职人员信息
-          if (media.actors != null || media.director != null) ...[
+          if (media.director != null || media.actors != null) ...[
             if (media.director != null)
               Text(
                 '导演: ${media.director}',

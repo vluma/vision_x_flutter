@@ -66,7 +66,12 @@ class FeatureSwitchSection extends StatelessWidget {
                     ),
                   ),
                   Switch(
-                    activeThumbColor: Theme.of(context).primaryColor,
+                    thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).primaryColor;
+                      }
+                      return Colors.grey; // 默认颜色
+                    }),
                     value: controller.yellowFilterEnabled,
                     onChanged: (bool value) {
                       controller.updateYellowFilter(value);
@@ -144,7 +149,12 @@ class FeatureSwitchSection extends StatelessWidget {
                     ),
                   ),
                   Switch(
-                    activeThumbColor: Theme.of(context).primaryColor,
+                    thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).primaryColor;
+                      }
+                      return Colors.grey; // 默认颜色
+                    }),
                     value: controller.adFilterEnabled,
                     onChanged: (bool value) {
                       controller.updateAdFilter(value);
@@ -224,7 +234,12 @@ class FeatureSwitchSection extends StatelessWidget {
                       ),
                     ),
                     Switch(
-                      activeThumbColor: Theme.of(context).primaryColor,
+                      thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Theme.of(context).primaryColor;
+                        }
+                        return Colors.grey; // 默认颜色
+                      }),
                       value: controller.adFilterByMetadata,
                       onChanged: (bool value) {
                         controller.updateAdFilterByMetadata(value);
@@ -296,7 +311,12 @@ class FeatureSwitchSection extends StatelessWidget {
                       ),
                     ),
                     Switch(
-                      activeThumbColor: Theme.of(context).primaryColor,
+                      thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Theme.of(context).primaryColor;
+                        }
+                        return Colors.grey; // 默认颜色
+                      }),
                       value: controller.adFilterByResolution,
                       onChanged: (bool value) {
                         controller.updateAdFilterByResolution(value);
