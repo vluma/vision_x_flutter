@@ -5,7 +5,7 @@ import 'video_control_models.dart';
 import 'video_control_widgets.dart' as custom_widgets;
 
 /// 全屏模式控制组件
-class FullScreenControls extends StatelessWidget {
+class FullScreenControls extends StatefulWidget {
   final VideoPlayerController controller;
   final UIState uiState;
   final String? title;
@@ -28,70 +28,135 @@ class FullScreenControls extends StatelessWidget {
   });
 
   @override
+  State<FullScreenControls> createState() => _FullScreenControlsState();
+}
+
+class _FullScreenControlsState extends State<FullScreenControls> {
+  bool _isSpeedUpMode = false;
+
+  @override
   Widget build(BuildContext context) {
-    if (uiState.isLocked) {
-      return _buildLockedControls(context);
-    }
-
-    return Stack(
-      children: [
-        // 顶部标题栏
-        if (uiState.controlsVisible)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildTopBar(context),
-          ),
-
-        // 中央播放按钮
-        if (uiState.showBigPlayButton)
-          Center(
-            child: custom_widgets.BigPlayButton(
-              isPlaying: controller.value.isPlaying,
-              onPressed: onPlayPause,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPressStart: _handleLongPressStart,
+      onLongPressEnd: _handleLongPressEnd,
+      onLongPressMoveUpdate: _handleLongPressMoveUpdate,
+      child: Stack(
+        children: [
+          // 顶部标题栏 (仅在非加速模式下显示)
+          if (widget.uiState.controlsVisible && !_isSpeedUpMode)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildTopBar(context),
             ),
-          ),
 
-        // 底部控制栏
-        if (uiState.controlsVisible)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomControls(context),
-          ),
+          // 中央播放按钮 (仅在非加速模式下显示)
+          if (widget.uiState.showBigPlayButton && !_isSpeedUpMode)
+            Center(
+              child: custom_widgets.BigPlayButton(
+                isPlaying: widget.controller.value.isPlaying,
+                onPressed: widget.onPlayPause,
+              ),
+            ),
 
-        // 右侧控制按钮
-        if (uiState.controlsVisible)
-          Positioned(
-            right: VideoControlConstants.sidePadding,
-            top: MediaQuery.of(context).size.height / 2 - 50,
-            child: _buildRightControls(),
-          ),
+          // 锁定控件 (仅在非加速模式下显示)
+          if (widget.uiState.controlsVisible && !_isSpeedUpMode)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 20,
+              child: Center(
+                child: custom_widgets.ControlButton(
+                  icon: widget.uiState.isLocked ? Icons.lock : Icons.lock_open,
+                  onPressed: widget.onToggleLock,
+                  tooltip: widget.uiState.isLocked ? '解锁屏幕' : '锁定屏幕',
+                ),
+              ),
+            ),
 
-        // 快进/快退指示器
-        if (uiState.showSeekIndicator) Center(child: _buildSeekIndicator()),
+          // 底部控制栏 (仅在非加速模式下显示)
+          if (widget.uiState.controlsVisible && !_isSpeedUpMode)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildBottomControls(context),
+            ),
 
-        // 速度指示器
-        if (uiState.showSpeedIndicator) Center(child: _buildSpeedIndicator()),
-      ],
+          // 快进/快退指示器 (仅在非加速模式下显示)
+          if (widget.uiState.showSeekIndicator && !_isSpeedUpMode)
+            Center(child: _buildSeekIndicator()),
+
+          // 速度指示器 (仅在非加速模式下显示)
+          if (widget.uiState.showSpeedIndicator && !_isSpeedUpMode)
+            Center(child: _buildSpeedIndicator()),
+
+          // 2倍速指示器 (仅在加速模式下显示，位于顶部居中)
+          if (_isSpeedUpMode)
+            Positioned(
+              top: 10,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(4.0),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.speed, color: Colors.white, size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        '2.0x',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildLockedControls(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          right: VideoControlConstants.sidePadding,
-          top: MediaQuery.of(context).size.height / 2 - 15,
-          child: custom_widgets.LockButton(
-            isLocked: uiState.isLocked,
-            onPressed: onToggleLock,
-          ),
-        ),
-      ],
-    );
+  void _handleLongPressStart(LongPressStartDetails details) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tapPosition = details.localPosition.dx;
+
+    // 右半部分长按
+    if (tapPosition > screenWidth / 2) {
+      setState(() {
+        _isSpeedUpMode = true;
+      });
+
+      // 如果暂停状态，先开始播放
+      if (!widget.controller.value.isPlaying) {
+        widget.controller.play();
+      }
+
+      widget.controller.setPlaybackSpeed(2.0);
+    }
+  }
+
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    setState(() {
+      _isSpeedUpMode = false;
+    });
+    widget.controller.setPlaybackSpeed(1.0);
+  }
+
+  void _handleLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    // 可以添加更多手势处理逻辑
   }
 
   Widget _buildTopBar(BuildContext context) {
@@ -114,23 +179,18 @@ class FullScreenControls extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: onBack,
+          custom_widgets.BackButton(
+            onPressed: widget.onBack,
           ),
           const SizedBox(width: 16.0),
-          if (title != null)
+          if (widget.title != null)
             Expanded(
               child: Text(
-                title!,
+                widget.title!,
                 style: VideoControlConstants.titleStyle,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-          custom_widgets.LockButton(
-            isLocked: uiState.isLocked,
-            onPressed: onToggleLock,
-          ),
         ],
       ),
     );
@@ -139,8 +199,7 @@ class FullScreenControls extends StatelessWidget {
   Widget _buildBottomControls(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-        bottom: VideoControlConstants.bottomPadding +
-            MediaQuery.of(context).padding.bottom,
+        bottom: MediaQuery.of(context).padding.bottom + 15,
         left: VideoControlConstants.sidePadding,
         right: VideoControlConstants.sidePadding,
       ),
@@ -159,51 +218,32 @@ class FullScreenControls extends StatelessWidget {
         children: [
           // 进度条
           custom_widgets.VideoProgressBar(
-            controller: controller,
-            onSeek: onSeek,
+            controller: widget.controller,
+            onSeek: widget.onSeek,
           ),
           const SizedBox(height: 8.0),
           // 控制按钮
           Row(
             children: [
               custom_widgets.PlayPauseButton(
-                isPlaying: controller.value.isPlaying,
-                onPressed: onPlayPause,
+                isPlaying: widget.controller.value.isPlaying,
+                onPressed: widget.onPlayPause,
               ),
               const SizedBox(width: 16.0),
               custom_widgets.TimeDisplay(
-                currentTime: _formatDuration(controller.value.position),
-                totalTime: _formatDuration(controller.value.duration),
+                currentTime: _formatDuration(widget.controller.value.position),
+                totalTime: _formatDuration(widget.controller.value.duration),
               ),
               const Spacer(),
               custom_widgets.ControlButton(
                 icon: Icons.fullscreen_exit,
-                onPressed: onToggleFullScreen,
+                onPressed: widget.onToggleFullScreen,
                 tooltip: '退出全屏',
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildRightControls() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        custom_widgets.ControlButton(
-          icon: Icons.fast_rewind,
-          onPressed: () {},
-          tooltip: '快退10秒',
-        ),
-        const SizedBox(height: 16.0),
-        custom_widgets.ControlButton(
-          icon: Icons.fast_forward,
-          onPressed: () {},
-          tooltip: '快进10秒',
-        ),
-      ],
     );
   }
 
@@ -216,7 +256,7 @@ class FullScreenControls extends StatelessWidget {
 
   Widget _buildSpeedIndicator() {
     return custom_widgets.Indicator(
-      text: '${uiState.currentSpeed.toStringAsFixed(1)}x',
+      text: '${widget.uiState.currentSpeed.toStringAsFixed(1)}x',
       icon: Icons.speed,
     );
   }
