@@ -50,7 +50,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onBackPressed; // 返回按钮回调
   final VoidCallback? onNextEpisode; // 下一集回调
   final VoidCallback? onPrevEpisode; // 上一集回调
-  final Function(int)? onEpisodeChanged; // 剧集切换回调
+  final Function(int)? onEpisodeChanged; // 副集切换回调
   final VoidCallback? onShowEpisodeSelector; // 显示剧集选择器回调
   final int currentEpisodeIndex; // 当前剧集索引
   final int totalEpisodes; // 总剧集数
@@ -351,6 +351,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
           );
           _videoPlayer.seekTo(seekPosition);
         },
+        onShowEpisodeSelector: widget.onShowEpisodeSelector, // 添加剧集选择回调
+        onSpeedChanged: (double speed) {
+          // 直接定义回调函数
+          _videoPlayer.setPlaybackSpeed(speed);
+        }, // 添加倍速选择回调
       ),
       placeholder:
           widget.media.poster != null ? _buildPosterPlaceholder() : null,
@@ -933,10 +938,12 @@ class _DynamicVideoControls extends StatefulWidget {
   final int totalEpisodes;
   final VoidCallback? onPlayPause;
   final VoidCallback? onBack;
-  final VoidCallback? onToggleFullScreen; // 添加全屏切换回调
+  final VoidCallback? onToggleFullScreen;
   final VoidCallback? onNextEpisode;
   final VoidCallback? onPrevEpisode;
   final ValueChanged<double>? onSeek;
+  final VoidCallback? onShowEpisodeSelector; // 添加剧集选择回调
+  final ValueChanged<double>? onSpeedChanged; // 添加倍速选择回调
 
   const _DynamicVideoControls({
     required this.controller,
@@ -947,10 +954,12 @@ class _DynamicVideoControls extends StatefulWidget {
     this.totalEpisodes = 0,
     this.onPlayPause,
     this.onBack,
-    this.onToggleFullScreen, // 添加全屏切换回调参数
+    this.onToggleFullScreen,
     this.onNextEpisode,
     this.onPrevEpisode,
     this.onSeek,
+    this.onShowEpisodeSelector, // 初始化剧集选择回调
+    this.onSpeedChanged, // 初始化倍速选择回调
   });
 
   @override
@@ -963,13 +972,29 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
   bool _isFullScreen = false;
   bool _isLocked = false;
   ChewieController? _chewieController;
+  bool _isDisposed = false; // 添加一个标记来跟踪组件是否已被销毁
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_onPlayerStateChanged);
+    // 检查控制器是否已被销毁
+    if (!_isControllerDisposed()) {
+      widget.controller.addListener(_onPlayerStateChanged);
+    }
     // 初始化时启动隐藏计时器
     _startHideTimer();
+  }
+
+  // 添加一个辅助方法来检查控制器是否已被销毁
+  bool _isControllerDisposed() {
+    // 使用反射方式检查控制器是否已被销毁
+    try {
+      // 尝试访问控制器的一个属性来检查它是否有效
+      widget.controller.value;
+      return false;
+    } catch (e) {
+      return true;
+    }
   }
 
   @override
@@ -985,11 +1010,21 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onPlayerStateChanged);
+    _isDisposed = true;
 
     // 使用保存的引用而不是重新获取
     if (_chewieController != null) {
       _chewieController!.removeListener(_onFullScreenChanged);
+    }
+
+    // 安全地移除监听器
+    try {
+      if (!_isControllerDisposed()) {
+        widget.controller.removeListener(_onPlayerStateChanged);
+      }
+    } catch (e) {
+      // 忽略移除监听器时可能出现的错误
+      debugPrint('Error removing controller listener: $e');
     }
 
     _hideTimer?.cancel();
@@ -997,17 +1032,26 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
   }
 
   void _onPlayerStateChanged() {
-    if (mounted) {
+    // 检查组件是否已被销毁
+    if (mounted && !_isDisposed) {
       setState(() {});
     }
   }
 
   void _onFullScreenChanged() {
     // 使用保存的引用
-    if (_chewieController != null && mounted) {
+    if (_chewieController != null && mounted && !_isDisposed) {
       setState(() {
         _isFullScreen = _chewieController!.isFullScreen;
       });
+    }
+  }
+
+  // 添加播放速度改变处理函数
+  void _onSpeedChanged(double speed) {
+    if (!_isDisposed) {
+      widget.controller.setPlaybackSpeed(speed);
+      setState(() {});
     }
   }
 
@@ -1015,7 +1059,7 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
     _hideTimer?.cancel();
     // 3秒后隐藏控制界面
     _hideTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         setState(() {
           _controlsVisible = false;
         });
@@ -1024,28 +1068,37 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
   }
 
   void _showControls() {
-    setState(() {
-      _controlsVisible = true;
-    });
-    _startHideTimer();
+    if (!_isDisposed) {
+      setState(() {
+        _controlsVisible = true;
+      });
+      _startHideTimer();
+    }
   }
 
   void _toggleLock() {
-    setState(() {
-      _isLocked = !_isLocked;
-      // 锁定状态下显示控制栏以显示解锁按钮，解锁状态下正常显示控制栏
-      if (_isLocked) {
-        _controlsVisible = true; // 锁定后立即显示解锁按钮
-        _startHideTimer(); // 启动计时器，3秒后隐藏解锁按钮
-      } else {
-        _controlsVisible = true; // 解锁后显示完整控制栏
-        _startHideTimer(); // 启动计时器，3秒后隐藏控制栏
-      }
-    });
+    if (!_isDisposed) {
+      setState(() {
+        _isLocked = !_isLocked;
+        // 锁定状态下显示控制栏以显示解锁按钮，解锁状态下正常显示控制栏
+        if (_isLocked) {
+          _controlsVisible = true; // 锁定后立即显示解锁按钮
+          _startHideTimer(); // 启动计时器，3秒后隐藏解锁按钮
+        } else {
+          _controlsVisible = true; // 解锁后显示完整控制栏
+          _startHideTimer(); // 启动计时器，3秒后隐藏控制栏
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 在构建方法开始处检查是否已销毁
+    if (_isDisposed) {
+      return const SizedBox();
+    }
+
     return MouseRegion(
       cursor: _isFullScreen && !_controlsVisible
           ? SystemMouseCursors.none // 全屏且控制界面隐藏时隐藏鼠标指针
@@ -1068,14 +1121,19 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
           } else {
             // 未锁定状态下显示完整控制栏并切换播放状态
             _showControls();
-            
+
             // 如果是在桌面端，则同时切换播放/暂停状态
             if (!kIsWeb &&
                 (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-              if (widget.controller.value.isPlaying) {
-                widget.controller.pause();
-              } else {
-                widget.controller.play();
+              // 检查控制器是否仍然有效
+              try {
+                if (widget.controller.value.isPlaying) {
+                  widget.controller.pause();
+                } else {
+                  widget.controller.play();
+                }
+              } catch (e) {
+                debugPrint('Error controlling video player: $e');
               }
             }
           }
@@ -1087,6 +1145,7 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
             showBigPlayButton: !widget.controller.value.isPlaying,
             isFullScreen: _isFullScreen, // 传递全屏状态
             isLocked: _isLocked, // 传递锁定状态
+            currentSpeed: widget.controller.value.playbackSpeed, // 传递当前播放速度
           ),
           // 根据全屏状态动态选择控制模式
           controlMode: widget.controlMode == ControlMode.shortDrama
@@ -1105,6 +1164,8 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
           onNextEpisode: widget.onNextEpisode,
           onPrevEpisode: widget.onPrevEpisode,
           onSeek: widget.onSeek,
+          onShowEpisodeSelector: widget.onShowEpisodeSelector, // 传递剧集选择回调
+          onSpeedChanged: _onSpeedChanged, // 传递倍速选择回调
         ),
       ),
     );

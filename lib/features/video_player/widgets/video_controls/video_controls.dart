@@ -23,6 +23,7 @@ class UnifiedVideoControls extends StatelessWidget {
   final VoidCallback? onPrevEpisode;
   final ValueChanged<double>? onSeek;
   final ValueChanged<double>? onSpeedChanged;
+  final VoidCallback? onShowEpisodeSelector; // 添加剧集选择回调
 
   const UnifiedVideoControls({
     super.key,
@@ -41,15 +42,16 @@ class UnifiedVideoControls extends StatelessWidget {
     this.onPrevEpisode,
     this.onSeek,
     this.onSpeedChanged,
+    this.onShowEpisodeSelector, // 初始化剧集选择回调
   });
 
   @override
   Widget build(BuildContext context) {
     // 根据全屏状态和控制界面可见性决定是否隐藏鼠标指针
     final shouldHideCursor = uiState.isFullScreen && !uiState.controlsVisible;
-    
+
     Widget controlsWidget;
-    
+
     switch (controlMode) {
       case ControlMode.shortDrama:
         controlsWidget = ShortDramaControls(
@@ -70,6 +72,9 @@ class UnifiedVideoControls extends StatelessWidget {
           onToggleFullScreen: onToggleFullScreen,
           onToggleLock: onToggleLock,
           onSeek: onSeek,
+          onShowEpisodeSelector: onShowEpisodeSelector, // 传递剧集选择回调
+          onSpeedChanged: onSpeedChanged, // 传递倍速选择回调
+          currentSpeed: uiState.currentSpeed, // 传递当前播放速度
         );
 
       case ControlMode.normal:
@@ -83,7 +88,7 @@ class UnifiedVideoControls extends StatelessWidget {
           onSeek: onSeek,
         );
     }
-    
+
     // 只在全屏且控制界面隐藏时隐藏鼠标指针
     if (shouldHideCursor) {
       return MouseRegion(
@@ -91,7 +96,7 @@ class UnifiedVideoControls extends StatelessWidget {
         child: controlsWidget,
       );
     }
-    
+
     return controlsWidget;
   }
 }

@@ -14,6 +14,10 @@ class FullScreenControls extends StatefulWidget {
   final VoidCallback? onToggleFullScreen;
   final VoidCallback? onToggleLock;
   final ValueChanged<double>? onSeek;
+  final VoidCallback? onShowEpisodeSelector; // 添加剧集选择回调
+  final ValueChanged<double>? onSpeedChanged; // 添加倍速选择回调
+  final List<double> playbackSpeeds; // 添加播放速度选项
+  final double currentSpeed; // 添加当前播放速度
 
   const FullScreenControls({
     super.key,
@@ -25,6 +29,10 @@ class FullScreenControls extends StatefulWidget {
     this.onToggleFullScreen,
     this.onToggleLock,
     this.onSeek,
+    this.onShowEpisodeSelector, // 初始化剧集选择回调
+    this.onSpeedChanged, // 初始化倍速选择回调
+    this.playbackSpeeds = const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0], // 默认播放速度选项
+    this.currentSpeed = 1.0, // 默认播放速度
   });
 
   @override
@@ -44,7 +52,9 @@ class _FullScreenControlsState extends State<FullScreenControls> {
       child: Stack(
         children: [
           // 顶部标题栏 (仅在非加速模式且未锁定状态下显示)
-          if (widget.uiState.controlsVisible && !_isSpeedUpMode && !widget.uiState.isLocked)
+          if (widget.uiState.controlsVisible &&
+              !_isSpeedUpMode &&
+              !widget.uiState.isLocked)
             Positioned(
               top: 0,
               left: 0,
@@ -53,7 +63,9 @@ class _FullScreenControlsState extends State<FullScreenControls> {
             ),
 
           // 中央播放按钮 (仅在非加速模式且未锁定状态下显示)
-          if (widget.uiState.showBigPlayButton && !_isSpeedUpMode && !widget.uiState.isLocked)
+          if (widget.uiState.showBigPlayButton &&
+              !_isSpeedUpMode &&
+              !widget.uiState.isLocked)
             Center(
               child: custom_widgets.BigPlayButton(
                 isPlaying: widget.controller.value.isPlaying,
@@ -77,7 +89,9 @@ class _FullScreenControlsState extends State<FullScreenControls> {
             ),
 
           // 底部控制栏 (仅在非加速模式且未锁定状态下显示)
-          if (widget.uiState.controlsVisible && !_isSpeedUpMode && !widget.uiState.isLocked)
+          if (widget.uiState.controlsVisible &&
+              !_isSpeedUpMode &&
+              !widget.uiState.isLocked)
             Positioned(
               bottom: 0,
               left: 0,
@@ -86,11 +100,15 @@ class _FullScreenControlsState extends State<FullScreenControls> {
             ),
 
           // 快进/快退指示器 (仅在非加速模式且未锁定状态下显示)
-          if (widget.uiState.showSeekIndicator && !_isSpeedUpMode && !widget.uiState.isLocked)
+          if (widget.uiState.showSeekIndicator &&
+              !_isSpeedUpMode &&
+              !widget.uiState.isLocked)
             Center(child: _buildSeekIndicator()),
 
           // 速度指示器 (仅在非加速模式且未锁定状态下显示)
-          if (widget.uiState.showSpeedIndicator && !_isSpeedUpMode && !widget.uiState.isLocked)
+          if (widget.uiState.showSpeedIndicator &&
+              !_isSpeedUpMode &&
+              !widget.uiState.isLocked)
             Center(child: _buildSpeedIndicator()),
 
           // 2倍速指示器 (仅在加速模式下显示，位于顶部居中)
@@ -235,6 +253,12 @@ class _FullScreenControlsState extends State<FullScreenControls> {
                 totalTime: _formatDuration(widget.controller.value.duration),
               ),
               const Spacer(),
+
+              // 添加倍速选择按钮
+              if (widget.onSpeedChanged != null) _buildSpeedButton(),
+              // 添加剧集选择按钮（带滑出动画）
+              if (widget.onShowEpisodeSelector != null)
+                _buildEpisodeSelectorButton(),
               custom_widgets.ControlButton(
                 icon: Icons.fullscreen_exit,
                 onPressed: widget.onToggleFullScreen,
@@ -244,6 +268,78 @@ class _FullScreenControlsState extends State<FullScreenControls> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建剧集选择按钮（带动画效果）
+  Widget _buildEpisodeSelectorButton() {
+    return AnimatedSwitcher(
+      duration: VideoControlConstants.animationDuration,
+      switchInCurve: Curves.easeOutBack,
+      switchOutCurve: Curves.easeInBack,
+      transitionBuilder: (child, animation) {
+        return ScaleTransition(
+          scale: animation,
+          child: child,
+        );
+      },
+      child: custom_widgets.ControlButton(
+        key: const ValueKey('episode_button'),
+        icon: Icons.video_library,
+        onPressed: widget.onShowEpisodeSelector,
+        tooltip: '选择剧集',
+      ),
+    );
+  }
+
+  /// 构建倍速选择按钮
+  Widget _buildSpeedButton() {
+    return PopupMenuButton<double>(
+      icon: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.speed, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            '${widget.currentSpeed.toStringAsFixed(1)}x',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+      tooltip: '播放速度',
+      color: VideoControlConstants.cardBackgroundColor, // 修改弹窗背景色
+      onSelected: widget.onSpeedChanged,
+      itemBuilder: (context) {
+        return widget.playbackSpeeds.map((speed) {
+          return PopupMenuItem<double>(
+            value: speed,
+            child: Row(
+              children: [
+                if (speed == widget.currentSpeed)
+                  Icon(Icons.check,
+                      size: 18, color: VideoControlConstants.primaryColor)
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 8),
+                Text(
+                  '${speed}x',
+                  style: TextStyle(
+                    color: speed == widget.currentSpeed
+                        ? VideoControlConstants.primaryColor // 使用主题主色
+                        : VideoControlConstants.textColor, // 使用文本颜色
+                    fontWeight: speed == widget.currentSpeed
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList();
+      },
     );
   }
 
