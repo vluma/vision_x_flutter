@@ -43,8 +43,8 @@ class _FullScreenControlsState extends State<FullScreenControls> {
       onLongPressMoveUpdate: _handleLongPressMoveUpdate,
       child: Stack(
         children: [
-          // 顶部标题栏 (仅在非加速模式下显示)
-          if (widget.uiState.controlsVisible && !_isSpeedUpMode)
+          // 顶部标题栏 (仅在非加速模式且未锁定状态下显示)
+          if (widget.uiState.controlsVisible && !_isSpeedUpMode && !widget.uiState.isLocked)
             Positioned(
               top: 0,
               left: 0,
@@ -52,8 +52,8 @@ class _FullScreenControlsState extends State<FullScreenControls> {
               child: _buildTopBar(context),
             ),
 
-          // 中央播放按钮 (仅在非加速模式下显示)
-          if (widget.uiState.showBigPlayButton && !_isSpeedUpMode)
+          // 中央播放按钮 (仅在非加速模式且未锁定状态下显示)
+          if (widget.uiState.showBigPlayButton && !_isSpeedUpMode && !widget.uiState.isLocked)
             Center(
               child: custom_widgets.BigPlayButton(
                 isPlaying: widget.controller.value.isPlaying,
@@ -61,7 +61,7 @@ class _FullScreenControlsState extends State<FullScreenControls> {
               ),
             ),
 
-          // 锁定控件 (仅在非加速模式下显示)
+          // 锁定控件 (在非加速模式下显示，锁定状态下始终显示解锁按钮)
           if (widget.uiState.controlsVisible && !_isSpeedUpMode)
             Positioned(
               top: 0,
@@ -69,15 +69,15 @@ class _FullScreenControlsState extends State<FullScreenControls> {
               right: 20,
               child: Center(
                 child: custom_widgets.ControlButton(
-                  icon: widget.uiState.isLocked ? Icons.lock : Icons.lock_open,
+                  icon: widget.uiState.isLocked ? Icons.lock_open : Icons.lock,
                   onPressed: widget.onToggleLock,
                   tooltip: widget.uiState.isLocked ? '解锁屏幕' : '锁定屏幕',
                 ),
               ),
             ),
 
-          // 底部控制栏 (仅在非加速模式下显示)
-          if (widget.uiState.controlsVisible && !_isSpeedUpMode)
+          // 底部控制栏 (仅在非加速模式且未锁定状态下显示)
+          if (widget.uiState.controlsVisible && !_isSpeedUpMode && !widget.uiState.isLocked)
             Positioned(
               bottom: 0,
               left: 0,
@@ -85,12 +85,12 @@ class _FullScreenControlsState extends State<FullScreenControls> {
               child: _buildBottomControls(context),
             ),
 
-          // 快进/快退指示器 (仅在非加速模式下显示)
-          if (widget.uiState.showSeekIndicator && !_isSpeedUpMode)
+          // 快进/快退指示器 (仅在非加速模式且未锁定状态下显示)
+          if (widget.uiState.showSeekIndicator && !_isSpeedUpMode && !widget.uiState.isLocked)
             Center(child: _buildSeekIndicator()),
 
-          // 速度指示器 (仅在非加速模式下显示)
-          if (widget.uiState.showSpeedIndicator && !_isSpeedUpMode)
+          // 速度指示器 (仅在非加速模式且未锁定状态下显示)
+          if (widget.uiState.showSpeedIndicator && !_isSpeedUpMode && !widget.uiState.isLocked)
             Center(child: _buildSpeedIndicator()),
 
           // 2倍速指示器 (仅在加速模式下显示，位于顶部居中)

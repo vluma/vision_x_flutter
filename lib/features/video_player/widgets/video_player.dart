@@ -961,6 +961,7 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
   bool _controlsVisible = true;
   Timer? _hideTimer;
   bool _isFullScreen = false;
+  bool _isLocked = false;
   ChewieController? _chewieController;
 
   @override
@@ -1029,6 +1030,20 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
     _startHideTimer();
   }
 
+  void _toggleLock() {
+    setState(() {
+      _isLocked = !_isLocked;
+      // 锁定状态下显示控制栏以显示解锁按钮，解锁状态下正常显示控制栏
+      if (_isLocked) {
+        _controlsVisible = true; // 锁定后立即显示解锁按钮
+        _startHideTimer(); // 启动计时器，3秒后隐藏解锁按钮
+      } else {
+        _controlsVisible = true; // 解锁后显示完整控制栏
+        _startHideTimer(); // 启动计时器，3秒后隐藏控制栏
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -1046,16 +1061,22 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
         behavior: HitTestBehavior.opaque, // 确保点击事件能够被正确处理
         onTap: () {
           debugPrint('_DynamicVideoControls: GestureDetector tapped');
-          // 点击播放区域时，总是显示控制栏
-          _showControls();
-
-          // 如果是在桌面端，则同时切换播放/暂停状态
-          if (!kIsWeb &&
-              (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-            if (widget.controller.value.isPlaying) {
-              widget.controller.pause();
-            } else {
-              widget.controller.play();
+          // 点击播放区域时的处理逻辑
+          if (_isLocked) {
+            // 锁定状态下只显示解锁按钮
+            _showControls();
+          } else {
+            // 未锁定状态下显示完整控制栏并切换播放状态
+            _showControls();
+            
+            // 如果是在桌面端，则同时切换播放/暂停状态
+            if (!kIsWeb &&
+                (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+              if (widget.controller.value.isPlaying) {
+                widget.controller.pause();
+              } else {
+                widget.controller.play();
+              }
             }
           }
         },
@@ -1065,6 +1086,7 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
             controlsVisible: _controlsVisible,
             showBigPlayButton: !widget.controller.value.isPlaying,
             isFullScreen: _isFullScreen, // 传递全屏状态
+            isLocked: _isLocked, // 传递锁定状态
           ),
           // 根据全屏状态动态选择控制模式
           controlMode: widget.controlMode == ControlMode.shortDrama
@@ -1079,6 +1101,7 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
           onPlayPause: widget.onPlayPause,
           onBack: widget.onBack,
           onToggleFullScreen: widget.onToggleFullScreen, // 确保传递全屏切换回调
+          onToggleLock: _toggleLock, // 传递锁定切换回调
           onNextEpisode: widget.onNextEpisode,
           onPrevEpisode: widget.onPrevEpisode,
           onSeek: widget.onSeek,
