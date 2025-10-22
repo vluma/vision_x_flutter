@@ -236,8 +236,6 @@ class _DescriptionTab extends StatelessWidget {
                           onTap: () {
                             // 切换剧集
                             controller.changeEpisode(index);
-                            // 同时更新页面控制器，确保页面切换同步
-                            controller.pageController.jumpToPage(index);
                           },
                           child: Container(
                             decoration: BoxDecoration(

@@ -234,12 +234,24 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(listener);
+    // 安全地添加监听器，检查控制器是否已被销毁
+    try {
+      widget.controller.addListener(listener);
+    } catch (e) {
+      // 如果控制器已被销毁，忽略错误
+      debugPrint('Controller already disposed: $e');
+    }
   }
 
   @override
   void deactivate() {
-    widget.controller.removeListener(listener);
+    // 安全地移除监听器
+    try {
+      widget.controller.removeListener(listener);
+    } catch (e) {
+      // 如果控制器已被销毁，忽略错误
+      debugPrint('Controller already disposed during deactivate: $e');
+    }
     super.deactivate();
   }
 
@@ -247,16 +259,35 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
   Widget build(BuildContext context) {
     VideoPlayerController controller = widget.controller;
 
-    void seekToRelativePosition(Offset globalPosition) {
-      final box = context.findRenderObject() as RenderBox;
-      final offset = box.globalToLocal(globalPosition);
-      final double relative = (offset.dx / box.size.width).clamp(0.0, 1.0);
-      controller.seekTo(
-        Duration(
-          milliseconds:
-              (controller.value.duration.inMilliseconds * relative).round(),
+    // 检查控制器是否有效
+    try {
+      controller.value;
+    } catch (e) {
+      // 如果控制器已被销毁，返回空的进度条
+      return Container(
+        height: 4.0,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(2.0),
+          color: Colors.grey.withValues(alpha: 0.3),
         ),
       );
+    }
+
+    void seekToRelativePosition(Offset globalPosition) {
+      try {
+        final box = context.findRenderObject() as RenderBox;
+        final offset = box.globalToLocal(globalPosition);
+        final double relative = (offset.dx / box.size.width).clamp(0.0, 1.0);
+        controller.seekTo(
+          Duration(
+            milliseconds:
+                (controller.value.duration.inMilliseconds * relative).round(),
+          ),
+        );
+      } catch (e) {
+        // 如果控制器已被销毁，忽略操作
+        debugPrint('Controller disposed during seek: $e');
+      }
     }
 
     return GestureDetector(
