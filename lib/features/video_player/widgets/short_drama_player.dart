@@ -78,26 +78,40 @@ class ShortDramaPlayer extends StatelessWidget {
     return ValueListenableBuilder<Episode>(
       valueListenable: controller.currentEpisode,
       builder: (context, currentEpisode, child) {
-        return CustomVideoPlayer(
-          key: ValueKey(currentEpisode.url), // 使用当前剧集URL作为key以确保更新
-          media: controller.media,
-          episode: currentEpisode,
-          onProgressUpdate: controller.updateProgress,
-          onPlaybackCompleted: () {
-            controller.playNextEpisode();
+        return ValueListenableBuilder<bool>(
+          valueListenable: controller.isFullScreen,
+          builder: (context, isFullScreen, _) {
+            // 如果当前是全屏状态，使用固定key避免重建
+            // 否则使用剧集URL作为key确保正常更新
+            final playerKey = isFullScreen 
+                ? const ValueKey('fullscreen_player')
+                : ValueKey(currentEpisode.url);
+                
+            debugPrint('构建视频播放器: 全屏=$isFullScreen, 剧集=${currentEpisode.title}, Key=$playerKey');
+            
+            return CustomVideoPlayer(
+              key: playerKey,
+              media: controller.media,
+              episode: currentEpisode,
+              onProgressUpdate: controller.updateProgress,
+              onPlaybackCompleted: () {
+                controller.playNextEpisode();
+              },
+              onVideoDurationReceived: controller.setVideoDuration,
+              startPosition: index == controller.currentEpisodeIndex.value
+                  ? controller.currentProgress.value
+                  : 0,
+              isShortDramaMode: true,
+              onBackPressed: () => context.pop(),
+              onNextEpisode: controller.playNextEpisode,
+              onPrevEpisode: controller.playPrevEpisode,
+              onEpisodeChanged: controller.changeEpisode,
+              currentEpisodeIndex: index,
+              totalEpisodes: controller.totalEpisodes,
+              onPreloadNextEpisode: controller.preloadNextEpisode,
+              onFullScreenChanged: controller.setFullScreen, // 同步全屏状态
+            );
           },
-          onVideoDurationReceived: controller.setVideoDuration,
-          startPosition: index == controller.currentEpisodeIndex.value
-              ? controller.currentProgress.value
-              : 0,
-          isShortDramaMode: true,
-          onBackPressed: () => context.pop(),
-          onNextEpisode: controller.playNextEpisode,
-          onPrevEpisode: controller.playPrevEpisode,
-          onEpisodeChanged: controller.changeEpisode,
-          currentEpisodeIndex: index,
-          totalEpisodes: controller.totalEpisodes,
-          onPreloadNextEpisode: controller.preloadNextEpisode,
         );
       },
     );

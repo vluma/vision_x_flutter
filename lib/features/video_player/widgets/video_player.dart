@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' as ui; // 添加ui库导入以使用SystemMouseCursors
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
@@ -9,7 +8,6 @@ import 'package:vision_x_flutter/features/video_player/widgets/video_controls/vi
 import 'package:vision_x_flutter/features/video_player/widgets/video_controls/video_control_models.dart'
     as models;
 import 'package:vision_x_flutter/services/history_service.dart';
-import 'package:vision_x_flutter/services/enhanced_video_service.dart';
 import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 // 添加HLS解析器服务导入
 import 'package:vision_x_flutter/services/hls_parser_service.dart';
@@ -18,13 +16,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 条件导入window_size包，仅在桌面端使用
-import 'package:window_size/window_size.dart'
-    if (dart.library.html) 'package:window_size/noop_window_size.dart';
 import 'package:vision_x_flutter/core/utils/window_manager.dart';
 
 // MARK: - 视频播放器配置
-class VideoPlayerConfig {
+class VideoPlayerSettings {
   // 进度更新间隔
   static const Duration progressUpdateInterval = Duration(seconds: 30);
 
@@ -56,6 +51,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final int totalEpisodes; // 总剧集数
   // 预加载相关参数
   final Function()? onPreloadNextEpisode; // 预加载下一集回调
+  final Function(bool)? onFullScreenChanged; // 全屏状态变化回调
 
   const CustomVideoPlayer({
     super.key,
@@ -76,6 +72,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.totalEpisodes = 0,
     // 预加载相关参数
     this.onPreloadNextEpisode,
+    this.onFullScreenChanged, // 添加全屏状态变化回调
   });
 
   @override
@@ -94,20 +91,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _hasRecordedInitialHistory = false; // 添加历史记录标志
 
   // 广告检测相关
-  final EnhancedVideoService _enhancedVideoService = EnhancedVideoService();
   bool _isProcessingVideo = false;
   String? _processedVideoUrl;
-  ProcessedVideoResult? _processingResult;
 
   // 添加HLS解析器服务
   final HlsParserService _hlsParserService = HlsParserService();
 
-  // 播放状态数据
-  final bool _isPlaying = false;
-  final Duration _currentPosition = Duration.zero;
-  final Duration _totalDuration = Duration.zero;
-  final bool _isBuffering = false;
-  final double _playbackSpeed = 1.0;
 
   // 错误处理
   String? _errorMessage;
@@ -123,6 +112,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePlayer();
     });
+  }
+
+  @override
+  void didUpdateWidget(CustomVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 当剧集切换时，如果当前处于全屏状态，需要重新初始化视频源
+    if (oldWidget.episode.url != widget.episode.url && _isPlayerInitialized) {
+      _updateVideoSource();
+    }
   }
 
   Future<void> _initializePlayer() async {
@@ -168,6 +166,81 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         });
       }
     } catch (e) {
+      _handleInitializationError(e.toString());
+    }
+  }
+
+  /// 更新视频源（用于剧集切换时保持全屏状态）
+  Future<void> _updateVideoSource() async {
+    try {
+      if (!mounted || _isDisposing) return;
+
+      // 保存当前状态
+      final wasFullScreen = _chewieController.isFullScreen;
+      final wasPlaying = _videoPlayer.value.isPlaying;
+      // final currentPosition = _videoPlayer.value.position; // 暂时注释掉未使用的变量
+
+      debugPrint('更新视频源: 全屏状态=$wasFullScreen, 播放状态=$wasPlaying');
+
+      // 处理新的视频URL
+      await _processVideoUrlWithHlsParser();
+      final videoUrl = _processedVideoUrl ?? widget.episode.url;
+
+      // 创建新的视频控制器
+      final newVideoPlayer = VideoPlayerController.networkUrl(
+        Uri.parse(videoUrl),
+      );
+
+      await newVideoPlayer.initialize();
+
+      // 如果指定了起始位置，则跳转到该位置
+      if (widget.startPosition > 0) {
+        await newVideoPlayer.seekTo(Duration(seconds: widget.startPosition));
+      }
+
+      // 安全地更新控制器
+      _videoPlayer.removeListener(_videoPlayerListener);
+      await _videoPlayer.dispose();
+      _videoPlayer = newVideoPlayer;
+      _videoPlayer.addListener(_videoPlayerListener);
+
+      // 重新创建Chewie控制器
+      _chewieController.dispose();
+      _createChewieController();
+
+      // 恢复播放状态
+      if (wasPlaying) {
+        _videoPlayer.play();
+      }
+
+      // 恢复全屏状态 - 使用更可靠的方法
+      if (wasFullScreen) {
+        // 使用多个回调确保全屏状态正确恢复
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isDisposing) {
+            try {
+              _chewieController.enterFullScreen();
+              debugPrint('全屏状态已恢复');
+            } catch (e) {
+              debugPrint('恢复全屏状态失败: $e');
+            }
+          }
+        });
+      }
+
+      // 报告新的视频时长
+      _reportVideoDuration();
+
+      // 记录新的历史
+      _recordInitialHistory();
+
+      if (mounted) {
+        setState(() {
+          _isPlayerInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('更新视频源失败: $e');
       _handleInitializationError(e.toString());
     }
   }
@@ -317,7 +390,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       allowedScreenSleep: false,
       aspectRatio: _videoPlayer.value.aspectRatio,
       systemOverlaysAfterFullScreen: SystemUiOverlay.values,
-      playbackSpeeds: VideoPlayerConfig.playbackSpeeds,
+      playbackSpeeds: VideoPlayerSettings.playbackSpeeds,
       showControls: true, // 确保显示控制栏
       showOptions: true, // 确保显示选项
       showControlsOnInitialize: true, // 初始化时显示控制栏
@@ -363,12 +436,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
     // 添加点击播放器区域的事件监听
     _chewieController.addListener(_handlePlayerTap);
+    
+    // 添加全屏状态变化监听
+    _chewieController.addListener(_onChewieFullScreenChanged);
+    
+    debugPrint('ChewieController 已创建');
   }
 
   // 处理播放器区域点击事件
   void _handlePlayerTap() {
     // 这个方法会在Chewie控制器状态改变时被调用
     // 我们需要监听特定的点击事件
+  }
+
+  // 处理Chewie全屏状态变化
+  void _onChewieFullScreenChanged() {
+    if (mounted && !_isDisposing) {
+      final isFullScreen = _chewieController.isFullScreen;
+      debugPrint('全屏状态变化: $isFullScreen');
+      widget.onFullScreenChanged?.call(isFullScreen);
+    }
   }
 
   // 构建海报占位符
@@ -496,7 +583,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         widget.currentEpisodeIndex < widget.totalEpisodes - 1) {
       final progressPercentage =
           position.inMilliseconds / duration.inMilliseconds;
-      if (progressPercentage >= VideoPlayerConfig.preloadThreshold) {
+      if (progressPercentage >= VideoPlayerSettings.preloadThreshold) {
         _hasPreloaded = true;
         widget.onPreloadNextEpisode?.call();
       }
@@ -504,8 +591,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   void _checkPlaybackCompletion(Duration difference) {
-    if (difference.inMilliseconds <= VideoPlayerConfig.completionThresholdMs &&
-        difference.inMilliseconds >= -VideoPlayerConfig.completionThresholdMs) {
+    if (difference.inMilliseconds <= VideoPlayerSettings.completionThresholdMs &&
+        difference.inMilliseconds >= -VideoPlayerSettings.completionThresholdMs) {
       _hasCompleted = true;
       widget.onPlaybackCompleted?.call();
     }
@@ -513,7 +600,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   void _startProgressTracking() {
     _progressTimer =
-        Timer.periodic(VideoPlayerConfig.progressUpdateInterval, (timer) {
+        Timer.periodic(VideoPlayerSettings.progressUpdateInterval, (timer) {
       if (_shouldUpdateProgress()) {
         final position = _videoPlayer.value.position.inSeconds;
         _updateProgressAndHistory(position);
@@ -890,11 +977,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   // MARK: - 数据获取方法
-  bool get isPlaying => _isPlaying;
-  bool get isBuffering => _isBuffering;
-  Duration get currentPosition => _currentPosition;
-  Duration get totalDuration => _totalDuration;
-  double get playbackSpeed => _playbackSpeed;
   bool get isFullScreen => _chewieController.isFullScreen;
   bool get isInitialized => _isPlayerInitialized;
   VideoPlayerController get videoPlayerController => _videoPlayer;
@@ -905,6 +987,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     _isDisposing = true;
     _progressTimer?.cancel();
     _videoPlayer.removeListener(_videoPlayerListener);
+
+    // 移除Chewie控制器监听器
+    try {
+      _chewieController.removeListener(_handlePlayerTap);
+      _chewieController.removeListener(_onChewieFullScreenChanged);
+    } catch (e) {
+      debugPrint('移除Chewie监听器时出错: $e');
+    }
 
     // 更新最终进度
     _updateFinalProgress();
@@ -1039,11 +1129,19 @@ class _DynamicVideoControlsState extends State<_DynamicVideoControls> {
   }
 
   void _onFullScreenChanged() {
-    // 使用保存的引用
+    // 使用保存的引用，并检查控制器是否已被销毁
     if (_chewieController != null && mounted && !_isDisposed) {
-      setState(() {
-        _isFullScreen = _chewieController!.isFullScreen;
-      });
+      try {
+        setState(() {
+          _isFullScreen = _chewieController!.isFullScreen;
+        });
+      } catch (e) {
+        debugPrint('全屏状态监听器错误: $e');
+        // 如果控制器已被销毁，移除监听器
+        if (e.toString().contains('disposed')) {
+          _chewieController = null;
+        }
+      }
     }
   }
 

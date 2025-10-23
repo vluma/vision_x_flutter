@@ -19,6 +19,7 @@ class VideoPlayerController {
   final ValueNotifier<bool> _isShortDramaMode;
   final ValueNotifier<bool> _isInfoCardExpanded; // 添加信息卡片展开状态
   final ValueNotifier<double> _playbackSpeed; // 添加播放速度状态
+  final ValueNotifier<bool> _isFullScreen; // 添加全屏状态跟踪
 
   // 数据
   late final Source _currentSource;
@@ -34,7 +35,8 @@ class VideoPlayerController {
         _videoDuration = ValueNotifier(null),
         _isShortDramaMode = ValueNotifier(false),
         _isInfoCardExpanded = ValueNotifier(false), // 初始化信息卡片为折叠状态
-        _playbackSpeed = ValueNotifier(1.0) { // 初始化播放速度为1.0
+        _playbackSpeed = ValueNotifier(1.0), // 初始化播放速度为1.0
+        _isFullScreen = ValueNotifier(false) { // 初始化全屏状态为false
     _initialize();
   }
 
@@ -46,6 +48,7 @@ class VideoPlayerController {
   ValueListenable<bool> get isShortDramaMode => _isShortDramaMode;
   ValueListenable<bool> get isInfoCardExpanded => _isInfoCardExpanded; // 添加getter
   ValueListenable<double> get playbackSpeed => _playbackSpeed; // 添加播放速度getter
+  ValueListenable<bool> get isFullScreen => _isFullScreen; // 添加全屏状态getter
   PageController get pageController => _pageController;
 
   int get totalEpisodes => _currentSource.episodes.length;
@@ -147,6 +150,11 @@ class VideoPlayerController {
     _playbackSpeed.value = speed;
   }
 
+  /// 设置全屏状态
+  void setFullScreen(bool isFullScreen) {
+    _isFullScreen.value = isFullScreen;
+  }
+
   void dispose() {
     _currentEpisode.dispose();
     _currentProgress.dispose();
@@ -155,6 +163,7 @@ class VideoPlayerController {
     _isShortDramaMode.dispose();
     _isInfoCardExpanded.dispose(); // 添加释放资源
     _playbackSpeed.dispose(); // 释放播放速度资源
+    _isFullScreen.dispose(); // 释放全屏状态资源
     _pageController.dispose();
   }
 }
