@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
+import 'package:vision_x_flutter/features/video_player/controllers/video_player_controller.dart';
 
 /// 视频播放控制器提供者
 /// 用于在widget树中传递控制器

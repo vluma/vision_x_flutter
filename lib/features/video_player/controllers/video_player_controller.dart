@@ -1,0 +1,164 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:vision_x_flutter/shared/models/media_detail.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_config.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
+
+/// 视频播放页面控制器
+/// 负责状态管理、业务逻辑和事件处理
+class VideoPlayerController {
+  final MediaDetail media;
+  final Episode initialEpisode;
+  final int startPosition;
+
+  // 状态通知器
+  final ValueNotifier<Episode> _currentEpisode;
+  final ValueNotifier<int> _currentProgress;
+  final ValueNotifier<int> _currentEpisodeIndex;
+  final ValueNotifier<int?> _videoDuration;
+  final ValueNotifier<bool> _isShortDramaMode;
+  final ValueNotifier<bool> _isInfoCardExpanded; // 添加信息卡片展开状态
+  final ValueNotifier<double> _playbackSpeed; // 添加播放速度状态
+  final ValueNotifier<bool> _isFullScreen; // 添加全屏状态跟踪
+
+  // 数据
+  late final Source _currentSource;
+  late final PageController _pageController;
+
+  VideoPlayerController({
+    required this.media,
+    required this.initialEpisode,
+    this.startPosition = 0,
+  })  : _currentEpisode = ValueNotifier(initialEpisode),
+        _currentProgress = ValueNotifier(startPosition),
+        _currentEpisodeIndex = ValueNotifier(0),
+        _videoDuration = ValueNotifier(null),
+        _isShortDramaMode = ValueNotifier(false),
+        _isInfoCardExpanded = ValueNotifier(false), // 初始化信息卡片为折叠状态
+        _playbackSpeed = ValueNotifier(1.0), // 初始化播放速度为1.0
+        _isFullScreen = ValueNotifier(false) { // 初始化全屏状态为false
+    _initialize();
+  }
+
+  // Getters for state access
+  ValueListenable<Episode> get currentEpisode => _currentEpisode;
+  ValueListenable<int> get currentProgress => _currentProgress;
+  ValueListenable<int> get currentEpisodeIndex => _currentEpisodeIndex;
+  ValueListenable<int?> get videoDuration => _videoDuration;
+  ValueListenable<bool> get isShortDramaMode => _isShortDramaMode;
+  ValueListenable<bool> get isInfoCardExpanded => _isInfoCardExpanded; // 添加getter
+  ValueListenable<double> get playbackSpeed => _playbackSpeed; // 添加播放速度getter
+  ValueListenable<bool> get isFullScreen => _isFullScreen; // 添加全屏状态getter
+  PageController get pageController => _pageController;
+
+  int get totalEpisodes => _currentSource.episodes.length;
+  bool get canPlayNext => _currentEpisodeIndex.value < totalEpisodes - 1;
+  bool get canPlayPrev => _currentEpisodeIndex.value > 0;
+
+  void _initialize() {
+    _currentSource = _getCurrentSource();
+    _currentEpisodeIndex.value = _getCurrentEpisodeIndex();
+    _isShortDramaMode.value = _checkShortDramaMode();
+    _pageController = PageController(initialPage: _currentEpisodeIndex.value);
+  }
+
+  Source get currentSource => _getCurrentSource();
+
+  Source _getCurrentSource() {
+    return media.surces.firstWhere(
+      (source) => source.name == media.sourceName,
+      orElse: () => media.surces.first,
+    );
+  }
+
+  int _getCurrentEpisodeIndex() {
+    try {
+      return _currentSource.episodes.indexWhere(
+        (episode) => episode.url == initialEpisode.url,
+      );
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  bool _checkShortDramaMode() {
+    return VideoPlayerUtils.isShortDramaMode(media.category, media.type);
+  }
+
+  /// 切换剧集
+  void changeEpisode(int index) {
+    if (index < 0 || index >= totalEpisodes) return;
+    if (index == _currentEpisodeIndex.value) return;
+
+    _currentEpisodeIndex.value = index;
+    _currentEpisode.value = _currentSource.episodes[index];
+    _currentProgress.value = 0;
+    _videoDuration.value = null;
+  }
+
+  /// 播放下一集
+  void playNextEpisode() {
+    if (!canPlayNext) return;
+    changeEpisode(_currentEpisodeIndex.value + 1);
+  }
+
+  /// 播放上一集
+  void playPrevEpisode() {
+    if (!canPlayPrev) return;
+    changeEpisode(_currentEpisodeIndex.value - 1);
+  }
+
+  /// 更新播放进度
+  void updateProgress(int progress) {
+    _currentProgress.value = progress;
+  }
+
+  /// 更新视频时长
+  void updateVideoDuration(int duration) {
+    _videoDuration.value = duration;
+  }
+
+  /// 切换短剧模式
+  void toggleShortDramaMode() {
+    _isShortDramaMode.value = !_isShortDramaMode.value;
+  }
+
+  /// 切换信息卡片展开状态
+  void toggleInfoCardExpanded() {
+    _isInfoCardExpanded.value = !_isInfoCardExpanded.value;
+  }
+
+  /// 设置播放速度
+  void setPlaybackSpeed(double speed) {
+    _playbackSpeed.value = speed;
+  }
+
+  /// 设置全屏状态
+  void setFullScreen(bool isFullScreen) {
+    _isFullScreen.value = isFullScreen;
+  }
+
+  /// 预加载下一集
+  void preloadNextEpisode() {
+    if (canPlayNext) {
+      final nextEpisode = _currentSource.episodes[_currentEpisodeIndex.value + 1];
+      VideoPlayerPerformance.preloadVideo(nextEpisode.url);
+    }
+  }
+
+  /// 清理资源
+  void dispose() {
+    _pageController.dispose();
+    // 其他清理工作
+  }
+}
+
+/// VideoPlayer工具类
+extension VideoPlayerUtils on Object {
+  /// 判断是否为短剧模式
+  static bool isShortDramaMode(String category, String type) {
+    return category.contains('短剧') || 
+           type.contains('短剧') || 
+           category.contains('Short Drama');
+  }
+}
