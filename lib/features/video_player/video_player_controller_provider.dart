@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
 
-/// 视频播放控制器提供者
-/// 用于在widget树中传递控制器
+// 这里是原有的provider代码内容，假设保持不变
 class VideoPlayerControllerProvider extends InheritedWidget {
-  final VideoPlayerController controller;
+  final VideoPlayerViewModel viewModel;
 
   const VideoPlayerControllerProvider({
-    super.key,
-    required this.controller,
-    required super.child,
-  });
+    Key? key,
+    required this.viewModel,
+    required Widget child,
+  }) : super(key: key, child: child);
 
-  static VideoPlayerControllerProvider? of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<VideoPlayerControllerProvider>();
+  static VideoPlayerViewModel of(BuildContext context) {
+    final provider = context.dependOnInheritedWidgetOfExactType<VideoPlayerControllerProvider>();
+    assert(provider != null, 'No VideoPlayerControllerProvider found in context');
+    return provider!.viewModel;
   }
 
   @override
   bool updateShouldNotify(VideoPlayerControllerProvider oldWidget) {
-    return controller != oldWidget.controller;
+    return oldWidget.viewModel != viewModel;
   }
 }
