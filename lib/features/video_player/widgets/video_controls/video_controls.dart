@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'video_control_models.dart';
 import 'short_drama_controls.dart';
-import 'full_screen_controls.dart';
 import 'normal_controls.dart';
 
 /// 统一的视频控制器，根据模式自动选择合适的控制界面
@@ -48,22 +47,26 @@ class UnifiedVideoControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 根据全屏状态和控制界面可见性决定是否隐藏鼠标指针
-    final shouldHideCursor = uiState.isFullScreen && !uiState.controlsVisible;
+    return MouseRegion(
+      cursor: uiState.controlsVisible && !uiState.isFullScreen
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.none,
+      child: _buildControlsByMode(),
+    );
+  }
 
-    Widget controlsWidget;
-
+  Widget _buildControlsByMode() {
     switch (controlMode) {
       case ControlMode.shortDrama:
-        controlsWidget = ShortDramaControls(
+        return ShortDramaControls(
           controller: controller,
           uiState: uiState,
           onPlayPause: onPlayPause,
           onBack: onBack,
           onSeek: onSeek,
         );
-
       case ControlMode.fullScreen:
-        controlsWidget = FullScreenControls(
+        return NormalControls(
           controller: controller,
           uiState: uiState,
           title: title,
@@ -74,107 +77,20 @@ class UnifiedVideoControls extends StatelessWidget {
           onSeek: onSeek,
           onShowEpisodeSelector: onShowEpisodeSelector, // 传递剧集选择回调
           onSpeedChanged: onSpeedChanged, // 传递倍速选择回调
-          currentSpeed: uiState.currentSpeed, // 传递当前播放速度
+          playbackSpeeds: const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0], // 传递播放速度选项
+          currentSpeed: controller.value.playbackSpeed, // 传递当前播放速度
         );
-
       case ControlMode.normal:
-        controlsWidget = NormalControls(
+        return NormalControls(
           controller: controller,
           uiState: uiState,
           title: title,
           onPlayPause: onPlayPause,
           onBack: onBack,
           onToggleFullScreen: onToggleFullScreen,
+          onToggleLock: onToggleLock,
           onSeek: onSeek,
         );
     }
-
-    // 只在全屏且控制界面隐藏时隐藏鼠标指针
-    if (shouldHideCursor) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.none, // 隐藏鼠标指针
-        child: controlsWidget,
-      );
-    }
-
-    return controlsWidget;
   }
 }
-
-/// 控制器模式枚举
-enum ControlMode {
-  normal, // 普通模式
-  shortDrama, // 短剧模式
-  fullScreen, // 全屏模式
-}
-
-/// 简化的控制器配置类
-class VideoControlsConfig {
-  final ControlMode mode;
-  final bool showTitle;
-  final bool showLockButton;
-  final bool showEpisodeControls;
-  final bool showSpeedControls;
-  final Duration autoHideDelay;
-  final Color themeColor;
-
-  const VideoControlsConfig({
-    this.mode = ControlMode.normal,
-    this.showTitle = true,
-    this.showLockButton = false,
-    this.showEpisodeControls = false,
-    this.showSpeedControls = true,
-    this.autoHideDelay = const Duration(seconds: 3),
-    this.themeColor = const Color(0xFF00D4FF),
-  });
-
-  VideoControlsConfig copyWith({
-    ControlMode? mode,
-    bool? showTitle,
-    bool? showLockButton,
-    bool? showEpisodeControls,
-    bool? showSpeedControls,
-    Duration? autoHideDelay,
-    Color? themeColor,
-  }) {
-    return VideoControlsConfig(
-      mode: mode ?? this.mode,
-      showTitle: showTitle ?? this.showTitle,
-      showLockButton: showLockButton ?? this.showLockButton,
-      showEpisodeControls: showEpisodeControls ?? this.showEpisodeControls,
-      showSpeedControls: showSpeedControls ?? this.showSpeedControls,
-      autoHideDelay: autoHideDelay ?? this.autoHideDelay,
-      themeColor: themeColor ?? this.themeColor,
-    );
-  }
-}
-
-/// 简化的状态管理器
-class VideoControlsState extends ChangeNotifier {
-  UIState _uiState = const UIState();
-  VideoControlsConfig _config = const VideoControlsConfig();
-
-  UIState get uiState => _uiState;
-  VideoControlsConfig get config => _config;
-
-  void updateUIState(UIState newState) {
-    _uiState = newState;
-    notifyListeners();
-  }
-
-  void updateConfig(VideoControlsConfig newConfig) {
-    _config = newConfig;
-    notifyListeners();
-  }
-
-  void toggleControlsVisibility() {
-    _uiState = _uiState.copyWith(controlsVisible: !_uiState.controlsVisible);
-    notifyListeners();
-  }
-
-  void toggleLock() {
-    _uiState = _uiState.copyWith(isLocked: !_uiState.isLocked);
-    notifyListeners();
-  }
-}
-

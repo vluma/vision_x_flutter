@@ -25,6 +25,12 @@ class ShortDramaPlayer extends StatelessWidget {
   Widget _buildShortDramaPlayer(BuildContext context) {
     return PopScope(
       canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          // 页面即将被销毁，确保视频播放器被正确清理
+          debugPrint('短剧播放器页面即将销毁，清理资源');
+        }
+      },
       child: Stack(
         children: [
           // 垂直滑动页面视图
@@ -110,6 +116,7 @@ class ShortDramaPlayer extends StatelessWidget {
               totalEpisodes: controller.totalEpisodes,
               onPreloadNextEpisode: controller.preloadNextEpisode,
               onFullScreenChanged: controller.setFullScreen, // 同步全屏状态
+              onSpeedChanged: controller.setPlaybackSpeed, // 同步倍速设置
             );
           },
         );
@@ -325,7 +332,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
                   ],
                   Expanded(
                     child: Text(
-                      '${widget.media.name ?? '未知剧集'} - ${(episodeTitle != null && episodeTitle.isNotEmpty) ? episodeTitle : '第${currentIndex + 1}集'}',
+                      '${widget.media.name ?? '未知剧集'} - ${(episodeTitle.isNotEmpty) ? episodeTitle : '第${currentIndex + 1}集'}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14.0,
@@ -526,26 +533,31 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   /// 构建倍速播放按钮行
   Widget _buildPlaybackSpeedRow() {
     final speeds = [0.75, 1.0, 1.25, 1.5, 2.0, 3.0];
-    return Container(
-      padding: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4.0,
-            offset: const Offset(0, 1),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.speed, size: 16.0, color: Colors.white70),
-          const SizedBox(width: 8.0),
-          ...speeds.map((speed) => _buildSpeedButton(speed)),
-        ],
-      ),
+    return ValueListenableBuilder<double>(
+      valueListenable: _controller.playbackSpeed,
+      builder: (context, currentSpeed, child) {
+        return Container(
+          padding: const EdgeInsets.all(4.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A2A2A),
+            borderRadius: BorderRadius.circular(12.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4.0,
+                offset: const Offset(0, 1),
+              )
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.speed, size: 16.0, color: Colors.white70),
+              const SizedBox(width: 8.0),
+              ...speeds.map((speed) => _buildSpeedButton(speed, currentSpeed)),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -591,7 +603,8 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
   }
 
   /// 构建倍速按钮
-  Widget _buildSpeedButton(double speed) {
+  Widget _buildSpeedButton(double speed, double currentSpeed) {
+    final isSelected = currentSpeed == speed;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -601,7 +614,7 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
           padding: const EdgeInsets.symmetric(vertical: 10.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6.0),
-            color: _controller.playbackSpeed.value == speed
+            color: isSelected
                 ? Colors.red.withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
@@ -609,11 +622,11 @@ class _ShortDramaInfoCardState extends State<_ShortDramaInfoCard> {
             '${speed}x',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: _controller.playbackSpeed.value == speed
+              color: isSelected
                   ? Colors.red
                   : Colors.white70,
               fontSize: 12.0,
-              fontWeight: _controller.playbackSpeed.value == speed
+              fontWeight: isSelected
                   ? FontWeight.bold
                   : FontWeight.normal,
             ),

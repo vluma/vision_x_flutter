@@ -6,10 +6,29 @@ import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_v
 import 'package:vision_x_flutter/features/video_player/video_player_controller_provider.dart';
 
 /// 传统模式播放器
-class TraditionalPlayer extends StatelessWidget {
+class TraditionalPlayer extends StatefulWidget {
   final VideoPlayerController controller;
 
   const TraditionalPlayer({super.key, required this.controller});
+
+  @override
+  State<TraditionalPlayer> createState() => _TraditionalPlayerState();
+}
+
+class _TraditionalPlayerState extends State<TraditionalPlayer> {
+  bool _isFullScreen = false;
+  bool _isLocked = false;
+  double _currentSpeed = 1.0;
+
+  // 处理全屏状态变化
+  void _handleFullScreenChanged(bool isFullScreen) {
+    setState(() {
+      _isFullScreen = isFullScreen;
+    });
+    // 同时更新 controller 的状态
+    widget.controller.setFullScreen(isFullScreen);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,25 +62,30 @@ class TraditionalPlayer extends StatelessWidget {
 
   Widget _buildCustomVideoPlayer(BuildContext context) {
     return ValueListenableBuilder<Episode>(
-      valueListenable: controller.currentEpisode,
+      valueListenable: widget.controller.currentEpisode,
       builder: (context, currentEpisode, child) {
         return CustomVideoPlayer(
           key: ValueKey(currentEpisode.url), // 添加key确保组件正确重建
-          media: controller.media,
+          media: widget.controller.media,
           episode: currentEpisode,
-          onProgressUpdate: controller.updateProgress,
-          onPlaybackCompleted: controller.playNextEpisode,
-          onVideoDurationReceived: controller.setVideoDuration,
-          startPosition: controller.currentProgress.value,
+          onProgressUpdate: widget.controller.updateProgress,
+          onPlaybackCompleted: widget.controller.playNextEpisode,
+          onVideoDurationReceived: widget.controller.setVideoDuration,
+          startPosition: widget.controller.currentProgress.value,
           isShortDramaMode: false,
           onShowEpisodeSelector: () => _showEpisodeSelector(context),
           onBackPressed: () => context.pop(),
-          onNextEpisode: controller.playNextEpisode,
-          onPrevEpisode: controller.playPrevEpisode,
-          onEpisodeChanged: controller.changeEpisode,
-          currentEpisodeIndex: controller.currentEpisodeIndex.value,
-          totalEpisodes: controller.totalEpisodes,
-          onPreloadNextEpisode: controller.preloadNextEpisode,
+          onNextEpisode: widget.controller.playNextEpisode,
+          onPrevEpisode: widget.controller.playPrevEpisode,
+          onEpisodeChanged: widget.controller.changeEpisode,
+          currentEpisodeIndex: widget.controller.currentEpisodeIndex.value,
+          totalEpisodes: widget.controller.totalEpisodes,
+          onPreloadNextEpisode: widget.controller.preloadNextEpisode,
+          onFullScreenChanged: _handleFullScreenChanged,
+          // 传递保存的状态
+          initialFullScreen: _isFullScreen,
+          initialLocked: _isLocked,
+          initialSpeed: _currentSpeed,
         );
       },
     );
@@ -73,7 +97,7 @@ class TraditionalPlayer extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.black87,
         title: Text(
-          '选集 (${controller.currentEpisodeIndex.value + 1}/${controller.totalEpisodes})',
+          '选集 (${widget.controller.currentEpisodeIndex.value + 1}/${widget.controller.totalEpisodes})',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18.0,
@@ -90,13 +114,13 @@ class TraditionalPlayer extends StatelessWidget {
               crossAxisSpacing: 8.0,
               mainAxisSpacing: 8.0,
             ),
-            itemCount: controller.totalEpisodes,
+            itemCount: widget.controller.totalEpisodes,
             itemBuilder: (context, index) {
-              final isSelected = index == controller.currentEpisodeIndex.value;
+              final isSelected = index == widget.controller.currentEpisodeIndex.value;
               return GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  controller.changeEpisode(index);
+                  widget.controller.changeEpisode(index);
                 },
                 child: Container(
                   decoration: BoxDecoration(

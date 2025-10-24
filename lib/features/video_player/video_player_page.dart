@@ -4,6 +4,7 @@ import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_v
 import 'package:vision_x_flutter/features/video_player/video_player_controller_provider.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/short_drama_player.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/traditional_player.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
 
 /// 视频播放页面 - 主入口
 class VideoPlayerPage extends StatefulWidget {
@@ -37,6 +38,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    // 清理预加载缓存，防止内存泄漏
+    VideoPlayerPerformance.clearPreloadCache();
     _controller.dispose();
     super.dispose();
   }

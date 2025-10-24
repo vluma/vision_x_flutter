@@ -168,3 +168,10 @@ class UIState {
     );
   }
 }
+
+/// 控制模式枚举
+enum ControlMode {
+  normal,
+  shortDrama,
+  fullScreen,
+}
