@@ -66,7 +66,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
         children: [
           // 侧边栏导航
           _buildSidebar(),
-          
+
           // 主内容区域
           Expanded(
             child: Column(
@@ -74,7 +74,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
               children: [
                 // 顶部筛选栏
                 _buildFilterBar(viewModel),
-                
+
                 // 内容区域
                 Expanded(
                   child: _buildBody(state),
@@ -121,9 +121,9 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // 导航项
           Expanded(
             child: ListView.builder(
@@ -131,11 +131,12 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
               itemBuilder: (context, index) {
                 final item = _navigationItems[index];
                 final isSelected = _selectedIndex == index;
-                
+
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 4.0),
                   child: Material(
-                    color: isSelected 
+                    color: isSelected
                         ? (Theme.of(context).brightness == Brightness.dark
                             ? AppColors.primaryButtonDark.withOpacity(0.3)
                             : AppColors.primaryButtonLight.withOpacity(0.3))
@@ -155,11 +156,13 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
                             Icon(
                               item['icon'],
                               size: 20,
-                              color: isSelected 
-                                  ? (Theme.of(context).brightness == Brightness.dark
+                              color: isSelected
+                                  ? (Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white
                                       : AppColors.primaryButtonDark)
-                                  : (Theme.of(context).brightness == Brightness.dark
+                                  : (Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white70
                                       : Colors.black87),
                             ),
@@ -168,12 +171,16 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
                               item['title'],
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                color: isSelected 
-                                    ? (Theme.of(context).brightness == Brightness.dark
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? (Theme.of(context).brightness ==
+                                            Brightness.dark
                                         ? Colors.white
                                         : AppColors.primaryButtonDark)
-                                    : (Theme.of(context).brightness == Brightness.dark
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
                                         ? Colors.white70
                                         : Colors.black87),
                               ),
@@ -215,29 +222,29 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
             ['全部', '电影', '电视剧', '动漫', '综艺'],
             (value) => viewModel.changeCategory(value!),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // 来源筛选
           _buildDropdown(
             '来源',
             viewModel.currentSource,
-            ['全部', '豆瓣', '自定义'],
+            ['全部', '热门', '豆瓣', '自定义'],
             (value) => viewModel.changeSource(value!),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // 排序筛选
           _buildDropdown(
             '排序',
             viewModel.currentSort,
-            ['最新', '评分', '热门'],
+            ['最新', '评分', '热门', 'recommend'],
             (value) => viewModel.changeSort(value!),
           ),
-          
+
           const Spacer(),
-          
+
           // 搜索框
           SizedBox(
             width: 250,
@@ -291,7 +298,9 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     return state.map(
       initial: (_) => const Center(child: CircularProgressIndicator()),
       loading: (_) => const Center(child: CircularProgressIndicator()),
-      loaded: (loadedState) => _buildContentGrid(loadedState.movies.map((movie) => _convertToDoubanMovie(movie)).toList()),
+      loaded: (loadedState) => _buildContentGrid(loadedState.movies
+          .map((movie) => _convertToDoubanMovie(movie))
+          .toList()),
       error: (errorState) => Center(
         child: Text('错误: ${errorState.message}'),
       ),
@@ -325,7 +334,9 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => ref.read(homeViewModelProvider.notifier).onItemTap(_convertToMovieEntity(movie), context),
+      onTap: () => ref
+          .read(homeViewModelProvider.notifier)
+          .onItemTap(_convertToMovieEntity(movie), context),
       child: CustomCard(
         padding: EdgeInsets.zero,
         child: Column(
@@ -334,12 +345,14 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
             // 电影海报
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12.0)),
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                  placeholder: (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
                   errorWidget: (context, url, error) => Container(
                     color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                     child: const Center(
@@ -352,7 +365,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
                 ),
               ),
             ),
-            
+
             // 电影信息
             Padding(
               padding: const EdgeInsets.all(12.0),
@@ -369,7 +382,8 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  if (movie.rate.isNotEmpty && double.tryParse(movie.rate) != null)
+                  if (movie.rate.isNotEmpty &&
+                      double.tryParse(movie.rate) != null)
                     Row(
                       children: [
                         const Icon(Icons.star, size: 16, color: Colors.amber),
@@ -391,7 +405,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
       ),
     );
   }
-  
+
   DoubanMovie _convertToDoubanMovie(MovieEntity movie) {
     return DoubanMovie(
       id: movie.id,
@@ -406,7 +420,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
       coverY: 0,
     );
   }
-  
+
   MovieEntity _convertToMovieEntity(DoubanMovie movie) {
     return MovieEntity(
       id: movie.id,
