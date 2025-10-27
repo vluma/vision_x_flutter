@@ -77,7 +77,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _hasPreloaded = false;
   bool _hasRecordedInitialHistory = false;
   bool _isFullScreen = false;
-  
+
   // UI状态管理
   UIState _uiState = const UIState();
   Timer? _hideControlsTimer;
@@ -99,10 +99,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    
+
     // 初始化 fvp 以支持 Windows 平台
     fvp.registerWith();
-    
+
     // 使用初始状态
     _isFullScreen = widget.initialFullScreen;
     _uiState = UIState(
@@ -110,12 +110,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       isLocked: widget.initialLocked,
       currentSpeed: widget.initialSpeed,
     );
-    
-    debugPrint('CustomVideoPlayer 初始化: 全屏=$_isFullScreen, 锁定=${_uiState.isLocked}, 速度=${_uiState.currentSpeed}');
-    
+
+    debugPrint(
+        'CustomVideoPlayer 初始化: 全屏=$_isFullScreen, 锁定=${_uiState.isLocked}, 速度=${_uiState.currentSpeed}');
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePlayer();
-      
     });
   }
 
@@ -124,7 +124,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     _hideControlsTimer?.cancel();
     _isDisposing = true;
     _progressTimer?.cancel();
-    
+
     // 立即停止视频播放，防止内存泄漏
     if (_isPlayerInitialized) {
       try {
@@ -134,7 +134,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         debugPrint('停止视频播放时出错: $e');
       }
     }
-    
+
     // 移除倍速监听器
     final provider = VideoPlayerControllerProvider.of(context);
     if (provider != null) {
@@ -143,7 +143,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
     // 更新最终进度
     _updateFinalProgress();
-    
+
     // 恢复屏幕方向，避免退出应用时卡在横屏
     if (!_isDesktopPlatform()) {
       SystemChrome.setPreferredOrientations([
@@ -153,7 +153,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         DeviceOrientation.landscapeRight,
       ]);
     }
-    
+
     // 恢复系统UI
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -237,14 +237,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       final wasFullScreen = _isFullScreen;
       final wasLocked = _uiState.isLocked;
 
-      debugPrint('更新视频源: 播放状态=$wasPlaying, 位置=${currentPosition.inSeconds}秒, 全屏状态=$wasFullScreen, 锁定状态=$wasLocked');
+      debugPrint(
+          '更新视频源: 播放状态=$wasPlaying, 位置=${currentPosition.inSeconds}秒, 全屏状态=$wasFullScreen, 锁定状态=$wasLocked');
 
       // 处理新的视频URL
       await _processVideoUrlWithHlsParser();
       final videoUrl = _processedVideoUrl ?? widget.episode.url;
 
       // 创建新的视频控制器
-      final newVideoPlayer = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      final newVideoPlayer =
+          VideoPlayerController.networkUrl(Uri.parse(videoUrl));
 
       await newVideoPlayer.initialize();
 
@@ -280,10 +282,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
               isFullScreen: true,
               isLocked: wasLocked,
             );
-            debugPrint('在setState中恢复全屏状态: _isFullScreen=$_isFullScreen, uiState.isFullScreen=${_uiState.isFullScreen}');
+            debugPrint(
+                '在setState中恢复全屏状态: _isFullScreen=$_isFullScreen, uiState.isFullScreen=${_uiState.isFullScreen}');
           }
         });
-        
+
         // 如果之前是全屏状态，重新应用全屏设置
         if (wasFullScreen) {
           debugPrint('恢复全屏状态: 重新应用全屏设置');
@@ -293,7 +296,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
               _enterFullScreen();
               // 通知外部全屏状态变化
               widget.onFullScreenChanged?.call(true);
-              debugPrint('全屏状态恢复完成: _isFullScreen=$_isFullScreen, uiState.isFullScreen=${_uiState.isFullScreen}');
+              debugPrint(
+                  '全屏状态恢复完成: _isFullScreen=$_isFullScreen, uiState.isFullScreen=${_uiState.isFullScreen}');
             }
           });
         }
@@ -337,7 +341,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
             final processedPlaylist =
                 await _hlsParserService.filterAdsAndRebuild(resolvedUrl);
             // 将处理后的播放列表保存到本地文件
-            final processedUrl = await _saveProcessedPlaylist(processedPlaylist);
+            final processedUrl =
+                await _saveProcessedPlaylist(processedPlaylist);
 
             // 设置处理后的URL
             _processedVideoUrl = processedUrl;
@@ -481,7 +486,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   void _checkPlaybackCompletion(Duration difference) {
-    if (difference.inMilliseconds <= 1000 && difference.inMilliseconds >= -1000) {
+    if (difference.inMilliseconds <= 1000 &&
+        difference.inMilliseconds >= -1000) {
       _hasCompleted = true;
       widget.onPlaybackCompleted?.call();
     }
@@ -588,7 +594,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       overlays: [],
     );
     debugPrint('系统UI已隐藏');
-    
+
     // 设置屏幕方向为横屏（仅移动端）
     if (!_isDesktopPlatform()) {
       SystemChrome.setPreferredOrientations([
@@ -597,7 +603,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       ]);
       debugPrint('屏幕方向已设置为横屏');
     }
-    
+
     // 在桌面端同时切换窗口全屏
     if (_isDesktopPlatform()) {
       WindowManager.setFullScreen(true);
@@ -612,7 +618,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
-    
+
     // 恢复屏幕方向（仅移动端）
     if (!_isDesktopPlatform()) {
       SystemChrome.setPreferredOrientations([
@@ -622,7 +628,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         DeviceOrientation.landscapeRight,
       ]);
     }
-    
+
     // 在桌面端同时退出窗口全屏
     if (_isDesktopPlatform()) {
       WindowManager.setFullScreen(false);
@@ -631,7 +637,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   /// 检查是否为桌面平台
   bool _isDesktopPlatform() {
-    return !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+    return !kIsWeb &&
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
   }
 
   // 切换锁定状态
@@ -663,7 +670,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   void _setupSpeedListener() {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
-    
+
     // 获取VideoPlayerControllerProvider
     final provider = VideoPlayerControllerProvider.of(context);
     if (provider != null) {
@@ -676,7 +683,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   void _onSpeedChanged() {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
-    
+
     final provider = VideoPlayerControllerProvider.of(context);
     if (provider != null && _isPlayerInitialized) {
       final speed = provider.controller.playbackSpeed.value;
@@ -955,10 +962,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                       final screenWidth = constraints.maxWidth;
                       final screenHeight = constraints.maxHeight;
                       final screenAspectRatio = screenWidth / screenHeight;
-                      
+
                       double displayWidth;
                       double displayHeight;
-                      
+
                       if (videoAspectRatio > screenAspectRatio) {
                         // 视频更宽，以屏幕宽度为准
                         displayWidth = screenWidth;
@@ -968,7 +975,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                         displayHeight = screenHeight;
                         displayWidth = screenHeight * videoAspectRatio;
                       }
-                      
+
                       return Center(
                         child: SizedBox(
                           width: displayWidth,
@@ -991,7 +998,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                   onSeek: (position) {
                     final duration = _videoPlayer.value.duration;
                     final seekPosition = Duration(
-                      milliseconds: (position * duration.inMilliseconds).round(),
+                      milliseconds:
+                          (position * duration.inMilliseconds).round(),
                     );
                     _videoPlayer.seekTo(seekPosition);
                   },
@@ -1041,5 +1049,4 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool get isFullScreen => _isFullScreen;
   bool get isInitialized => _isPlayerInitialized;
   VideoPlayerController get videoPlayerController => _videoPlayer;
-
 }

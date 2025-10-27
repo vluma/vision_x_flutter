@@ -35,7 +35,7 @@ class SettingsController extends ChangeNotifier {
   bool get adFilterByMetadata => _adFilterByMetadata;
   bool get adFilterByResolution => _adFilterByResolution;
   bool get showCustomApiForm => _showCustomApiForm;
-  bool get isHiddenSource => _isHiddenSource;
+  bool get isHiddenSource => _isHiddenSource; // 恢复原始名称
   int get selectedTheme => _selectedTheme;
 
   // 加载保存的设置
@@ -93,14 +93,24 @@ class SettingsController extends ChangeNotifier {
         // 这里应该只选择普通资源，但我们现在没有区分
         _selectedSources = ApiService.apiSites.keys.toSet();
       } else {
+        // 合并内置API和自定义API的key
         _selectedSources = ApiService.apiSites.keys.toSet();
+        for (var api in _customApis) {
+          if (api['key'] != null) {
+            _selectedSources.add(api['key']!);
+          }
+        }
       }
     } else {
       // 不允许全不选，至少保留一个源
       if (_selectedSources.length > 1) {
         _selectedSources.clear();
         // 默认选中第一个源
-        _selectedSources.add(ApiService.apiSites.keys.first);
+        if (ApiService.apiSites.isNotEmpty) {
+          _selectedSources.add(ApiService.apiSites.keys.first);
+        } else if (_customApis.isNotEmpty && _customApis.first['key'] != null) {
+          _selectedSources.add(_customApis.first['key']!);
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('至少需要选择一个数据源')),
@@ -169,7 +179,7 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateIsHiddenSource(bool value) {
+  void updateIsHiddenSource(bool value) { // 恢复原始方法名
     _isHiddenSource = value;
     notifyListeners();
   }
@@ -181,10 +191,14 @@ class SettingsController extends ChangeNotifier {
         'name': name,
         'api': url,
         'detail': detail,
-        'isHidden': _isHiddenSource.toString(),
+        'isHidden': _isHiddenSource.toString(), // 使用原始字段名
       };
 
       _customApis.add(newApi);
+      
+      // 自动选择新添加的API
+      _selectedSources.add(newApi['key']!);
+      
       _showCustomApiForm = false;
       _isHiddenSource = false;
 
@@ -198,7 +212,23 @@ class SettingsController extends ChangeNotifier {
   }
 
   void removeCustomApi(int index, BuildContext context) {
+    final removedApi = _customApis[index];
     _customApis.removeAt(index);
+    
+    // 如果删除的API被选中，需要从选中列表中移除
+    if (removedApi['key'] != null) {
+      _selectedSources.remove(removedApi['key']);
+      
+      // 确保至少有一个源被选中
+      if (_selectedSources.isEmpty) {
+        if (ApiService.apiSites.isNotEmpty) {
+          _selectedSources.add(ApiService.apiSites.keys.first);
+        } else if (_customApis.isNotEmpty && _customApis.first['key'] != null) {
+          _selectedSources.add(_customApis.first['key']!);
+        }
+      }
+    }
+
     notifyListeners();
 
     ScaffoldMessenger.of(context).showSnackBar(

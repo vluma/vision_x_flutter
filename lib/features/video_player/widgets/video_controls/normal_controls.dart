@@ -74,7 +74,9 @@ class _NormalControlsState extends State<NormalControls> {
             ),
 
           // 锁定控件 (仅在全屏模式下显示，锁定状态下始终显示解锁按钮)
-          if (widget.uiState.isFullScreen && widget.uiState.controlsVisible && !_isSpeedUpMode)
+          if (widget.uiState.isFullScreen &&
+              widget.uiState.controlsVisible &&
+              !_isSpeedUpMode)
             Positioned(
               top: 0,
               bottom: 0,
@@ -150,7 +152,7 @@ class _NormalControlsState extends State<NormalControls> {
   void _handleLongPressStart(LongPressStartDetails details) {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
     final tapPosition = details.localPosition.dx;
 
@@ -172,7 +174,7 @@ class _NormalControlsState extends State<NormalControls> {
   void _handleLongPressEnd(LongPressEndDetails details) {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
-    
+
     setState(() {
       _isSpeedUpMode = false;
     });
@@ -189,7 +191,9 @@ class _NormalControlsState extends State<NormalControls> {
     return Container(
       padding: EdgeInsets.only(
         top: VideoControlConstants.topPadding +
-            (widget.uiState.isFullScreen ? MediaQuery.of(context).padding.top : 0),
+            (widget.uiState.isFullScreen
+                ? MediaQuery.of(context).padding.top
+                : 0),
         left: VideoControlConstants.sidePadding,
         right: VideoControlConstants.sidePadding,
       ),
@@ -266,7 +270,8 @@ class _NormalControlsState extends State<NormalControls> {
               const Spacer(),
 
               // 添加倍速选择按钮（仅在全屏模式下显示）
-              if (isFullScreen && widget.onSpeedChanged != null) _buildSpeedButton(),
+              if (isFullScreen && widget.onSpeedChanged != null)
+                _buildSpeedButton(),
               // 添加剧集选择按钮（仅在全屏模式下显示，带滑出动画）
               if (isFullScreen && widget.onShowEpisodeSelector != null)
                 _buildEpisodeSelectorButton(),

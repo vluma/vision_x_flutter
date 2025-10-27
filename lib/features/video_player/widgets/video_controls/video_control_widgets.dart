@@ -166,10 +166,10 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
   @override
   Widget build(BuildContext context) {
     final baseHeight = widget.height;
-    final currentHeight = _isDragging && widget.expandedHeight != null 
-        ? widget.expandedHeight! 
+    final currentHeight = _isDragging && widget.expandedHeight != null
+        ? widget.expandedHeight!
         : baseHeight;
-    
+
     return Container(
       height: currentHeight,
       decoration: BoxDecoration(
@@ -186,7 +186,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
       ),
     );
   }
-  
+
   void _onDragStart() {
     if (widget.expandedHeight != null) {
       setState(() {
@@ -194,7 +194,7 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
       });
     }
   }
-  
+
   void _onDragEnd() {
     if (widget.expandedHeight != null) {
       setState(() {
@@ -218,10 +218,12 @@ class _CustomVideoProgressIndicator extends StatefulWidget {
   });
 
   @override
-  State<_CustomVideoProgressIndicator> createState() => _CustomVideoProgressIndicatorState();
+  State<_CustomVideoProgressIndicator> createState() =>
+      _CustomVideoProgressIndicatorState();
 }
 
-class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndicator> {
+class _CustomVideoProgressIndicatorState
+    extends State<_CustomVideoProgressIndicator> {
   _CustomVideoProgressIndicatorState() {
     listener = () {
       if (!mounted) return;
@@ -290,7 +292,7 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
     void seekToRelativePosition(Offset globalPosition) {
       // 检查当前Widget是否仍然挂载
       if (!mounted) return;
-      
+
       try {
         final box = context.findRenderObject() as RenderBox;
         final offset = box.globalToLocal(globalPosition);
@@ -363,8 +365,7 @@ class _ProgressBarPainter extends CustomPainter {
 
     // Draw buffered part
     final double? bufferedEnd = value.isInitialized && value.buffered.isNotEmpty
-        ? value.buffered.last.end.inMilliseconds /
-            value.duration.inMilliseconds
+        ? value.buffered.last.end.inMilliseconds / value.duration.inMilliseconds
         : 0.0;
     if (bufferedEnd != null && bufferedEnd > 0) {
       paint.color = colors.bufferedColor;
@@ -380,7 +381,9 @@ class _ProgressBarPainter extends CustomPainter {
       canvas.drawRect(
         Offset.zero &
             Size(
-              size.width * value.position.inMilliseconds / value.duration.inMilliseconds,
+              size.width *
+                  value.position.inMilliseconds /
+                  value.duration.inMilliseconds,
               size.height,
             ),
         paint,

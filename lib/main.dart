@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'core/utils/window_manager.dart';
-import 'dart:io' show Platform, HttpClient, SecurityContext, X509Certificate, HttpOverrides;
+import 'dart:io'
+    show Platform, HttpClient, SecurityContext, X509Certificate, HttpOverrides;
 import 'package:flutter/foundation.dart' show debugPrint;
 
 class MyHttpOverrides extends HttpOverrides {
@@ -19,12 +20,13 @@ class MyHttpOverrides extends HttpOverrides {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // 处理 HTTPS 证书验证问题
   HttpOverrides.global = MyHttpOverrides();
-  
+
   // 初始化窗口管理器（仅在桌面平台）
-  debugPrint('Main: Platform.isWindows=${Platform.isWindows}, Platform.isMacOS=${Platform.isMacOS}, Platform.isLinux=${Platform.isLinux}');
+  debugPrint(
+      'Main: Platform.isWindows=${Platform.isWindows}, Platform.isMacOS=${Platform.isMacOS}, Platform.isLinux=${Platform.isLinux}');
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     debugPrint('Main: Initializing WindowManager for desktop platform');
     try {
@@ -34,9 +36,10 @@ Future<void> main() async {
       debugPrint('Main: Failed to initialize WindowManager: $e');
     }
   } else {
-    debugPrint('Main: Not a desktop platform, skipping WindowManager initialization');
+    debugPrint(
+        'Main: Not a desktop platform, skipping WindowManager initialization');
   }
-  
+
   runApp(
     const ProviderScope(
       child: VisionXApp(),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
 import 'widgets/data_source_section.dart';
-import 'widgets/custom_api_section.dart';
 import 'widgets/theme_section.dart';
 import 'widgets/feature_switch_section.dart';
 import 'widgets/general_functions_section.dart';
@@ -59,8 +58,6 @@ class _SettingsContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DataSourceSection(),
-            SizedBox(height: AppSpacing.lg),
-            CustomApiSection(),
             SizedBox(height: AppSpacing.lg),
             ThemeSection(),
             SizedBox(height: AppSpacing.lg),
