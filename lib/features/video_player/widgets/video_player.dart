@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import 'package:fvp/fvp.dart' as fvp;
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/services/history_service.dart';
 import 'package:vision_x_flutter/services/hls_parser_service.dart';
@@ -99,6 +100,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   void initState() {
     super.initState();
     
+    // 初始化 fvp 以支持 Windows 平台
+    fvp.registerWith();
+    
     // 使用初始状态
     _isFullScreen = widget.initialFullScreen;
     _uiState = UIState(
@@ -112,18 +116,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePlayer();
       
-      // 如果初始状态是全屏，应用系统级全屏设置
-      if (widget.initialFullScreen) {
-        debugPrint('应用初始全屏设置');
-        _enterFullScreen();
-        // 通知外部全屏状态变化
-        widget.onFullScreenChanged?.call(true);
-      }
-      
-      // 监听VideoPlayerController的倍速变化
-      _setupSpeedListener();
     });
-    _startHideControlsTimer();
   }
 
   @override
