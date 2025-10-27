@@ -661,6 +661,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   /// 设置倍速监听器
   void _setupSpeedListener() {
+    // 检查Widget是否仍然挂载
+    if (!mounted) return;
+    
     // 获取VideoPlayerControllerProvider
     final provider = VideoPlayerControllerProvider.of(context);
     if (provider != null) {
@@ -671,6 +674,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   /// 倍速变化回调
   void _onSpeedChanged() {
+    // 检查Widget是否仍然挂载
+    if (!mounted) return;
+    
     final provider = VideoPlayerControllerProvider.of(context);
     if (provider != null && _isPlayerInitialized) {
       final speed = provider.controller.playbackSpeed.value;

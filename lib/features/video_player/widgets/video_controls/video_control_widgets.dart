@@ -236,7 +236,9 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
     super.initState();
     // 安全地添加监听器，检查控制器是否已被销毁
     try {
-      widget.controller.addListener(listener);
+      if (mounted) {
+        widget.controller.addListener(listener);
+      }
     } catch (e) {
       // 如果控制器已被销毁，忽略错误
       debugPrint('Controller already disposed: $e');
@@ -257,6 +259,18 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
 
   @override
   Widget build(BuildContext context) {
+    // 检查当前Widget是否仍然挂载
+    if (!mounted) {
+      // 如果未挂载，返回空的进度条
+      return Container(
+        height: 4.0,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(2.0),
+          color: Colors.grey.withValues(alpha: 0.3),
+        ),
+      );
+    }
+
     VideoPlayerController controller = widget.controller;
 
     // 检查控制器是否有效
@@ -274,6 +288,9 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
     }
 
     void seekToRelativePosition(Offset globalPosition) {
+      // 检查当前Widget是否仍然挂载
+      if (!mounted) return;
+      
       try {
         final box = context.findRenderObject() as RenderBox;
         final offset = box.globalToLocal(globalPosition);
@@ -293,16 +310,20 @@ class _CustomVideoProgressIndicatorState extends State<_CustomVideoProgressIndic
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onHorizontalDragStart: (DragStartDetails details) {
+        if (!mounted) return;
         widget.onDragStart();
         seekToRelativePosition(details.globalPosition);
       },
       onHorizontalDragUpdate: (DragUpdateDetails details) {
+        if (!mounted) return;
         seekToRelativePosition(details.globalPosition);
       },
       onHorizontalDragEnd: (DragEndDetails details) {
+        if (!mounted) return;
         widget.onDragEnd();
       },
       onTapDown: (TapDownDetails details) {
+        if (!mounted) return;
         seekToRelativePosition(details.globalPosition);
       },
       child: CustomPaint(

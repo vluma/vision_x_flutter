@@ -148,6 +148,9 @@ class _NormalControlsState extends State<NormalControls> {
   }
 
   void _handleLongPressStart(LongPressStartDetails details) {
+    // 检查Widget是否仍然挂载
+    if (!mounted) return;
+    
     final screenWidth = MediaQuery.of(context).size.width;
     final tapPosition = details.localPosition.dx;
 
@@ -167,6 +170,9 @@ class _NormalControlsState extends State<NormalControls> {
   }
 
   void _handleLongPressEnd(LongPressEndDetails details) {
+    // 检查Widget是否仍然挂载
+    if (!mounted) return;
+    
     setState(() {
       _isSpeedUpMode = false;
     });
@@ -174,6 +180,8 @@ class _NormalControlsState extends State<NormalControls> {
   }
 
   void _handleLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    // 检查Widget是否仍然挂载
+    if (!mounted) return;
     // 可以添加更多手势处理逻辑
   }
 
