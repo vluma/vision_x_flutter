@@ -13,14 +13,14 @@ class SettingsController extends ChangeNotifier {
   // 功能开关
   bool _yellowFilterEnabled = true;
   bool _adFilterEnabled = false;
-  
+
   // 广告过滤子选项
   bool _adFilterByMetadata = true;
   bool _adFilterByResolution = true;
 
   // 显示自定义API表单
   bool _showCustomApiForm = false;
-  
+
   // 自定义API是否为隐藏资源站
   bool _isHiddenSource = false;
 
@@ -54,7 +54,7 @@ class SettingsController extends ChangeNotifier {
     // 加载功能开关设置
     _yellowFilterEnabled = prefs.getBool('yellow_filter_enabled') ?? true;
     _adFilterEnabled = prefs.getBool('ad_filter_enabled') ?? false;
-    
+
     // 加载广告过滤子选项
     _adFilterByMetadata = prefs.getBool('ad_filter_by_metadata') ?? true;
     _adFilterByResolution = prefs.getBool('ad_filter_by_resolution') ?? true;
@@ -87,7 +87,8 @@ class SettingsController extends ChangeNotifier {
   }
 
   // 全选或全不选API
-  void selectAllAPIs(bool selectAll, BuildContext context, [bool normalOnly = false]) {
+  void selectAllAPIs(bool selectAll, BuildContext context,
+      [bool normalOnly = false]) {
     if (selectAll) {
       if (normalOnly) {
         // 这里应该只选择普通资源，但我们现在没有区分
@@ -136,8 +137,6 @@ class SettingsController extends ChangeNotifier {
     _saveSettingsWithoutNotification();
   }
 
-
-
   void updateAdFilterByMetadata(bool value) {
     _adFilterByMetadata = value;
     notifyListeners();
@@ -153,7 +152,7 @@ class SettingsController extends ChangeNotifier {
   // 主题设置
   void updateTheme(int value, BuildContext context) {
     _selectedTheme = value;
-    
+
     // 保存主题选择到 SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt('selected_theme', value);
@@ -162,7 +161,7 @@ class SettingsController extends ChangeNotifier {
     // 通知主应用更新主题
     final themeProvider = ThemeProvider.of(context);
     themeProvider.updateTheme(value);
-    
+
     notifyListeners();
   }
 
@@ -179,12 +178,14 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateIsHiddenSource(bool value) { // 恢复原始方法名
+  void updateIsHiddenSource(bool value) {
+    // 恢复原始方法名
     _isHiddenSource = value;
     notifyListeners();
   }
 
-  void addCustomApi(String name, String url, String detail, BuildContext context) {
+  void addCustomApi(
+      String name, String url, String detail, BuildContext context) {
     if (name.isNotEmpty && url.isNotEmpty) {
       final newApi = {
         'key': 'custom_${DateTime.now().millisecondsSinceEpoch}',
@@ -195,10 +196,10 @@ class SettingsController extends ChangeNotifier {
       };
 
       _customApis.add(newApi);
-      
+
       // 自动选择新添加的API
       _selectedSources.add(newApi['key']!);
-      
+
       _showCustomApiForm = false;
       _isHiddenSource = false;
 
@@ -214,11 +215,11 @@ class SettingsController extends ChangeNotifier {
   void removeCustomApi(int index, BuildContext context) {
     final removedApi = _customApis[index];
     _customApis.removeAt(index);
-    
+
     // 如果删除的API被选中，需要从选中列表中移除
     if (removedApi['key'] != null) {
       _selectedSources.remove(removedApi['key']);
-      
+
       // 确保至少有一个源被选中
       if (_selectedSources.isEmpty) {
         if (ApiService.apiSites.isNotEmpty) {
@@ -268,7 +269,7 @@ class SettingsController extends ChangeNotifier {
     // 保存功能开关设置
     await prefs.setBool('yellow_filter_enabled', _yellowFilterEnabled);
     await prefs.setBool('ad_filter_enabled', _adFilterEnabled);
-    
+
     // 保存广告过滤子选项
     await prefs.setBool('ad_filter_by_metadata', _adFilterByMetadata);
     await prefs.setBool('ad_filter_by_resolution', _adFilterByResolution);
@@ -276,5 +277,4 @@ class SettingsController extends ChangeNotifier {
     // 保存主题设置
     await prefs.setInt('selected_theme', _selectedTheme);
   }
-
 }

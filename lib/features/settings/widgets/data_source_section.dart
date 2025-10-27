@@ -28,7 +28,9 @@ class _DataSourceSectionState extends State<DataSourceSection> {
   /// 从剪贴板添加数据源
   Future<void> _addFromClipboard() async {
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
+    if (clipboardData != null &&
+        clipboardData.text != null &&
+        clipboardData.text!.isNotEmpty) {
       final url = clipboardData.text!.trim();
       if (url.startsWith('http')) {
         // 从URL中提取域名作为名称
@@ -66,7 +68,7 @@ class _DataSourceSectionState extends State<DataSourceSection> {
   /// 显示添加API的弹窗
   Future<void> _showAddApiDialog() async {
     final controller = Provider.of<SettingsController>(context, listen: false);
-    
+
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -79,135 +81,146 @@ class _DataSourceSectionState extends State<DataSourceSection> {
             ),
           ),
           content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: _apiNameController,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                      decoration: InputDecoration(
-                        labelText: 'API名称',
-                        labelStyle: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: isDark ? Colors.white12 : Colors.black12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
+              builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              width: 300,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _apiNameController,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      labelText: 'API名称',
+                      labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _apiUrlController,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                      decoration: InputDecoration(
-                        labelText: 'https://abc.com/api.php/provide/vod',
-                        labelStyle: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: isDark ? Colors.white12 : Colors.black12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _apiUrlController,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      labelText: 'https://abc.com/api.php/provide/vod',
+                      labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _apiDetailController,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                      decoration: InputDecoration(
-                        labelText: 'detail地址（可选）',
-                        labelStyle: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: isDark ? Colors.white12 : Colors.black12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _apiDetailController,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      labelText: 'detail地址（可选）',
+                      labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // 从剪贴板粘贴按钮
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-                          if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
-                            final url = clipboardData.text!.trim();
-                            if (url.startsWith('http')) {
-                              // 从URL中提取域名作为名称
-                              String name = '未知源';
-                              try {
-                                final uri = Uri.parse(url);
-                                name = uri.host;
-                              } catch (e) {
-                                // 如果解析失败，使用默认名称
-                                name = '自定义源';
-                              }
-                              
-                              setState(() {
-                                _apiNameController.text = name;
-                                _apiUrlController.text = url;
-                              });
-                            } else {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('剪贴板中的内容不是有效的URL')),
-                                );
-                              }
+                  ),
+                  const SizedBox(height: 12),
+                  // 从剪贴板粘贴按钮
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final clipboardData =
+                            await Clipboard.getData(Clipboard.kTextPlain);
+                        if (clipboardData != null &&
+                            clipboardData.text != null &&
+                            clipboardData.text!.isNotEmpty) {
+                          final url = clipboardData.text!.trim();
+                          if (url.startsWith('http')) {
+                            // 从URL中提取域名作为名称
+                            String name = '未知源';
+                            try {
+                              final uri = Uri.parse(url);
+                              name = uri.host;
+                            } catch (e) {
+                              // 如果解析失败，使用默认名称
+                              name = '自定义源';
                             }
+
+                            setState(() {
+                              _apiNameController.text = name;
+                              _apiUrlController.text = url;
+                            });
                           } else {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                                const SnackBar(
+                                    content: Text('剪贴板中的内容不是有效的URL')),
                               );
                             }
                           }
-                        },
-                        icon: const Icon(Icons.paste, size: 16),
-                        label: const Text('从剪贴板粘贴'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFEEEEEE),
-                          foregroundColor: isDark ? Colors.white : Colors.black87,
-                        ),
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.paste, size: 16),
+                      label: const Text('从剪贴板粘贴'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? const Color(0xFF2D2D2D)
+                            : const Color(0xFFEEEEEE),
+                        foregroundColor: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // 隐藏资源站复选框
-                    Row(
-                      children: [
-                        Checkbox(
-                          activeColor: Theme.of(context).primaryColor,
-                          value: controller.isHiddenSource,
-                          onChanged: (bool? value) {
-                            controller.updateIsHiddenSource(value ?? false);
-                            setState(() {}); // 更新弹窗内的状态
-                          },
+                  ),
+                  const SizedBox(height: 12),
+                  // 隐藏资源站复选框
+                  Row(
+                    children: [
+                      Checkbox(
+                        activeColor: Theme.of(context).primaryColor,
+                        value: controller.isHiddenSource,
+                        onChanged: (bool? value) {
+                          controller.updateIsHiddenSource(value ?? false);
+                          setState(() {}); // 更新弹窗内的状态
+                        },
+                      ),
+                      Text(
+                        '隐藏资源站',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: 12,
                         ),
-                        Text(
-                          '隐藏资源站',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }
-          ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
           actions: [
             TextButton(
               onPressed: () {
@@ -252,7 +265,8 @@ class _DataSourceSectionState extends State<DataSourceSection> {
   Widget build(BuildContext context) {
     final controller = Provider.of<SettingsController>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasApis = ApiService.apiSites.isNotEmpty || controller.customApis.isNotEmpty;
+    final hasApis =
+        ApiService.apiSites.isNotEmpty || controller.customApis.isNotEmpty;
 
     return Card(
       color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -308,13 +322,15 @@ class _DataSourceSectionState extends State<DataSourceSection> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // 如果没有数据源，显示提示信息
             if (!hasApis) ...[
               Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
+                  color: isDark
+                      ? const Color(0xFF2D2D2D)
+                      : const Color(0xFFFAFAFA),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -357,8 +373,9 @@ class _DataSourceSectionState extends State<DataSourceSection> {
               Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color:
-                      isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
+                  color: isDark
+                      ? const Color(0xFF2D2D2D)
+                      : const Color(0xFFFAFAFA),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: GridView.builder(
@@ -369,11 +386,13 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 4,
                   ),
-                  itemCount: ApiService.apiSites.length + controller.customApis.length,
+                  itemCount:
+                      ApiService.apiSites.length + controller.customApis.length,
                   itemBuilder: (context, index) {
                     // 显示内置API
                     if (index < ApiService.apiSites.length) {
-                      final entry = ApiService.apiSites.entries.elementAt(index);
+                      final entry =
+                          ApiService.apiSites.entries.elementAt(index);
                       return CheckboxListTile(
                         activeColor: Theme.of(context).primaryColor,
                         title: Text(
@@ -388,7 +407,8 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                           controller.toggleSource(entry.key, context);
                         },
                         dense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       );
                     } else {
                       // 显示自定义API
@@ -403,7 +423,8 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                               Text(
                                 api['name']!,
                                 style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
                                   fontSize: 12,
                                 ),
                               ),
@@ -429,12 +450,14 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                               ],
                             ],
                           ),
-                          value: controller.selectedSources.contains(api['key']),
+                          value:
+                              controller.selectedSources.contains(api['key']),
                           onChanged: (bool? value) {
                             controller.toggleSource(api['key']!, context);
                           },
                           dense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 8),
                         );
                       } else {
                         return const SizedBox.shrink();
@@ -451,15 +474,16 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                   Row(
                     children: [
                       ElevatedButton(
-                        onPressed: () => controller.selectAllAPIs(true, context),
+                        onPressed: () =>
+                            controller.selectAllAPIs(true, context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                         ),
                         child: const Text(
                           '全选',
@@ -468,17 +492,19 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => controller.selectAllAPIs(false, context),
+                        onPressed: () =>
+                            controller.selectAllAPIs(false, context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark
                               ? const Color(0xFF2D2D2D)
                               : const Color(0xFFEEEEEE),
-                          foregroundColor: isDark ? Colors.white70 : Colors.black54,
+                          foregroundColor:
+                              isDark ? Colors.white70 : Colors.black54,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                         ),
                         child: const Text(
                           '全不选',
@@ -495,8 +521,8 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                         ),
                         child: const Text(
                           '全选普通资源',
