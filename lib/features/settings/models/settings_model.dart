@@ -8,7 +8,7 @@ class SettingsModel {
   final Set<String> selectedSources;
 
   /// 自定义API源
-  final List<Map<String, String>> customApis;
+  final List<Map<String, dynamic>> customApis;
 
   /// 功能开关 - 黄色内容过滤
   final bool yellowFilterEnabled;
@@ -52,7 +52,7 @@ class SettingsModel {
   /// 复制并修改部分属性
   SettingsModel copyWith({
     Set<String>? selectedSources,
-    List<Map<String, String>>? customApis,
+    List<Map<String, dynamic>>? customApis,
     bool? yellowFilterEnabled,
     bool? adFilterEnabled,
     bool? adFilterByMetadata,

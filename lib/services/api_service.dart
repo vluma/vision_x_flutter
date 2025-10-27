@@ -244,16 +244,45 @@ class ApiService {
 
   /// 获取用户选中的数据源配置
   /// 从SharedPreferences读取用户选择的数据源
-  static Future<Map<String, Map<String, String>>> getSelectedApiSites() async {
+  static Future<Map<String, Map<String, dynamic>>> getSelectedApiSites() async {
     final prefs = await SharedPreferences.getInstance();
     final selectedSourcesString = prefs.getString('selected_sources') ?? '';
 
     if (selectedSourcesString.isNotEmpty) {
       final selectedSources = selectedSourcesString.split(',').toSet();
-      return Map.from(apiSites)
-        ..removeWhere((key, _) => !selectedSources.contains(key));
+      Map<String, Map<String, dynamic>> result = {};
+      
+      // 添加内置API
+      for (var entry in apiSites.entries) {
+        if (selectedSources.contains(entry.key)) {
+          result[entry.key] = Map<String, dynamic>.from(entry.value);
+        }
+      }
+      
+      // 添加自定义API
+      final customApisString = prefs.getString('custom_apis') ?? '';
+      if (customApisString.isNotEmpty) {
+        try {
+          final customApis = json.decode(customApisString) as List;
+          for (var api in customApis) {
+            if (api is Map<String, dynamic> && 
+                api['key'] != null && 
+                selectedSources.contains(api['key'])) {
+              result[api['key']!] = api;
+            }
+          }
+        } catch (e) {
+          // 忽略解析错误
+        }
+      }
+      
+      return result;
     } else {
-      return Map.from(apiSites); // 默认使用所有源
+      Map<String, Map<String, dynamic>> result = {};
+      for (var entry in apiSites.entries) {
+        result[entry.key] = Map<String, dynamic>.from(entry.value);
+      }
+      return result; // 默认使用所有源
     }
   }
 
@@ -265,7 +294,10 @@ class ApiService {
       final selectedSites = await getSelectedApiSites();
       final futures = selectedSites.entries
           .map((entry) => _searchByAPI(
-              entry.key, entry.value['api']!, entry.value['name']!, query))
+              entry.key, 
+              entry.value['api']?.toString() ?? '', 
+              entry.value['name']?.toString() ?? '', 
+              query))
           .toList();
 
       final results = await Future.wait(futures, eagerError: false);
@@ -290,7 +322,12 @@ class ApiService {
       var completedRequests = 0;
 
       selectedSites.forEach((key, value) {
-        _searchByAPI(key, value['api']!, value['name']!, query).then((results) {
+        _searchByAPI(
+          key, 
+          value['api']?.toString() ?? '', 
+          value['name']?.toString() ?? '', 
+          query
+        ).then((results) {
           onResultsReceived(results);
           if (++completedRequests == totalRequests) {
             onSearchCompleted();

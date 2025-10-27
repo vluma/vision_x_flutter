@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -16,53 +17,228 @@ class _DataSourceSectionState extends State<DataSourceSection> {
   final TextEditingController _apiNameController = TextEditingController();
   final TextEditingController _apiUrlController = TextEditingController();
   final TextEditingController _apiDetailController = TextEditingController();
+  final TextEditingController _batchInputController = TextEditingController();
 
   @override
   void dispose() {
     _apiNameController.dispose();
     _apiUrlController.dispose();
     _apiDetailController.dispose();
+    _batchInputController.dispose();
     super.dispose();
   }
 
-  /// 从剪贴板添加数据源
-  Future<void> _addFromClipboard() async {
-    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData != null &&
-        clipboardData.text != null &&
-        clipboardData.text!.isNotEmpty) {
-      final url = clipboardData.text!.trim();
-      if (url.startsWith('http')) {
-        // 从URL中提取域名作为名称
-        String name = '未知源';
-        try {
-          final uri = Uri.parse(url);
-          name = uri.host;
-        } catch (e) {
-          // 如果解析失败，使用默认名称
-          name = '自定义源';
-        }
 
-        // 填充表单
-        _apiNameController.text = name;
-        _apiUrlController.text = url;
+  /// 显示批量添加数据源的弹窗
+  Future<void> _showBatchAddDialog() async {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        // 显示表单弹窗
-        _showAddApiDialog();
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('剪贴板中的内容不是有效的URL')),
-          );
-        }
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('剪贴板为空或无有效内容')),
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            '批量添加数据源',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '支持以下格式：',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '1. 单个URL：\nhttp://caiji.dyttzyapi.com/api.php/provide/vod',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '2. 注释格式：\n// api: \'https://hsckzy.vip\', name: \'黄色仓库\', adult: true, detail: \'https://hsckzy.vip\'',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '3. 对象格式：\nwujin: { api: \'https://api.wujinapi.me/api.php/provide/vod\', name: \'无尽资源\' }',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _batchInputController,
+                    maxLines: null,
+                    expands: true,
+                    textAlignVertical: TextAlignVertical.top,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 12,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '请粘贴数据源配置...',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.white12 : Colors.black12,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.white12 : Colors.black12,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 使用Wrap避免按钮溢出
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+                        if (clipboardData != null && clipboardData.text != null) {
+                          print('剪贴板内容: ${clipboardData.text}');
+                          _batchInputController.text = clipboardData.text!;
+                        } else {
+                          print('剪贴板为空或无法访问');
+                        }
+                      },
+                      icon: const Icon(Icons.paste, size: 16),
+                      label: const Text('从剪贴板粘贴'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? const Color(0xFF2D2D2D)
+                            : const Color(0xFFEEEEEE),
+                        foregroundColor: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _batchInputController.clear();
+                      },
+                      child: Text(
+                        '取消',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_batchInputController.text.trim().isNotEmpty) {
+                          controller.addMultipleDataSources(
+                            _batchInputController.text,
+                            context,
+                          );
+                          Navigator.of(context).pop();
+                          _batchInputController.clear();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('添加'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
+      },
+    );
+  }
+
+  /// 智能添加数据源处理
+  Future<void> _handleSmartAdd(BuildContext context) async {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    
+    // 如果URL字段为空，尝试从剪贴板识别
+    if (_apiUrlController.text.trim().isEmpty) {
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
+        print('从剪贴板智能识别数据源: ${clipboardData.text}');
+        
+        // 尝试解析剪贴板内容
+        List<Map<String, dynamic>> parsedSources = controller.parseDataSourceString(clipboardData.text!);
+        
+        if (parsedSources.isNotEmpty) {
+          // 如果解析出多个数据源，使用批量添加
+          if (parsedSources.length > 1) {
+            Navigator.of(context).pop();
+            controller.addMultipleDataSources(clipboardData.text!, context);
+            _apiNameController.clear();
+            _apiUrlController.clear();
+            _apiDetailController.clear();
+            return;
+          } else if (parsedSources.length == 1) {
+            // 如果解析出单个数据源，填充表单
+            Map<String, dynamic> source = parsedSources.first;
+            _apiNameController.text = source['name']?.toString() ?? '';
+            _apiUrlController.text = source['api']?.toString() ?? '';
+            _apiDetailController.text = source['detail']?.toString() ?? '';
+            
+            // 显示填充后的表单，让用户确认
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('已从剪贴板识别数据源，请确认后点击添加')),
+            );
+            return;
+          }
+        }
       }
     }
+    
+    // 如果无法从剪贴板识别或用户手动输入，使用传统添加方式
+    if (_apiNameController.text.trim().isEmpty || _apiUrlController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请填写API名称和URL')),
+      );
+      return;
+    }
+    
+    controller.addCustomApi(
+      _apiNameController.text,
+      _apiUrlController.text,
+      _apiDetailController.text,
+      context,
+    );
+    Navigator.of(context).pop();
+    _apiNameController.clear();
+    _apiUrlController.clear();
+    _apiDetailController.clear();
   }
 
   /// 显示添加API的弹窗
@@ -83,7 +259,7 @@ class _DataSourceSectionState extends State<DataSourceSection> {
           content: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
             return SizedBox(
-              width: 300,
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -141,6 +317,37 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                         borderSide:
                             BorderSide(color: Theme.of(context).primaryColor),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // 智能添加提示
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.blue.withOpacity(0.1) : Colors.blue.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? Colors.blue.withOpacity(0.3) : Colors.blue.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 16,
+                          color: isDark ? Colors.blue[300] : Colors.blue[600],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '智能添加：如果URL为空，将自动从剪贴板识别数据源格式',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.blue[300] : Colors.blue[600],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -238,22 +445,14 @@ class _DataSourceSectionState extends State<DataSourceSection> {
             ),
             ElevatedButton(
               onPressed: () {
-                controller.addCustomApi(
-                  _apiNameController.text,
-                  _apiUrlController.text,
-                  _apiDetailController.text,
-                  context,
-                );
-                Navigator.of(context).pop();
-                _apiNameController.clear();
-                _apiUrlController.clear();
-                _apiDetailController.clear();
+                // 检查是否可以从剪贴板智能识别数据源
+                _handleSmartAdd(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('添加'),
+              child: const Text('智能添加'),
             ),
           ],
         );
@@ -279,8 +478,9 @@ class _DataSourceSectionState extends State<DataSourceSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // 标题和按钮布局 - 适配手机端
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '数据源设置',
@@ -290,34 +490,170 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    _apiNameController.clear();
-                    _apiUrlController.clear();
-                    _apiDetailController.clear();
-                    _showAddApiDialog();
-                  },
-                  icon: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '+',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                const SizedBox(height: 12),
+                // 使用Wrap避免按钮溢出
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    // 从剪贴板直接添加按钮
+                    IconButton(
+                      onPressed: () async {
+                        final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+                        if (clipboardData != null && clipboardData.text != null) {
+                          print('从剪贴板直接添加数据源: ${clipboardData.text}');
+                          controller.addMultipleDataSources(
+                            clipboardData.text!,
+                            context,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                          );
+                        }
+                      },
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.content_paste,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: '从剪贴板直接添加数据源',
                     ),
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  tooltip: '添加数据源',
+                    // 批量添加按钮
+                    IconButton(
+                      onPressed: () {
+                        _batchInputController.clear();
+                        _showBatchAddDialog();
+                      },
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.add_box,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: '批量添加数据源',
+                    ),
+                    // 单个添加按钮
+                    IconButton(
+                      onPressed: () {
+                        _apiNameController.clear();
+                        _apiUrlController.clear();
+                        _apiDetailController.clear();
+                        _showAddApiDialog();
+                      },
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '+',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: '添加单个数据源',
+                    ),
+                    // 导出配置按钮
+                    IconButton(
+                      onPressed: () async {
+                        final config = controller.exportDataSourceConfig();
+                        final configJson = json.encode(config);
+                        await Clipboard.setData(ClipboardData(text: configJson));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('数据源配置已复制到剪贴板')),
+                        );
+                      },
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.download,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: '导出数据源配置',
+                    ),
+                    // 导入配置按钮
+                    IconButton(
+                      onPressed: () async {
+                        final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+                        if (clipboardData != null && clipboardData.text != null) {
+                          try {
+                            final config = json.decode(clipboardData.text!);
+                            await controller.importDataSourceConfig(config, context);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('导入失败: $e')),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                          );
+                        }
+                      },
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.purple,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.upload,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: '导入数据源配置',
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -416,16 +752,20 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                       if (customIndex < controller.customApis.length) {
                         final api = controller.customApis[customIndex];
                         final isHidden = api['isHidden'] == 'true';
+                        final isAdult = api['adult'] == true;
                         return CheckboxListTile(
                           activeColor: Theme.of(context).primaryColor,
                           title: Row(
                             children: [
-                              Text(
-                                api['name']!,
-                                style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black87,
-                                  fontSize: 12,
+                              Expanded(
+                                child: Text(
+                                  api['name']!,
+                                  style: TextStyle(
+                                    color:
+                                        isDark ? Colors.white70 : Colors.black87,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               if (isHidden) ...[
@@ -441,6 +781,26 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                                   ),
                                   child: const Text(
                                     '隐藏',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (isAdult) ...[
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: const Text(
+                                    '成人',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 8,
@@ -468,10 +828,13 @@ class _DataSourceSectionState extends State<DataSourceSection> {
               ),
               const SizedBox(height: 12),
               // 全选按钮和已选API数量
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 全选按钮
-                  Row(
+                  // 按钮组 - 使用Wrap避免溢出
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ElevatedButton(
                         onPressed: () =>
@@ -483,14 +846,13 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                              horizontal: 12, vertical: 6),
                         ),
                         child: const Text(
                           '全选',
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () =>
                             controller.selectAllAPIs(false, context),
@@ -504,14 +866,13 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                              horizontal: 12, vertical: 6),
                         ),
                         child: const Text(
                           '全不选',
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () =>
                             controller.selectAllAPIs(true, context, true),
@@ -522,16 +883,16 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                              horizontal: 12, vertical: 6),
                         ),
                         child: const Text(
-                          '全选普通资源',
-                          style: TextStyle(fontSize: 12),
+                          '全选普通',
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 8),
                   // 已选API数量
                   Text(
                     '已选：${controller.selectedSources.length}',
