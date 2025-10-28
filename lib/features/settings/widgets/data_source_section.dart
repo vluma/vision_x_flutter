@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../services/api_service.dart';
 import '../settings_controller.dart';
+import '../data_source_parser.dart';
 
 class DataSourceSection extends StatefulWidget {
   const DataSourceSection({super.key});
@@ -1229,22 +1230,28 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                         if (clipboardData != null && clipboardData.text != null) {
                           print('从剪贴板添加数据源: ${clipboardData.text}');
                           
-                          // 尝试解析剪贴板内容
-                          List<Map<String, dynamic>> parsedSources = controller.parseDataSourceString(clipboardData.text!);
+                          // 使用新方法解析剪贴板内容
+                          List<Map<String, dynamic>> parsedSources = DataSourceParser.parseDataSourceAdvanced(clipboardData.text!);
                           
                           if (parsedSources.isNotEmpty) {
                             // 如果解析出数据源，使用批量添加
                             controller.addMultipleDataSources(clipboardData.text!, context);
                           } else {
-                            // 尝试作为JSON配置导入
-                            try {
-                              final config = json.decode(clipboardData.text!);
-                              await controller.importDataSourceConfig(config, context);
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('剪贴板内容格式不支持，请使用标准数据源格式或配置JSON')),
-                                );
+                            // 尝试使用旧方法解析
+                            List<Map<String, dynamic>> oldParsedSources = controller.parseDataSourceString(clipboardData.text!);
+                            if (oldParsedSources.isNotEmpty) {
+                              controller.addMultipleDataSources(clipboardData.text!, context);
+                            } else {
+                              // 尝试作为JSON配置导入
+                              try {
+                                final config = json.decode(clipboardData.text!);
+                                await controller.importDataSourceConfig(config, context);
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('剪贴板内容格式不支持，请使用标准数据源格式或配置JSON')),
+                                  );
+                                }
                               }
                             }
                           }
