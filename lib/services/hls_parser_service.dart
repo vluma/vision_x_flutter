@@ -15,6 +15,16 @@ class HlsParserService {
   bool _adFilterEnabled = true; // 全局广告过滤开关
   bool _adFilterByMetadata = true; // 合并码率和不连续标记检测
 
+  /// 释放资源
+  void dispose() {
+    try {
+      _dio.close();
+      debugPrint('HlsParserService 资源已释放');
+    } catch (e) {
+      debugPrint('释放HlsParserService资源时出错: $e');
+    }
+  }
+
   /// 加载广告过滤设置
   Future<void> _loadAdFilterSettings() async {
     final prefs = await SharedPreferences.getInstance();

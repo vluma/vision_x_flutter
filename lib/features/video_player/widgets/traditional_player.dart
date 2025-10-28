@@ -4,6 +4,7 @@ import 'package:vision_x_flutter/features/video_player/widgets/video_player.dart
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_controller_provider.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
 
 /// 传统模式播放器
 class TraditionalPlayer extends StatefulWidget {
@@ -19,6 +20,15 @@ class _TraditionalPlayerState extends State<TraditionalPlayer> {
   bool _isFullScreen = false;
   bool _isLocked = false;
   double _currentSpeed = 1.0;
+
+  @override
+  void dispose() {
+    debugPrint('TraditionalPlayer dispose() 开始');
+    // 清理预加载缓存
+    VideoPlayerPerformance.clearPreloadCache();
+    debugPrint('TraditionalPlayer dispose() 完成');
+    super.dispose();
+  }
 
   // 处理全屏状态变化
   void _handleFullScreenChanged(bool isFullScreen) {

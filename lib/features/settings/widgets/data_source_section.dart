@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:vision_x_flutter/core/themes/spacing.dart';
 import '../../../services/api_service.dart';
 import '../settings_controller.dart';
 
@@ -212,9 +211,11 @@ class _DataSourceSectionState extends State<DataSourceSection> {
             _apiDetailController.text = source['detail']?.toString() ?? '';
             
             // 显示填充后的表单，让用户确认
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('已从剪贴板识别数据源，请确认后点击添加')),
-            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('已从剪贴板识别数据源，请确认后点击添加')),
+              );
+            }
             return;
           }
         }
@@ -223,9 +224,11 @@ class _DataSourceSectionState extends State<DataSourceSection> {
     
     // 如果无法从剪贴板识别或用户手动输入，使用传统添加方式
     if (_apiNameController.text.trim().isEmpty || _apiUrlController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写API名称和URL')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请填写API名称和URL')),
+        );
+      }
       return;
     }
     
@@ -474,7 +477,7 @@ class _DataSourceSectionState extends State<DataSourceSection> {
       ),
       elevation: isDark ? 1 : 2,
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -507,9 +510,11 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                             context,
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('剪贴板为空或无有效内容')),
-                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                            );
+                          }
                         }
                       },
                       icon: Container(
@@ -592,9 +597,11 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                         final config = controller.exportDataSourceConfig();
                         final configJson = json.encode(config);
                         await Clipboard.setData(ClipboardData(text: configJson));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('数据源配置已复制到剪贴板')),
-                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('数据源配置已复制到剪贴板')),
+                          );
+                        }
                       },
                       icon: Container(
                         width: 32,
@@ -624,14 +631,18 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                             final config = json.decode(clipboardData.text!);
                             await controller.importDataSourceConfig(config, context);
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('导入失败: $e')),
-                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('导入失败: $e')),
+                              );
+                            }
                           }
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('剪贴板为空或无有效内容')),
-                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('剪贴板为空或无有效内容')),
+                            );
+                          }
                         }
                       },
                       icon: Container(

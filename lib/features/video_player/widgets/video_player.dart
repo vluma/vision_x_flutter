@@ -116,59 +116,94 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializePlayer();
+      _setupSpeedListener();
     });
   }
 
   @override
   void dispose() {
-    _hideControlsTimer?.cancel();
+    debugPrint('CustomVideoPlayer dispose() 开始');
+    
+    // 设置disposing标志，防止异步操作继续执行
     _isDisposing = true;
+    
+    // 取消所有定时器
+    _hideControlsTimer?.cancel();
+    _hideControlsTimer = null;
     _progressTimer?.cancel();
+    _progressTimer = null;
 
     // 立即停止视频播放，防止内存泄漏
     if (_isPlayerInitialized) {
       try {
         _videoPlayer.pause();
         _videoPlayer.removeListener(_videoPlayerListener);
+        debugPrint('视频播放器监听器已移除');
       } catch (e) {
         debugPrint('停止视频播放时出错: $e');
       }
     }
 
     // 移除倍速监听器
-    final provider = VideoPlayerControllerProvider.of(context);
-    if (provider != null) {
-      provider.controller.playbackSpeed.removeListener(_onSpeedChanged);
+    try {
+      final provider = VideoPlayerControllerProvider.of(context);
+      if (provider != null) {
+        provider.controller.playbackSpeed.removeListener(_onSpeedChanged);
+        debugPrint('倍速监听器已移除');
+      }
+    } catch (e) {
+      debugPrint('移除倍速监听器时出错: $e');
     }
 
     // 更新最终进度
-    _updateFinalProgress();
+    try {
+      _updateFinalProgress();
+    } catch (e) {
+      debugPrint('更新最终进度时出错: $e');
+    }
 
     // 恢复屏幕方向，避免退出应用时卡在横屏
-    if (!_isDesktopPlatform()) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
+    try {
+      if (!_isDesktopPlatform()) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      }
+    } catch (e) {
+      debugPrint('恢复屏幕方向时出错: $e');
     }
 
     // 恢复系统UI
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
+    try {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: SystemUiOverlay.values,
+      );
+    } catch (e) {
+      debugPrint('恢复系统UI时出错: $e');
+    }
 
     // 立即销毁控制器，防止内存泄漏
     if (_isPlayerInitialized) {
       try {
         _videoPlayer.dispose();
+        debugPrint('视频播放器控制器已销毁');
       } catch (e) {
         debugPrint('销毁视频播放器时出错: $e');
       }
     }
 
+    // 清理HLS解析器服务
+    try {
+      _hlsParserService.dispose();
+    } catch (e) {
+      debugPrint('清理HLS解析器服务时出错: $e');
+    }
+
+    debugPrint('CustomVideoPlayer dispose() 完成');
     super.dispose();
   }
 
@@ -231,6 +266,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     try {
       if (!mounted || _isDisposing) return;
 
+      debugPrint('开始更新视频源');
+
       // 保存当前状态
       final wasPlaying = _videoPlayer.value.isPlaying;
       final currentPosition = _videoPlayer.value.position;
@@ -255,11 +292,34 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         await newVideoPlayer.seekTo(Duration(seconds: widget.startPosition));
       }
 
-      // 安全地更新控制器
-      _videoPlayer.removeListener(_videoPlayerListener);
-      await _videoPlayer.dispose();
-      _videoPlayer = newVideoPlayer;
-      _videoPlayer.addListener(_videoPlayerListener);
+      // 安全地更新控制器 - 确保旧控制器完全释放
+      VideoPlayerController? oldController;
+      try {
+        _videoPlayer.removeListener(_videoPlayerListener);
+        oldController = _videoPlayer;
+        _videoPlayer = newVideoPlayer;
+        _videoPlayer.addListener(_videoPlayerListener);
+        debugPrint('视频控制器已更新');
+      } catch (e) {
+        debugPrint('更新视频控制器时出错: $e');
+        // 如果更新失败，确保新控制器也被释放
+        try {
+          newVideoPlayer.dispose();
+        } catch (disposeError) {
+          debugPrint('释放新控制器时出错: $disposeError');
+        }
+        rethrow;
+      }
+
+      // 异步释放旧控制器，避免阻塞UI
+      Future.microtask(() {
+        try {
+          oldController?.dispose();
+          debugPrint('旧视频控制器已释放');
+        } catch (e) {
+          debugPrint('释放旧控制器时出错: $e');
+        }
+      });
 
       // 恢复播放状态
       if (wasPlaying) {
@@ -272,7 +332,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       // 记录新的历史
       _recordInitialHistory();
 
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         setState(() {
           _isPlayerInitialized = true;
           // 恢复全屏状态
@@ -292,7 +352,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
           debugPrint('恢复全屏状态: 重新应用全屏设置');
           // 使用 Future.microtask 确保在下一个事件循环中执行
           Future.microtask(() {
-            if (mounted) {
+            if (mounted && !_isDisposing) {
               _enterFullScreen();
               // 通知外部全屏状态变化
               widget.onFullScreenChanged?.call(true);
@@ -494,7 +554,18 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   void _startProgressTracking() {
+    // 先取消之前的定时器
+    _progressTimer?.cancel();
+    _progressTimer = null;
+    
     _progressTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      // 检查组件是否仍然挂载且未在销毁过程中
+      if (!mounted || _isDisposing) {
+        timer.cancel();
+        _progressTimer = null;
+        return;
+      }
+      
       if (_shouldUpdateProgress()) {
         final position = _videoPlayer.value.position.inSeconds;
         _updateProgressAndHistory(position);
@@ -666,6 +737,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     }
   }
 
+
   /// 设置倍速监听器
   void _setupSpeedListener() {
     // 检查Widget是否仍然挂载
@@ -694,12 +766,21 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   /// 启动控制栏自动隐藏定时器
   void _startHideControlsTimer() {
     _hideControlsTimer?.cancel();
+    _hideControlsTimer = null;
+    
     _hideControlsTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted && _videoPlayer.value.isPlaying) {
+      // 检查组件是否仍然挂载且未在销毁过程中
+      if (!mounted || _isDisposing) {
+        _hideControlsTimer = null;
+        return;
+      }
+      
+      if (_videoPlayer.value.isPlaying) {
         setState(() {
           _uiState = _uiState.copyWith(controlsVisible: false);
         });
       }
+      _hideControlsTimer = null;
     });
   }
 

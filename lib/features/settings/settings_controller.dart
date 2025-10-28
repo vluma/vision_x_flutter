@@ -840,10 +840,12 @@ class SettingsController extends ChangeNotifier {
     // 保存主题设置
     await prefs.setInt('selected_theme', _selectedTheme);
 
-    // 显示保存提示
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('设置已自动保存')),
-    );
+    // 显示保存提示 - 检查context是否仍然有效
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('设置已自动保存')),
+      );
+    }
   }
 
   // 导出数据源配置

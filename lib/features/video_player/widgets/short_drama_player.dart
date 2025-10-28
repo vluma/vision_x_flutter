@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_player.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
 import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
+import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
 
 /// 短剧模式播放器 - 支持垂直滑动切换剧集的播放器组件
 class ShortDramaPlayer extends StatelessWidget {
@@ -29,6 +30,8 @@ class ShortDramaPlayer extends StatelessWidget {
         if (didPop) {
           // 页面即将被销毁，确保视频播放器被正确清理
           debugPrint('短剧播放器页面即将销毁，清理资源');
+          // 清理预加载缓存
+          VideoPlayerPerformance.clearPreloadCache();
         }
       },
       child: Stack(

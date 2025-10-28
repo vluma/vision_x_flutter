@@ -38,9 +38,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
-    // 清理预加载缓存，防止内存泄漏
-    VideoPlayerPerformance.clearPreloadCache();
-    _controller.dispose();
+    debugPrint('VideoPlayerPage dispose() 开始');
+    
+    try {
+      // 清理预加载缓存，防止内存泄漏
+      VideoPlayerPerformance.clearPreloadCache();
+      debugPrint('预加载缓存已清理');
+    } catch (e) {
+      debugPrint('清理预加载缓存时出错: $e');
+    }
+    
+    try {
+      _controller.dispose();
+      debugPrint('VideoPlayerController 已释放');
+    } catch (e) {
+      debugPrint('释放 VideoPlayerController 时出错: $e');
+    }
+    
+    debugPrint('VideoPlayerPage dispose() 完成');
     super.dispose();
   }
 

@@ -13,6 +13,12 @@ class VideoPlayerPerformance {
       return;
     }
 
+    // 限制预加载数量，防止内存泄漏
+    const maxPreloadCount = 3;
+    if (_preloadedEpisodes.length >= maxPreloadCount) {
+      clearOldestPreloadCache(maxPreloadCount - 1);
+    }
+
     try {
       // 创建视频播放控制器并初始化
       final controller = VideoPlayerController.networkUrl(Uri.parse(episodeUrl));
@@ -22,7 +28,7 @@ class VideoPlayerPerformance {
       _preloadedEpisodes[episodeUrl] = controller;
       
       if (kDebugMode) {
-        print('预加载剧集成功: $episodeUrl');
+        print('预加载剧集成功: $episodeUrl (当前缓存数量: ${_preloadedEpisodes.length})');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -40,12 +46,41 @@ class VideoPlayerPerformance {
   static void clearPreloadCache() {
     // 释放所有预加载的控制器
     for (final controller in _preloadedEpisodes.values) {
-      controller.dispose();
+      try {
+        controller.dispose();
+      } catch (e) {
+        if (kDebugMode) {
+          print('释放预加载控制器时出错: $e');
+        }
+      }
     }
     _preloadedEpisodes.clear();
     
     if (kDebugMode) {
-      print('清理预加载缓存');
+      print('清理预加载缓存完成，共清理 ${_preloadedEpisodes.length} 个控制器');
+    }
+  }
+
+  /// 清理指定数量的预加载缓存（用于内存管理）
+  static void clearOldestPreloadCache(int keepCount) {
+    if (_preloadedEpisodes.length <= keepCount) return;
+    
+    final entries = _preloadedEpisodes.entries.toList();
+    final toRemove = entries.length - keepCount;
+    
+    for (int i = 0; i < toRemove; i++) {
+      try {
+        entries[i].value.dispose();
+        _preloadedEpisodes.remove(entries[i].key);
+      } catch (e) {
+        if (kDebugMode) {
+          print('释放旧预加载控制器时出错: $e');
+        }
+      }
+    }
+    
+    if (kDebugMode) {
+      print('清理了 $toRemove 个旧预加载缓存，剩余 ${_preloadedEpisodes.length} 个');
     }
   }
 

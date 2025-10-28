@@ -156,14 +156,71 @@ class VideoPlayerController {
   }
 
   void dispose() {
-    _currentEpisode.dispose();
-    _currentProgress.dispose();
-    _currentEpisodeIndex.dispose();
-    _videoDuration.dispose();
-    _isShortDramaMode.dispose();
-    _isInfoCardExpanded.dispose(); // 添加释放资源
-    _playbackSpeed.dispose(); // 释放播放速度资源
-    _isFullScreen.dispose(); // 释放全屏状态资源
-    _pageController.dispose();
+    debugPrint('VideoPlayerController dispose() 开始');
+    
+    try {
+      _currentEpisode.dispose();
+      debugPrint('_currentEpisode 已释放');
+    } catch (e) {
+      debugPrint('释放 _currentEpisode 时出错: $e');
+    }
+    
+    try {
+      _currentProgress.dispose();
+      debugPrint('_currentProgress 已释放');
+    } catch (e) {
+      debugPrint('释放 _currentProgress 时出错: $e');
+    }
+    
+    try {
+      _currentEpisodeIndex.dispose();
+      debugPrint('_currentEpisodeIndex 已释放');
+    } catch (e) {
+      debugPrint('释放 _currentEpisodeIndex 时出错: $e');
+    }
+    
+    try {
+      _videoDuration.dispose();
+      debugPrint('_videoDuration 已释放');
+    } catch (e) {
+      debugPrint('释放 _videoDuration 时出错: $e');
+    }
+    
+    try {
+      _isShortDramaMode.dispose();
+      debugPrint('_isShortDramaMode 已释放');
+    } catch (e) {
+      debugPrint('释放 _isShortDramaMode 时出错: $e');
+    }
+    
+    try {
+      _isInfoCardExpanded.dispose();
+      debugPrint('_isInfoCardExpanded 已释放');
+    } catch (e) {
+      debugPrint('释放 _isInfoCardExpanded 时出错: $e');
+    }
+    
+    try {
+      _playbackSpeed.dispose();
+      debugPrint('_playbackSpeed 已释放');
+    } catch (e) {
+      debugPrint('释放 _playbackSpeed 时出错: $e');
+    }
+    
+    try {
+      _isFullScreen.dispose();
+      debugPrint('_isFullScreen 已释放');
+    } catch (e) {
+      debugPrint('释放 _isFullScreen 时出错: $e');
+    }
+    
+    try {
+      _pageController.dispose();
+      debugPrint('_pageController 已释放');
+    } catch (e) {
+      debugPrint('释放 _pageController 时出错: $e');
+    }
+    
+    debugPrint('VideoPlayerController dispose() 完成');
   }
 }
