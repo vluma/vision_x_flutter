@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_x_flutter/core/themes/theme_provider.dart';
 import '../../services/api_service.dart';
+import '../../shared/widgets/custom_toast.dart';
 
 class SettingsController extends ChangeNotifier {
   // 选中的播放源
@@ -10,6 +11,9 @@ class SettingsController extends ChangeNotifier {
 
   // 自定义API源
   final List<Map<String, dynamic>> _customApis = [];
+
+  // 批量删除选中的API
+  final Set<String> _batchDeleteSelected = <String>{};
 
   // 功能开关
   bool _yellowFilterEnabled = true;
@@ -31,6 +35,7 @@ class SettingsController extends ChangeNotifier {
   // Getters
   Set<String> get selectedSources => _selectedSources;
   List<Map<String, dynamic>> get customApis => _customApis;
+  Set<String> get batchDeleteSelected => _batchDeleteSelected;
   bool get yellowFilterEnabled => _yellowFilterEnabled;
   bool get adFilterEnabled => _adFilterEnabled;
   bool get adFilterByMetadata => _adFilterByMetadata;
@@ -101,8 +106,10 @@ class SettingsController extends ChangeNotifier {
         _selectedSources.remove(sourceKey);
       } else {
         // 如果只剩一个源，不允许取消选择
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('至少需要选择一个数据源')),
+        CustomToast.warning(
+          context,
+          message: '至少需要选择一个数据源',
+          position: ToastPosition.top,
         );
         return;
       }
@@ -119,10 +126,20 @@ class SettingsController extends ChangeNotifier {
       [bool normalOnly = false]) {
     if (selectAll) {
       if (normalOnly) {
-        // 这里应该只选择普通资源，但我们现在没有区分
-        _selectedSources = ApiService.apiSites.keys.toSet();
+        // 全选普通：只选择非隐藏资源站
+        _selectedSources.clear();
+        
+        // 选择所有内置API（内置API都是普通资源）
+        _selectedSources.addAll(ApiService.apiSites.keys);
+        
+        // 选择非隐藏的自定义API
+        for (var api in _customApis) {
+          if (api['key'] != null && api['isHidden'] != 'true') {
+            _selectedSources.add(api['key']!);
+          }
+        }
       } else {
-        // 合并内置API和自定义API的key
+        // 全选：选择所有资源
         _selectedSources = ApiService.apiSites.keys.toSet();
         for (var api in _customApis) {
           if (api['key'] != null) {
@@ -141,8 +158,10 @@ class SettingsController extends ChangeNotifier {
           _selectedSources.add(_customApis.first['key']!);
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('至少需要选择一个数据源')),
+        CustomToast.warning(
+          context,
+          message: '至少需要选择一个数据源',
+          position: ToastPosition.top,
         );
         return;
       }
@@ -226,8 +245,10 @@ class SettingsController extends ChangeNotifier {
 
       // 检查是否重复
       if (_isDuplicateSource(newApi)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('该数据源已存在，请勿重复添加')),
+        CustomToast.warning(
+          context,
+          message: '该数据源已存在，请勿重复添加',
+          position: ToastPosition.top,
         );
         return;
       }
@@ -244,8 +265,10 @@ class SettingsController extends ChangeNotifier {
       _saveSettingsWithoutNotification();
 
       // 显示成功提示
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('自定义API添加成功')),
+      CustomToast.success(
+        context,
+        message: '自定义API添加成功',
+        position: ToastPosition.top,
       );
     }
   }
@@ -256,9 +279,38 @@ class SettingsController extends ChangeNotifier {
   /// 2. 注释格式: // api: 'https://hsckzy.vip', name: '黄色仓库', adult: true, detail: 'https://hsckzy.vip'
   /// 3. 对象格式: wujin: { api: 'https://api.wujinapi.me/api.php/provide/vod', name: '无尽资源' }
   /// 4. 多行对象格式: 'mozhua': { 'api': '...', 'name': '...' }
+  /// 5. JSON配置格式: {"customApis": [...]}
   List<Map<String, dynamic>> parseDataSourceString(String input) {
     print('开始解析数据源字符串: $input');
     List<Map<String, dynamic>> results = [];
+    
+    // 首先尝试解析为JSON配置格式
+    try {
+      final jsonData = json.decode(input);
+      if (jsonData is Map<String, dynamic> && jsonData.containsKey('customApis')) {
+        print('识别为JSON配置格式');
+        List<dynamic> customApis = jsonData['customApis'];
+        for (var api in customApis) {
+          if (api is Map<String, dynamic>) {
+            Map<String, dynamic> newSource = Map<String, dynamic>.from(api);
+            // 确保有key字段
+            if (!newSource.containsKey('key') || newSource['key'] == null) {
+              newSource['key'] = 'custom_${DateTime.now().millisecondsSinceEpoch}_${results.length}';
+            }
+            // 确保有isHidden字段
+            if (!newSource.containsKey('isHidden')) {
+              newSource['isHidden'] = 'false';
+            }
+            results.add(newSource);
+            print('添加JSON配置数据源: $newSource');
+          }
+        }
+        print('JSON配置解析完成，共解析出 ${results.length} 个数据源');
+        return results;
+      }
+    } catch (e) {
+      print('不是JSON格式，继续尝试其他格式: $e');
+    }
     
     // 按行分割
     List<String> lines = input.split('\n');
@@ -656,8 +708,10 @@ class SettingsController extends ChangeNotifier {
       
       if (parsedSources.isEmpty) {
         print('未找到有效的数据源格式');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未找到有效的数据源格式')),
+        CustomToast.warning(
+          context,
+          message: '未找到有效的数据源格式',
+          position: ToastPosition.top,
         );
         return;
       }
@@ -696,14 +750,18 @@ class SettingsController extends ChangeNotifier {
         message += '，跳过 $duplicateCount 个重复数据源';
       }
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      CustomToast.success(
+        context,
+        message: message,
+        position: ToastPosition.top,
       );
     } catch (e, stackTrace) {
       print('批量添加数据源时发生错误: $e');
       print('错误堆栈: $stackTrace');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('添加数据源时发生错误: $e')),
+      CustomToast.error(
+        context,
+        message: '添加数据源时发生错误: $e',
+        position: ToastPosition.top,
       );
     }
   }
@@ -795,7 +853,70 @@ class SettingsController extends ChangeNotifier {
     return false;
   }
 
-  void removeCustomApi(int index, BuildContext context) {
+  // 检查更新时是否为重复数据源（排除自己）
+  bool _isDuplicateSourceForUpdate(Map<String, dynamic> updatedSource, int currentIndex) {
+    String newApiUrl = updatedSource['api']?.toString() ?? '';
+    if (newApiUrl.isEmpty) return false;
+    
+    // 检查内置API中是否有重复
+    for (var entry in ApiService.apiSites.entries) {
+      if (entry.value['api'] == newApiUrl) {
+        print('与内置API重复: ${entry.value['name']} (${newApiUrl})');
+        return true;
+      }
+    }
+    
+    // 检查自定义API中是否有重复（排除当前正在更新的API）
+    for (int i = 0; i < _customApis.length; i++) {
+      if (i == currentIndex) continue; // 跳过自己
+      
+      Map<String, dynamic> existingSource = _customApis[i];
+      String existingApiUrl = existingSource['api']?.toString() ?? '';
+      if (existingApiUrl == newApiUrl) {
+        print('与自定义API重复: ${existingSource['name']} (${newApiUrl})');
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  void updateCustomApi(int index, String name, String url, String detail, 
+      bool isHidden, bool isAdult, BuildContext context) {
+    if (name.isNotEmpty && url.isNotEmpty && index < _customApis.length) {
+      final updatedApi = {
+        'key': _customApis[index]['key'], // 保持原有的key
+        'name': name,
+        'api': url,
+        'detail': detail,
+        'adult': isAdult,
+        'isHidden': isHidden.toString(),
+      };
+
+      // 检查是否与其他API重复（排除自己）
+      if (_isDuplicateSourceForUpdate(updatedApi, index)) {
+        CustomToast.warning(
+          context,
+          message: '该数据源已存在，请勿重复添加',
+          position: ToastPosition.top,
+        );
+        return;
+      }
+
+      _customApis[index] = updatedApi;
+
+      notifyListeners();
+      _saveSettingsWithoutNotification();
+
+      CustomToast.success(
+        context,
+        message: '数据源已更新',
+        position: ToastPosition.top,
+      );
+    }
+  }
+
+  void removeCustomApi(int index, BuildContext context, [bool showMessage = true]) {
     final removedApi = _customApis[index];
     _customApis.removeAt(index);
 
@@ -816,9 +937,38 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
     _saveSettingsWithoutNotification();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('自定义API已删除')),
-    );
+    if (showMessage) {
+      CustomToast.success(
+        context,
+        message: '自定义API已删除',
+        position: ToastPosition.top,
+      );
+    }
+  }
+
+  // 批量删除相关方法
+  void toggleBatchDeleteSelection(String key) {
+    if (_batchDeleteSelected.contains(key)) {
+      _batchDeleteSelected.remove(key);
+    } else {
+      _batchDeleteSelected.add(key);
+    }
+    notifyListeners();
+  }
+
+  void clearBatchDeleteSelection() {
+    _batchDeleteSelected.clear();
+    notifyListeners();
+  }
+
+  void selectAllForBatchDelete() {
+    _batchDeleteSelected.clear();
+    for (var api in _customApis) {
+      if (api['key'] != null) {
+        _batchDeleteSelected.add(api['key']!);
+      }
+    }
+    notifyListeners();
   }
 
   // 保存设置
@@ -842,8 +992,10 @@ class SettingsController extends ChangeNotifier {
 
     // 显示保存提示 - 检查context是否仍然有效
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('设置已自动保存')),
+      CustomToast.info(
+        context,
+        message: '设置已自动保存',
+        position: ToastPosition.top,
       );
     }
   }
@@ -863,8 +1015,10 @@ class SettingsController extends ChangeNotifier {
     try {
       // 验证配置格式
       if (!config.containsKey('customApis') || !config.containsKey('selectedSources')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('配置文件格式无效')),
+        CustomToast.error(
+          context,
+          message: '配置文件格式无效',
+          position: ToastPosition.top,
         );
         return false;
       }
@@ -919,14 +1073,18 @@ class SettingsController extends ChangeNotifier {
       notifyListeners();
       _saveSettingsWithoutNotification();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('成功导入 ${importedApis.length} 个自定义数据源')),
+      CustomToast.success(
+        context,
+        message: '成功导入 ${importedApis.length} 个自定义数据源',
+        position: ToastPosition.top,
       );
 
       return true;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导入配置失败: $e')),
+      CustomToast.error(
+        context,
+        message: '导入配置失败: $e',
+        position: ToastPosition.top,
       );
       return false;
     }

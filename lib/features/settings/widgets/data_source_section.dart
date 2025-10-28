@@ -463,6 +463,729 @@ class _DataSourceSectionState extends State<DataSourceSection> {
     );
   }
 
+  /// 显示编辑API的弹窗
+  Future<void> _showEditApiDialog(Map<String, dynamic> api, int index) async {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // 创建编辑用的控制器
+    final editNameController = TextEditingController(text: api['name'] ?? '');
+    final editUrlController = TextEditingController(text: api['api'] ?? '');
+    final editDetailController = TextEditingController(text: api['detail'] ?? '');
+    bool isHidden = api['isHidden'] == 'true';
+    bool isAdult = api['adult'] == true;
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text(
+                '编辑数据源',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: editNameController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'API名称',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: editUrlController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'API地址',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: editDetailController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: '详情地址（可选）',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Checkbox(
+                          activeColor: Theme.of(context).primaryColor,
+                          value: isHidden,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              isHidden = value ?? false;
+                            });
+                          },
+                        ),
+                        Text(
+                          '隐藏资源站',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Checkbox(
+                          activeColor: Theme.of(context).primaryColor,
+                          value: isAdult,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              isAdult = value ?? false;
+                            });
+                          },
+                        ),
+                        Text(
+                          '成人内容',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    editNameController.dispose();
+                    editUrlController.dispose();
+                    editDetailController.dispose();
+                  },
+                  child: Text(
+                    '取消',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (editNameController.text.trim().isNotEmpty && 
+                        editUrlController.text.trim().isNotEmpty) {
+                      controller.updateCustomApi(
+                        index,
+                        editNameController.text.trim(),
+                        editUrlController.text.trim(),
+                        editDetailController.text.trim(),
+                        isHidden,
+                        isAdult,
+                        context,
+                      );
+                      Navigator.of(context).pop();
+                      editNameController.dispose();
+                      editUrlController.dispose();
+                      editDetailController.dispose();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('请填写API名称和地址')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('保存'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 构建内置API项目
+  Widget _buildBuiltInApiItem(MapEntry<String, Map<String, dynamic>> entry, bool isDark) {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isSelected = controller.selectedSources.contains(entry.key);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: isSelected 
+            ? (isDark ? Colors.blue.withOpacity(0.1) : Colors.blue.withOpacity(0.05))
+            : (isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.01)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected 
+              ? (isDark ? Colors.blue.withOpacity(0.3) : Colors.blue.withOpacity(0.2))
+              : (isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
+          width: 1,
+        ),
+      ),
+      child: CheckboxListTile(
+        activeColor: Theme.of(context).primaryColor,
+        title: Row(
+          children: [
+            Icon(
+              Icons.cloud,
+              size: 18,
+              color: isDark ? Colors.blue[300] : Colors.blue[600],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                entry.value['name']!,
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.green.withOpacity(0.2) : Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isDark ? Colors.green.withOpacity(0.3) : Colors.green.withOpacity(0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                '内置',
+                style: TextStyle(
+                  color: isDark ? Colors.green[300] : Colors.green[600],
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        value: isSelected,
+        onChanged: (bool? value) {
+          controller.toggleSource(entry.key, context);
+        },
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+    );
+  }
+
+  /// 构建自定义API项目
+  Widget _buildCustomApiItem(Map<String, dynamic> api, int index, bool isDark) {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isSelected = controller.selectedSources.contains(api['key']);
+    final isHidden = api['isHidden'] == 'true';
+    final isAdult = api['adult'] == true;
+    
+    return Dismissible(
+      key: Key('custom_api_${api['key']}'),
+      direction: DismissDirection.horizontal,
+      background: Container(
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.edit,
+              color: Colors.blue[600],
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '编辑',
+              style: TextStyle(
+                color: Colors.blue[600],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      secondaryBackground: Container(
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '删除',
+              style: TextStyle(
+                color: Colors.red[600],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.delete,
+              color: Colors.red[600],
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // 左滑编辑
+          _showEditApiDialog(api, index);
+          return false; // 不删除项目
+        } else {
+          // 右滑删除
+          return await _showDeleteConfirmDialog(api, index);
+        }
+      },
+      onDismissed: (direction) {
+        if (direction == DismissDirection.endToStart) {
+          // 确认删除
+          controller.removeCustomApi(index, context);
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? (isDark ? Colors.purple.withOpacity(0.1) : Colors.purple.withOpacity(0.05))
+              : (isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.01)),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected 
+                ? (isDark ? Colors.purple.withOpacity(0.3) : Colors.purple.withOpacity(0.2))
+                : (isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
+            width: 1,
+          ),
+        ),
+        child: CheckboxListTile(
+          activeColor: Theme.of(context).primaryColor,
+          title: Row(
+            children: [
+              Icon(
+                Icons.settings,
+                size: 18,
+                color: isDark ? Colors.purple[300] : Colors.purple[600],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  api['name']!,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (isHidden) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: const Text(
+                    '隐藏',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+              if (isAdult) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Colors.red.withOpacity(0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: const Text(
+                    '成人',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.purple.withOpacity(0.2) : Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isDark ? Colors.purple.withOpacity(0.3) : Colors.purple.withOpacity(0.2),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  '自定义',
+                  style: TextStyle(
+                    color: isDark ? Colors.purple[300] : Colors.purple[600],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          value: isSelected,
+          onChanged: (bool? value) {
+            controller.toggleSource(api['key']!, context);
+          },
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+      ),
+    );
+  }
+
+  /// 显示批量删除对话框
+  Future<void> _showBatchDeleteDialog() async {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final customApis = controller.customApis;
+    
+    if (customApis.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('没有自定义数据源可删除')),
+      );
+      return;
+    }
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text(
+                '批量删除数据源',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '选择要删除的自定义数据源：',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: customApis.length,
+                        itemBuilder: (context, index) {
+                          final api = customApis[index];
+                          final isHidden = api['isHidden'] == 'true';
+                          final isAdult = api['adult'] == true;
+                          
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1),
+                                width: 1,
+                              ),
+                            ),
+                            child: CheckboxListTile(
+                              activeColor: Theme.of(context).primaryColor,
+                              title: Row(
+                                children: [
+                                  Icon(
+                                    Icons.settings,
+                                    size: 16,
+                                    color: isDark ? Colors.purple[300] : Colors.purple[600],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      api['name']!,
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white70 : Colors.black87,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (isHidden) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        '隐藏',
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (isAdult) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        '成人',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              value: controller.batchDeleteSelected.contains(api['key']),
+                              onChanged: (bool? value) {
+                                controller.toggleBatchDeleteSelection(api['key']!);
+                                setState(() {});
+                              },
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            controller.clearBatchDeleteSelection();
+                            setState(() {});
+                          },
+                          child: Text(
+                            '全不选',
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            controller.selectAllForBatchDelete();
+                            setState(() {});
+                          },
+                          child: Text(
+                            '全选',
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    controller.clearBatchDeleteSelection();
+                  },
+                  child: Text(
+                    '取消',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: controller.batchDeleteSelected.isNotEmpty
+                      ? () {
+                          _confirmBatchDelete();
+                          Navigator.of(context).pop();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('删除 (${controller.batchDeleteSelected.length})'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 确认批量删除
+  void _confirmBatchDelete() {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final selectedKeys = controller.batchDeleteSelected.toList();
+    
+    if (selectedKeys.isEmpty) return;
+    
+    // 按索引倒序删除，避免索引错乱
+    final indicesToDelete = <int>[];
+    for (int i = 0; i < controller.customApis.length; i++) {
+      if (selectedKeys.contains(controller.customApis[i]['key'])) {
+        indicesToDelete.add(i);
+      }
+    }
+    
+    // 倒序删除
+    for (int i = indicesToDelete.length - 1; i >= 0; i--) {
+      controller.removeCustomApi(indicesToDelete[i], context, false);
+    }
+    
+    controller.clearBatchDeleteSelection();
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('已删除 ${selectedKeys.length} 个数据源')),
+    );
+  }
+
+  /// 显示删除确认对话框
+  Future<bool> _showDeleteConfirmDialog(Map<String, dynamic> api, int index) async {
+    final controller = Provider.of<SettingsController>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            '确认删除',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          content: Text(
+            '确定要删除数据源 "${api['name']}" 吗？',
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text(
+                '取消',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                controller.removeCustomApi(index, context);
+                Navigator.of(context).pop(true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('删除'),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<SettingsController>(context);
@@ -499,16 +1222,32 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    // 从剪贴板直接添加按钮
+                    // 从剪贴板添加数据源按钮
                     IconButton(
                       onPressed: () async {
                         final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
                         if (clipboardData != null && clipboardData.text != null) {
-                          print('从剪贴板直接添加数据源: ${clipboardData.text}');
-                          controller.addMultipleDataSources(
-                            clipboardData.text!,
-                            context,
-                          );
+                          print('从剪贴板添加数据源: ${clipboardData.text}');
+                          
+                          // 尝试解析剪贴板内容
+                          List<Map<String, dynamic>> parsedSources = controller.parseDataSourceString(clipboardData.text!);
+                          
+                          if (parsedSources.isNotEmpty) {
+                            // 如果解析出数据源，使用批量添加
+                            controller.addMultipleDataSources(clipboardData.text!, context);
+                          } else {
+                            // 尝试作为JSON配置导入
+                            try {
+                              final config = json.decode(clipboardData.text!);
+                              await controller.importDataSourceConfig(config, context);
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('剪贴板内容格式不支持，请使用标准数据源格式或配置JSON')),
+                                );
+                              }
+                            }
+                          }
                         } else {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -534,7 +1273,7 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      tooltip: '从剪贴板直接添加数据源',
+                      tooltip: '从剪贴板添加数据源（支持多种格式）',
                     ),
                     // 批量添加按钮
                     IconButton(
@@ -622,48 +1361,29 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                       constraints: const BoxConstraints(),
                       tooltip: '导出数据源配置',
                     ),
-                    // 导入配置按钮
-                    IconButton(
-                      onPressed: () async {
-                        final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-                        if (clipboardData != null && clipboardData.text != null) {
-                          try {
-                            final config = json.decode(clipboardData.text!);
-                            await controller.importDataSourceConfig(config, context);
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('导入失败: $e')),
-                              );
-                            }
-                          }
-                        } else {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('剪贴板为空或无有效内容')),
-                            );
-                          }
-                        }
-                      },
-                      icon: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.upload,
-                            color: Colors.white,
-                            size: 18,
+                    // 批量删除按钮
+                    if (controller.customApis.isNotEmpty)
+                      IconButton(
+                        onPressed: () => _showBatchDeleteDialog(),
+                        icon: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.delete_sweep,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: '批量删除自定义数据源',
                       ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: '导入数据源配置',
-                    ),
                   ],
                 ),
               ],
@@ -716,125 +1436,85 @@ class _DataSourceSectionState extends State<DataSourceSection> {
                 ),
               ),
             ] else ...[
-              // API复选框列表
+              // 数据源列表
               Container(
-                height: 200,
+                constraints: const BoxConstraints(
+                  minHeight: 200,
+                  maxHeight: 400,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? const Color(0xFF2D2D2D)
                       : const Color(0xFFFAFAFA),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(8),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 4.0,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 4,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                    width: 1,
                   ),
-                  itemCount:
-                      ApiService.apiSites.length + controller.customApis.length,
-                  itemBuilder: (context, index) {
-                    // 显示内置API
-                    if (index < ApiService.apiSites.length) {
-                      final entry =
-                          ApiService.apiSites.entries.elementAt(index);
-                      return CheckboxListTile(
-                        activeColor: Theme.of(context).primaryColor,
-                        title: Text(
-                          entry.value['name']!,
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            fontSize: 12,
-                          ),
+                ),
+                child: Column(
+                  children: [
+                    // 列表头部
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
                         ),
-                        value: controller.selectedSources.contains(entry.key),
-                        onChanged: (bool? value) {
-                          controller.toggleSource(entry.key, context);
-                        },
-                        dense: true,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      );
-                    } else {
-                      // 显示自定义API
-                      final customIndex = index - ApiService.apiSites.length;
-                      if (customIndex < controller.customApis.length) {
-                        final api = controller.customApis[customIndex];
-                        final isHidden = api['isHidden'] == 'true';
-                        final isAdult = api['adult'] == true;
-                        return CheckboxListTile(
-                          activeColor: Theme.of(context).primaryColor,
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  api['name']!,
-                                  style: TextStyle(
-                                    color:
-                                        isDark ? Colors.white70 : Colors.black87,
-                                    fontSize: 12,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (isHidden) ...[
-                                const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                  child: const Text(
-                                    '隐藏',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              if (isAdult) ...[
-                                const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                  child: const Text(
-                                    '成人',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.api,
+                            size: 18,
+                            color: isDark ? Colors.white70 : Colors.black54,
                           ),
-                          value:
-                              controller.selectedSources.contains(api['key']),
-                          onChanged: (bool? value) {
-                            controller.toggleSource(api['key']!, context);
-                          },
-                          dense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 8),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    }
-                  },
+                          const SizedBox(width: 8),
+                          Text(
+                            '数据源列表',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${controller.selectedSources.length} 已选',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 列表内容
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: ApiService.apiSites.length + controller.customApis.length,
+                        itemBuilder: (context, index) {
+                          // 显示内置API
+                          if (index < ApiService.apiSites.length) {
+                            final entry = ApiService.apiSites.entries.elementAt(index);
+                            return _buildBuiltInApiItem(entry, isDark);
+                          } else {
+                            // 显示自定义API
+                            final customIndex = index - ApiService.apiSites.length;
+                            if (customIndex < controller.customApis.length) {
+                              final api = controller.customApis[customIndex];
+                              return _buildCustomApiItem(api, customIndex, isDark);
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
