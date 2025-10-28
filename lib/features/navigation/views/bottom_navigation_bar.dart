@@ -9,6 +9,7 @@ import 'package:vision_x_flutter/features/navigation/models/nav_bar_constants.da
 import 'package:vision_x_flutter/features/navigation/providers/navigation_provider.dart';
 import 'package:vision_x_flutter/features/navigation/viewmodels/navigation_view_model.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
+import 'package:vision_x_flutter/core/themes/colors.dart';
 import 'widgets/navigation_container.dart';
 import 'widgets/search_container.dart';
 
@@ -87,36 +88,67 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
     final viewInsets = MediaQuery.of(context).viewInsets;
     final bottomPadding =
-        viewInsets.bottom +
-        NavBarConstants.bottomPaddingOffset;
+        viewInsets.bottom + NavBarConstants.bottomPaddingOffset;
 
     return Consumer<NavigationProvider>(
       builder: (context, provider, child) {
         final state = provider.state;
-        
-        return Container(
-          padding: EdgeInsets.only(
-            bottom: bottomPadding,
-            left: NavBarConstants.horizontalPadding,
-            right: NavBarConstants.horizontalPadding,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              NavigationContainer(
-                maxWidth: maxColumnWidth,
-                isSearchExpanded: state.isSearchExpanded,
-                viewModel: _viewModel,
-                currentTab: state.currentTab,
+
+        return Stack(
+          children: [
+            // 渐变背景 - 从底部到屏幕一半高度
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 52,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkBackground.withValues(alpha: 1)
+                          : AppColors.lightBackground.withValues(alpha: 1),
+                      Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkBackground.withValues(alpha: 0.5)
+                          : AppColors.lightBackground.withValues(alpha: 0.5),
+                      Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkBackground.withValues(alpha: 0.0)
+                          : AppColors.lightBackground.withValues(alpha: 0.0),
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
               ),
-              SearchContainer(
-                maxWidth: maxColumnWidth,
-                isSearchExpanded: state.isSearchExpanded,
-                viewModel: _viewModel,
-                searchController: _searchController,
+            ),
+            // 底部导航栏内容
+            Container(
+              padding: EdgeInsets.only(
+                bottom: bottomPadding,
+                left: NavBarConstants.horizontalPadding,
+                right: NavBarConstants.horizontalPadding,
               ),
-            ],
-          ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  NavigationContainer(
+                    maxWidth: maxColumnWidth,
+                    isSearchExpanded: state.isSearchExpanded,
+                    viewModel: _viewModel,
+                    currentTab: state.currentTab,
+                  ),
+                  SearchContainer(
+                    maxWidth: maxColumnWidth,
+                    isSearchExpanded: state.isSearchExpanded,
+                    viewModel: _viewModel,
+                    searchController: _searchController,
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
