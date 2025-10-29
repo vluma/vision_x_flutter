@@ -96,6 +96,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   bool _isImageLoading = true;
   bool _imageLoadError = false;
 
+  // 保存VideoPlayerControllerProvider的引用，用于安全地在dispose中访问
+  VideoPlayerControllerProvider? _videoPlayerControllerProvider;
+  
+  // 防止重复初始化的标志
+  bool _isInitializing = false;
+
   @override
   void initState() {
     super.initState();
@@ -121,11 +127,19 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 安全地保存VideoPlayerControllerProvider的引用
+    _videoPlayerControllerProvider = VideoPlayerControllerProvider.of(context);
+  }
+
+  @override
   void dispose() {
     debugPrint('CustomVideoPlayer dispose() 开始');
     
     // 设置disposing标志，防止异步操作继续执行
     _isDisposing = true;
+    _isInitializing = false;
     
     // 取消所有定时器
     _hideControlsTimer?.cancel();
@@ -146,9 +160,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
     // 移除倍速监听器
     try {
-      final provider = VideoPlayerControllerProvider.of(context);
-      if (provider != null) {
-        provider.controller.playbackSpeed.removeListener(_onSpeedChanged);
+      if (_videoPlayerControllerProvider != null) {
+        _videoPlayerControllerProvider!.controller.playbackSpeed.removeListener(_onSpeedChanged);
         debugPrint('倍速监听器已移除');
       }
     } catch (e) {
@@ -218,21 +231,34 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   Future<void> _initializePlayer() async {
     try {
-      if (!mounted || _isDisposing) return;
+      if (!mounted || _isDisposing || _isInitializing) return;
+      
+      _isInitializing = true;
+      debugPrint('开始初始化视频播放器');
 
       // 处理视频URL（检测和过滤广告）
       await _processVideoUrlWithHlsParser();
 
       // 使用处理后的URL或原始URL
       final videoUrl = _processedVideoUrl ?? widget.episode.url;
+      debugPrint('视频URL: $videoUrl');
 
       _videoPlayer = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
 
-      await _videoPlayer.initialize();
+      // 添加超时机制，防止初始化卡住
+      await _videoPlayer.initialize().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('视频播放器初始化超时');
+        },
+      );
+
+      debugPrint('视频播放器初始化完成');
 
       // 如果指定了起始位置，则跳转到该位置
       if (widget.startPosition > 0) {
         await _videoPlayer.seekTo(Duration(seconds: widget.startPosition));
+        debugPrint('已跳转到起始位置: ${widget.startPosition}秒');
       }
 
       // 报告视频总时长
@@ -247,7 +273,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       // 启动进度更新定时器
       _startProgressTracking();
 
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         setState(() {
           _isPlayerInitialized = true;
         });
@@ -255,9 +281,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         _videoPlayer.play();
         // 启动控制栏自动隐藏定时器
         _startHideControlsTimer();
+        debugPrint('视频播放器设置完成，开始播放');
       }
     } catch (e) {
+      debugPrint('视频播放器初始化失败: $e');
       _handleInitializationError(e.toString());
+    } finally {
+      _isInitializing = false;
     }
   }
 
@@ -285,7 +315,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       final newVideoPlayer =
           VideoPlayerController.networkUrl(Uri.parse(videoUrl));
 
-      await newVideoPlayer.initialize();
+      // 添加超时机制，防止初始化卡住
+      await newVideoPlayer.initialize().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('视频播放器初始化超时');
+        },
+      );
 
       // 如果指定了起始位置，则跳转到该位置
       if (widget.startPosition > 0) {
@@ -743,11 +779,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
 
-    // 获取VideoPlayerControllerProvider
-    final provider = VideoPlayerControllerProvider.of(context);
-    if (provider != null) {
+    // 使用保存的VideoPlayerControllerProvider引用
+    if (_videoPlayerControllerProvider != null) {
       // 监听倍速变化
-      provider.controller.playbackSpeed.addListener(_onSpeedChanged);
+      _videoPlayerControllerProvider!.controller.playbackSpeed.addListener(_onSpeedChanged);
     }
   }
 
@@ -756,9 +791,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     // 检查Widget是否仍然挂载
     if (!mounted) return;
 
-    final provider = VideoPlayerControllerProvider.of(context);
-    if (provider != null && _isPlayerInitialized) {
-      final speed = provider.controller.playbackSpeed.value;
+    if (_videoPlayerControllerProvider != null && _isPlayerInitialized) {
+      final speed = _videoPlayerControllerProvider!.controller.playbackSpeed.value;
       _setPlaybackSpeed(speed);
     }
   }

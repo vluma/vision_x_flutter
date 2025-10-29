@@ -35,7 +35,13 @@ class HlsParserService {
   /// 解析主播放列表 - 使用 Dio 获取内容
   Future<HlsMasterPlaylist> parseMasterPlaylist(String url) async {
     try {
-      final response = await _dio.get(url);
+      final response = await _dio.get(
+        url,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
+        ),
+      );
       final data = response.data as String;
       debugPrint('主播放列表解析元数据: $data');
       return _parseMasterPlaylistContent(data, url);
@@ -50,8 +56,8 @@ class HlsParserService {
       final response = await _dio.get(
         url,
         options: Options(
-          receiveTimeout: const Duration(seconds: 10),
-          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
         ),
       );
       final data = response.data as String;
@@ -69,7 +75,13 @@ class HlsParserService {
   /// 获取 HLS 文件内容（通用方法）
   Future<String> fetchHlsContent(String url) async {
     try {
-      final response = await _dio.get(url);
+      final response = await _dio.get(
+        url,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
+        ),
+      );
       return response.data as String;
     } catch (e) {
       throw HlsParserException('获取 HLS 内容失败: $e');
