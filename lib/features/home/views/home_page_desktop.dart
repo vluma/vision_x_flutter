@@ -4,6 +4,7 @@ import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
+import 'package:vision_x_flutter/features/home/views/widgets/loading_skeleton.dart';
 import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
 import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,32 +20,6 @@ class HomePageDesktop extends ConsumerStatefulWidget {
 }
 
 class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
-  // 侧边栏导航项
-  final List<Map<String, dynamic>> _navigationItems = [
-    {
-      'title': '立即观看',
-      'icon': Icons.play_circle_filled,
-    },
-    {
-      'title': '电影',
-      'icon': Icons.movie,
-    },
-    {
-      'title': '电视剧',
-      'icon': Icons.tv,
-    },
-    {
-      'title': '儿童',
-      'icon': Icons.child_care,
-    },
-    {
-      'title': '我的媒体库',
-      'icon': Icons.video_library,
-    },
-  ];
-
-  int _selectedIndex = 0;
-
   @override
   void initState() {
     super.initState();
@@ -62,137 +37,15 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     final viewModel = ref.read(homeViewModelProvider.notifier);
 
     return Scaffold(
-      body: Row(
-        children: [
-          // 侧边栏导航
-          _buildSidebar(),
-
-          // 主内容区域
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 顶部筛选栏
-                _buildFilterBar(viewModel),
-
-                // 内容区域
-                Expanded(
-                  child: _buildBody(state),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 构建侧边栏导航
-  Widget _buildSidebar() {
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E1E1E)
-            : const Color(0xFFf5f5f7),
-        border: Border(
-          right: BorderSide(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.darkBorder
-                : AppColors.lightBorder,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Column(
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo区域
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Vision X',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-              ),
-            ),
-          ),
+          // 顶部筛选栏
+          _buildFilterBar(viewModel),
 
-          const SizedBox(height: 20),
-
-          // 导航项
+          // 内容区域
           Expanded(
-            child: ListView.builder(
-              itemCount: _navigationItems.length,
-              itemBuilder: (context, index) {
-                final item = _navigationItems[index];
-                final isSelected = _selectedIndex == index;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 4.0),
-                  child: Material(
-                    color: isSelected
-                        ? (Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.primaryButtonDark.withOpacity(0.3)
-                            : AppColors.primaryButtonLight.withOpacity(0.3))
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              item['icon'],
-                              size: 20,
-                              color: isSelected
-                                  ? (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : AppColors.primaryButtonDark)
-                                  : (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white70
-                                      : Colors.black87),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              item['title'],
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                                color: isSelected
-                                    ? (Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : AppColors.primaryButtonDark)
-                                    : (Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white70
-                                        : Colors.black87),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+            child: _buildBody(state, viewModel),
           ),
         ],
       ),
@@ -213,130 +66,208 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 分类筛选
-          _buildDropdown(
-            '分类',
-            viewModel.currentCategory,
-            ['全部', '电影', '电视剧', '动漫', '综艺'],
-            (value) => viewModel.changeCategory(value!),
-          ),
+          Row(
+            children: [
+              // 分类筛选
+              _buildCategorySelector(viewModel),
 
-          const SizedBox(width: 16),
+              const SizedBox(width: 16),
 
-          // 来源筛选
-          _buildDropdown(
-            '来源',
-            viewModel.currentSource,
-            ['全部', '热门', '豆瓣', '自定义'],
-            (value) => viewModel.changeSource(value!),
-          ),
+              // 排序筛选
+              _buildSortSelector(viewModel),
 
-          const SizedBox(width: 16),
+              const Spacer(),
 
-          // 排序筛选
-          _buildDropdown(
-            '排序',
-            viewModel.currentSort,
-            ['最新', '评分', '热门', 'recommend'],
-            (value) => viewModel.changeSort(value!),
-          ),
-
-          const Spacer(),
-
-          // 搜索框
-          SizedBox(
-            width: 250,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: '搜索视频...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+              // 搜索框
+              SizedBox(
+                width: 250,
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: '搜索视频...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12.0),
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 16),
+          // 来源标签
+          _buildSourceTags(viewModel),
         ],
       ),
     );
   }
 
-  /// 构建下拉筛选组件
-  Widget _buildDropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
+  /// 构建分类选择器
+  Widget _buildCategorySelector(dynamic viewModel) {
+    final categories = ['电影', '电视剧'];
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '$label: ',
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        DropdownButton<String>(
-          value: value,
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
-          onChanged: onChanged,
-          underline: Container(),
+        const Text('分类: ', style: TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(width: 8),
+        ...categories.map((category) {
+          final bool isSelected = viewModel.currentCategory == category;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(category),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  viewModel.changeCategory(category);
+                }
+              },
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  /// 构建排序选择器
+  Widget _buildSortSelector(dynamic viewModel) {
+    final sortOptions = [
+      {'value': 'recommend', 'label': '推荐'},
+      {'value': 'time', 'label': '时间'},
+      {'value': 'rank', 'label': '评分'},
+    ];
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('排序: ', style: TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(width: 8),
+        PopupMenuButton<String>(
+          initialValue: viewModel.currentSort,
+          onSelected: (value) => viewModel.changeSort(value),
+          itemBuilder: (BuildContext context) {
+            return sortOptions.map((option) {
+              return PopupMenuItem<String>(
+                value: option['value']!,
+                child: Text(option['label']!),
+              );
+            }).toList();
+          },
+          child: Row(
+            children: [
+              Text(sortOptions
+                  .firstWhere((element) =>
+                      element['value'] == viewModel.currentSort)['label']!),
+              const Icon(Icons.arrow_drop_down, size: 16),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  /// 构建来源标签
+  Widget _buildSourceTags(dynamic viewModel) {
+    final sources = viewModel.currentCategory == '电影'
+        ? ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美']
+        : ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧'];
+
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: sources.map((source) {
+          final bool isSelected = viewModel.currentSource == source;
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: FilterChip(
+              label: Text(source),
+              selected: isSelected,
+              onSelected: (selected) => viewModel.changeSource(source),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   /// 构建内容区域
-  Widget _buildBody(HomeState state) {
+  Widget _buildBody(HomeState state, dynamic viewModel) {
     return state.map(
-      initial: (_) => const Center(child: CircularProgressIndicator()),
-      loading: (_) => const Center(child: CircularProgressIndicator()),
+      initial: (_) => const LoadingSkeleton(),
+      loading: (_) => const LoadingSkeleton(),
       loaded: (loadedState) => _buildContentGrid(loadedState.movies
           .map((movie) => _convertToDoubanMovie(movie))
-          .toList()),
+          .toList(), viewModel),
       error: (errorState) => Center(
         child: Text('错误: ${errorState.message}'),
       ),
     );
   }
 
+  /// 计算网格列数基于屏幕宽度
+  int _calculateCrossAxisCount(double width) {
+    // 根据宽度动态计算列数
+    // 最小宽度200，最大宽度300
+    const minItemWidth = 200.0;
+    const maxItemWidth = 300.0;
+    
+    // 计算列数
+    int count = (width / maxItemWidth).floor();
+    
+    // 确保至少有3列，最多不超过10列
+    count = count < 3 ? 3 : count;
+    count = count > 10 ? 10 : count;
+    
+    return count;
+  }
+
   /// 构建内容网格
-  Widget _buildContentGrid(List<DoubanMovie> movies) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 6, // 桌面端显示更多列
-          childAspectRatio: 0.6, // 更适合海报比例
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: movies.length,
-        itemBuilder: (context, index) {
-          final movie = movies[index];
-          return _buildMovieCard(movie);
-        },
-      ),
+  Widget _buildContentGrid(List<DoubanMovie> movies, dynamic viewModel) {
+    if (movies.isEmpty) {
+      return const Center(
+        child: Text('暂无数据'),
+      );
+    }
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = _calculateCrossAxisCount(constraints.maxWidth);
+        final itemWidth = constraints.maxWidth / crossAxisCount;
+        final childAspectRatio = itemWidth / (itemWidth * 1.5); // 2:3 比例
+        
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: childAspectRatio,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: movies.length,
+            itemBuilder: (context, index) {
+              final movie = movies[index];
+              return _buildMovieCard(movie, viewModel);
+            },
+          ),
+        );
+      },
     );
   }
 
   /// 构建电影卡片
-  Widget _buildMovieCard(DoubanMovie movie) {
+  Widget _buildMovieCard(DoubanMovie movie, dynamic viewModel) {
     final String imageUrl = ApiService.handleImageUrl(movie.cover);
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => ref
-          .read(homeViewModelProvider.notifier)
-          .onItemTap(_convertToMovieEntity(movie), context),
+      onTap: () => viewModel.onItemTap(_convertToMovieEntity(movie), context),
       child: CustomCard(
         padding: EdgeInsets.zero,
         child: Column(

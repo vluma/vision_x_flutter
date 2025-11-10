@@ -10,6 +10,7 @@ import 'package:vision_x_flutter/features/navigation/states/navigation_state.dar
 import 'package:vision_x_flutter/features/navigation/viewmodels/navigation_view_model.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:ui';
 
 /// PC端侧边栏导航组件
 class SideNavigationBarWidget extends StatefulWidget {
@@ -97,91 +98,121 @@ class _SideNavigationBarWidgetState extends State<SideNavigationBarWidget> {
         final state = provider.state;
         
         return Container(
+          // 添加边距
+          margin: const EdgeInsets.all(8),
           width: 250,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            // 实现磨砂半透明效果
+            color: Theme.of(context).cardColor.withOpacity(0.7),
+            // 设置4个角大小一致
+            borderRadius: BorderRadius.circular(16),
+            // 添加发光边框样式
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white.withOpacity(0.1) 
+                : Colors.black.withOpacity(0.1),
+              width: 1,
+            ),
+            // 添加模糊效果和边框
             boxShadow: [
               BoxShadow(
+                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 1,
+                offset: const Offset(0, 0),
+              ),
+              BoxShadow(
                 color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(2, 0),
+                blurRadius: 10,
+                offset: const Offset(4, 0),
               ),
             ],
           ),
-          child: Column(
-            children: [
-              // Logo区域
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+          // 使用BackdropFilter实现磨砂玻璃效果
+          child: ClipRRect(
+            // 设置4个角大小一致
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
                   children: [
-                    const Icon(
-                      Icons.play_circle_fill,
-                      size: 32,
-                      color: Colors.blue,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Vision X',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    // Logo区域
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.play_circle_fill,
+                            size: 32,
+                            color: Colors.blue,
                           ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Vision X',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // 搜索框
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _handleSearchInput,
+                        onSubmitted: _handleSearchSubmit,
+                        decoration: InputDecoration(
+                          hintText: '搜索...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // 导航菜单
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          _buildNavItem(
+                            context,
+                            icon: Icons.home,
+                            label: '首页',
+                            isSelected: state.currentTab == NavBarTab.home,
+                            onTap: () => _viewModel.navigateToTab(NavBarTab.home),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.history,
+                            label: '历史记录',
+                            isSelected: state.currentTab == NavBarTab.history,
+                            onTap: () => _viewModel.navigateToTab(NavBarTab.history),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.settings,
+                            label: '设置',
+                            isSelected: state.currentTab == NavBarTab.settings,
+                            onTap: () => _viewModel.navigateToTab(NavBarTab.settings),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              
-              // 搜索框
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _handleSearchInput,
-                  onSubmitted: _handleSearchSubmit,
-                  decoration: InputDecoration(
-                    hintText: '搜索...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                ),
-              ),
-              
-              // 导航菜单
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    _buildNavItem(
-                      context,
-                      icon: Icons.home,
-                      label: '首页',
-                      isSelected: state.currentTab == NavBarTab.home,
-                      onTap: () => _viewModel.navigateToTab(NavBarTab.home),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.history,
-                      label: '历史记录',
-                      isSelected: state.currentTab == NavBarTab.history,
-                      onTap: () => _viewModel.navigateToTab(NavBarTab.history),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.settings,
-                      label: '设置',
-                      isSelected: state.currentTab == NavBarTab.settings,
-                      onTap: () => _viewModel.navigateToTab(NavBarTab.settings),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -197,12 +228,19 @@ class _SideNavigationBarWidgetState extends State<SideNavigationBarWidget> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: isSelected 
-          ? Theme.of(context).primaryColor.withOpacity(0.1)
-          : Colors.transparent,
+      // 消除原来的选中样式
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Container(
+          // 为选中状态设置左右间距和圆角
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: isSelected 
+                ? Theme.of(context).primaryColor.withOpacity(0.3)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
