@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class PlatformAdapter {
   /// 检查是否为桌面平台（Windows、macOS或Linux）
   static bool get isDesktop {
-    if (kIsWeb) return false;
+    // 修改为Web平台也视为桌面平台
+    if (kIsWeb) return true;
     return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
   }
 

@@ -15,7 +15,8 @@ class MainPage extends StatelessWidget {
   });
 
   bool get _isDesktop {
-    if (kIsWeb) return false;
+    // 修改为Web平台也视为桌面平台，以使用桌面布局
+    if (kIsWeb) return true;
     return defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux;

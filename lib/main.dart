@@ -4,7 +4,7 @@ import 'app/app.dart';
 import 'core/utils/window_manager.dart';
 import 'dart:io'
     show Platform, HttpClient, SecurityContext, X509Certificate, HttpOverrides;
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -26,8 +26,8 @@ Future<void> main() async {
 
   // 初始化窗口管理器（仅在桌面平台）
   debugPrint(
-      'Main: Platform.isWindows=${Platform.isWindows}, Platform.isMacOS=${Platform.isMacOS}, Platform.isLinux=${Platform.isLinux}');
-  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      'Main: kIsWeb=$kIsWeb, Platform.isWindows=${!kIsWeb && (Platform.isWindows)}, Platform.isMacOS=${!kIsWeb && (Platform.isMacOS)}, Platform.isLinux=${!kIsWeb && (Platform.isLinux)}');
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
     debugPrint('Main: Initializing WindowManager for desktop platform');
     try {
       await WindowManager.initialize();

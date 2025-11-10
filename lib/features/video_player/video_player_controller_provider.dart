@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart' as viewmodels;
 
 /// 视频播放器控制器提供者
 class VideoPlayerController extends ChangeNotifier {
@@ -22,10 +22,12 @@ class VideoPlayerController extends ChangeNotifier {
 /// 视频播放器控制器提供者
 class VideoPlayerControllerProvider extends InheritedNotifier<VideoPlayerController> {
   final VideoPlayerController controller;
+  final viewmodels.VideoPlayerController? viewModelController;
 
   const VideoPlayerControllerProvider({
     super.key,
     required this.controller,
+    this.viewModelController,
     required super.child,
   }) : super(notifier: controller);
 

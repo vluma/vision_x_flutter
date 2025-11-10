@@ -92,7 +92,6 @@ class ApiService {
 
   /// 聚合搜索API配置 - 支持多个视频资源站点
   static final Map<String, Map<String, String>> apiSites = {
-    /*
     'dyttzy': {
       'api': 'http://caiji.dyttzyapi.com/api.php/provide/vod',
       'name': '电影天堂资源'
@@ -149,7 +148,6 @@ class ApiService {
       'api': 'https://ikunzyapi.com/api.php/provide/vod',
       'name': 'iKun资源'
     },
-    */
   };
 
   /// 获取电影标签列表

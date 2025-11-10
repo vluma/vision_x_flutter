@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/video_player.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
-import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
+import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart' as viewmodels;
 import 'package:vision_x_flutter/features/video_player/video_player_controller_provider.dart';
 import 'package:vision_x_flutter/features/video_player/video_player_performance.dart';
 
 /// 传统模式播放器
 class TraditionalPlayer extends StatefulWidget {
-  final VideoPlayerController controller;
+  final viewmodels.VideoPlayerController controller;
 
   const TraditionalPlayer({super.key, required this.controller});
 
@@ -231,7 +231,11 @@ class _DescriptionTab extends StatelessWidget {
       return const Center(child: Text('加载中...'));
     }
 
-    final controller = controllerProvider.controller;
+    final controller = controllerProvider.viewModelController;
+    if (controller == null) {
+      return const Center(child: Text('加载中...'));
+    }
+    
     final media = controller.media;
 
     return SingleChildScrollView(
@@ -240,7 +244,7 @@ class _DescriptionTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 剧集选择器移到最上方
-          if (controller.currentSource.episodes.length > 1) ...[
+          if (controller.totalEpisodes > 1) ...[
             Text(
               '剧集选择',
               style: TextStyle(
@@ -263,7 +267,7 @@ class _DescriptionTab extends StatelessWidget {
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
                       ),
-                      itemCount: controller.currentSource.episodes.length,
+                      itemCount: controller.totalEpisodes,
                       itemBuilder: (BuildContext context, int index) {
                         final isSelected = index == currentEpisodeIndex;
                         return GestureDetector(

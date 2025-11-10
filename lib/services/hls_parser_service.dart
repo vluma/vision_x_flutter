@@ -3,6 +3,69 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// HLS 解析器异常
+class HlsParserException implements Exception {
+  final String message;
+  HlsParserException(this.message);
+
+  @override
+  String toString() => 'HlsParserException: $message';
+}
+
+/// HLS 主播放列表
+class HlsMasterPlaylist {
+  final List<HlsVariant> variants;
+  final List<dynamic> audios;
+  final List<dynamic> subtitles;
+
+  HlsMasterPlaylist({
+    required this.variants,
+    required this.audios,
+    required this.subtitles,
+  });
+}
+
+/// HLS 媒体播放列表
+class HlsMediaPlaylist {
+  final List<HlsSegment> segments;
+  final int targetDuration;
+  final bool isLive;
+
+  HlsMediaPlaylist({
+    required this.segments,
+    required this.targetDuration,
+    this.isLive = false,
+  });
+}
+
+/// HLS 视频流变体
+class HlsVariant {
+  final int bandwidth;
+  final String? resolution;
+  final String? codecs;
+  final double frameRate;
+  final String url;
+
+  HlsVariant({
+    required this.bandwidth,
+    this.resolution,
+    this.codecs,
+    required this.frameRate,
+    required this.url,
+  });
+}
+
+/// HLS 片段
+class HlsSegment {
+  final String url;
+  final double duration;
+
+  HlsSegment({
+    required this.url,
+    required this.duration,
+  });
+}
+
 /// HLS 解析器服务 - 集成 Better Player HLS 解析器
 class HlsParserService {
   static final HlsParserService _instance = HlsParserService._internal();
@@ -122,3 +185,96 @@ class HlsParserService {
       throw HlsParserException('过滤广告失败: $e');
     }
   }
+  
+  /// 解析主播放列表内容
+  HlsMasterPlaylist _parseMasterPlaylistContent(String content, String baseUrl) {
+    // 简化的解析逻辑，实际项目中应该更完整
+    final variants = <HlsVariant>[];
+    final lines = content.split('\n');
+    
+    for (int i = 0; i < lines.length - 1; i++) {
+      if (lines[i].startsWith('#EXT-X-STREAM-INF')) {
+        // 解析流信息
+        final bandwidthMatch = RegExp(r'BANDWIDTH=(\d+)').firstMatch(lines[i]);
+        final bandwidth = bandwidthMatch != null ? int.parse(bandwidthMatch.group(1)!) : 0;
+        
+        final resolutionMatch = RegExp(r'RESOLUTION=([^,\n]+)').firstMatch(lines[i]);
+        final resolution = resolutionMatch?.group(1);
+        
+        final codecsMatch = RegExp(r'CODECS="([^"]+)"').firstMatch(lines[i]);
+        final codecs = codecsMatch?.group(1);
+        
+        final url = lines[i + 1].trim();
+        i++; // 跳过下一行（URL行）
+        
+        variants.add(HlsVariant(
+          bandwidth: bandwidth,
+          resolution: resolution,
+          codecs: codecs,
+          frameRate: 0.0,
+          url: url,
+        ));
+      }
+    }
+    
+    return HlsMasterPlaylist(
+      variants: variants,
+      audios: [],
+      subtitles: [],
+    );
+  }
+  
+  /// 解析媒体播放列表内容
+  HlsMediaPlaylist _parseMediaPlaylistContent(String content, String baseUrl) {
+    // 简化的解析逻辑，实际项目中应该更完整
+    final segments = <HlsSegment>[];
+    final lines = content.split('\n');
+    int targetDuration = 10; // 默认值
+    
+    for (int i = 0; i < lines.length - 1; i++) {
+      if (lines[i].startsWith('#EXT-X-TARGETDURATION')) {
+        final durationMatch = RegExp(r'#EXT-X-TARGETDURATION:(\d+)').firstMatch(lines[i]);
+        if (durationMatch != null) {
+          targetDuration = int.parse(durationMatch.group(1)!);
+        }
+      } else if (lines[i].startsWith('#EXTINF')) {
+        final durationMatch = RegExp(r'#EXTINF:([\d.]+)').firstMatch(lines[i]);
+        final duration = durationMatch != null ? double.parse(durationMatch.group(1)!) : 0.0;
+        final url = lines[i + 1].trim();
+        i++; // 跳过下一行（URL行）
+        
+        segments.add(HlsSegment(
+          url: url,
+          duration: duration,
+        ));
+      }
+    }
+    
+    return HlsMediaPlaylist(
+      segments: segments,
+      targetDuration: targetDuration,
+      isLive: !content.contains('#EXT-X-ENDLIST'),
+    );
+  }
+  
+  /// 选择最佳变体
+  HlsVariant? _selectBestVariant(List<HlsVariant> variants) {
+    if (variants.isEmpty) return null;
+    // 简单选择最高带宽的变体
+    return variants.reduce((a, b) => a.bandwidth > b.bandwidth ? a : b);
+  }
+  
+  /// 检测和过滤广告
+  Future<List<HlsSegment>> _detectAndFilterAds(
+      HlsMediaPlaylist mediaPlaylist, HlsVariant variant) async {
+    // 简化的广告检测逻辑
+    return mediaPlaylist.segments;
+  }
+  
+  /// 重建播放列表
+  String _rebuildPlaylist(HlsMediaPlaylist mediaPlaylist,
+      List<HlsSegment> filteredSegments, String baseUrl) {
+    // 简化的播放列表重建逻辑
+    return '#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:${mediaPlaylist.targetDuration}\n';
+  }
+}

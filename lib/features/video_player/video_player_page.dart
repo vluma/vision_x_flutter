@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
-import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart';
+import 'package:vision_x_flutter/features/video_player/viewmodels/video_player_viewmodel.dart' as viewmodels;
 import 'package:vision_x_flutter/features/video_player/video_player_controller_provider.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/short_drama_player.dart';
 import 'package:vision_x_flutter/features/video_player/widgets/traditional_player.dart';
@@ -24,12 +24,12 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
-  late VideoPlayerController _controller;
+  late viewmodels.VideoPlayerController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController(
+    _controller = viewmodels.VideoPlayerController(
       media: widget.media,
       initialEpisode: widget.episode,
       startPosition: widget.startPosition,
@@ -62,7 +62,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   Widget build(BuildContext context) {
     return VideoPlayerControllerProvider(
-      controller: _controller,
+      controller: VideoPlayerController(),
+      viewModelController: _controller,
       child: ValueListenableBuilder<bool>(
         valueListenable: _controller.isShortDramaMode,
         builder: (context, isShortDramaMode, _) {
