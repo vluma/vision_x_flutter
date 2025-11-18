@@ -55,11 +55,6 @@ class AdDetectionService {
     // 1. URL 模式检测
     scores['url'] = _detectUrlPattern(segment.url);
     
-    // 2. 标题模式检测
-    if (segment.title != null) {
-      scores['title'] = _detectTitlePattern(segment.title!);
-    }
-    
     // 3. 时长检测
     scores['duration'] = _detectDurationPattern(segment.duration);
     
