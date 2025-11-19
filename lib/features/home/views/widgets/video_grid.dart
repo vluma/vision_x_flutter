@@ -6,7 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
-import 'package:vision_x_flutter/features/detail_page/webview_page.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:developer' as developer;
 
 /// 视频网格组件，支持下拉刷新和上拉加载更多
@@ -263,14 +263,11 @@ class _VideoItem extends StatelessWidget {
                         bottom: 6,
                         child: GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => WebViewPage(
-                                  url: movie.url,
-                                  title: movie.title,
-                                ),
-                              ),
-                            );
+                            // 通过路由跳转到 WebView 页面
+                            context.push('/webview', extra: {
+                              'url': movie.url,
+                              'title': movie.title,
+                            });
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(

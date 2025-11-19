@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/detail_page/detail_page.dart';
+import 'package:vision_x_flutter/features/detail_page/webview_page.dart';
 import 'package:vision_x_flutter/features/home/index.dart';
 import 'package:vision_x_flutter/features/history/presentation/pages/history_page.dart';
 import 'package:vision_x_flutter/features/settings/settings_page.dart';
@@ -21,7 +22,7 @@ final GoRouter router = GoRouter(
             currentPath.startsWith('/settings') ||
             currentPath.startsWith('/search');
         final isSubPage =
-            currentPath.contains('/detail/') || currentPath.contains('/video');
+            currentPath.contains('/detail/') || currentPath.contains('/video') || currentPath.contains('/webview');
 
         if (isMainTab && !isSubPage) {
           return MainPage(
@@ -52,6 +53,21 @@ final GoRouter router = GoRouter(
                       child: extra is MediaDetail
                           ? DetailPage(id: id, media: extra)
                           : DetailPage(id: id),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'webview',
+                  name: 'home_webview',
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    final url = extra?['url'] as String? ?? '';
+                    final title = extra?['title'] as String? ?? '网页浏览';
+                    return CupertinoPage(
+                      child: WebViewPage(
+                        url: url,
+                        title: title,
+                      ),
                     );
                   },
                 ),
@@ -109,6 +125,21 @@ final GoRouter router = GoRouter(
                   },
                 ),
                 GoRoute(
+                  path: 'webview',
+                  name: 'history_webview',
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    final url = extra?['url'] as String? ?? '';
+                    final title = extra?['title'] as String? ?? '网页浏览';
+                    return CupertinoPage(
+                      child: WebViewPage(
+                        url: url,
+                        title: title,
+                      ),
+                    );
+                  },
+                ),
+                GoRoute(
                   path: 'video',
                   pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
@@ -161,6 +192,21 @@ final GoRouter router = GoRouter(
                   },
                 ),
                 GoRoute(
+                  path: 'webview',
+                  name: 'settings_webview',
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    final url = extra?['url'] as String? ?? '';
+                    final title = extra?['title'] as String? ?? '网页浏览';
+                    return CupertinoPage(
+                      child: WebViewPage(
+                        url: url,
+                        title: title,
+                      ),
+                    );
+                  },
+                ),
+                GoRoute(
                   path: 'video',
                   pageBuilder: (BuildContext context, GoRouterState state) {
                     final extra = state.extra;
@@ -209,6 +255,21 @@ final GoRouter router = GoRouter(
                       child: extra is MediaDetail
                           ? DetailPage(id: id, media: extra)
                           : DetailPage(id: id),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'webview',
+                  name: 'search_webview',
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    final url = extra?['url'] as String? ?? '';
+                    final title = extra?['title'] as String? ?? '网页浏览';
+                    return CupertinoPage(
+                      child: WebViewPage(
+                        url: url,
+                        title: title,
+                      ),
                     );
                   },
                 ),
