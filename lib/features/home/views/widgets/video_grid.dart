@@ -31,13 +31,12 @@ class VideoGrid extends StatefulWidget {
 }
 
 class _VideoGridState extends State<VideoGrid> {
-  final ScrollController _scrollController = ScrollController();
-  List<DoubanMovie> _previousMovies = [];
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
-    _previousMovies = widget.movies;
+    _scrollController = ScrollController();
   }
 
   @override
@@ -48,7 +47,6 @@ class _VideoGridState extends State<VideoGrid> {
     if (_shouldScrollToTop(oldWidget.movies, widget.movies)) {
       _scrollToTop();
     }
-    _previousMovies = widget.movies;
   }
 
   bool _shouldScrollToTop(
@@ -94,9 +92,13 @@ class _VideoGridState extends State<VideoGrid> {
             onRefresh: widget.onRefresh,
             child: NotificationListener<ScrollNotification>(
               onNotification: (ScrollNotification scrollInfo) {
+                // 当滚动接近底部时加载更多数据
                 if (scrollInfo.metrics.pixels >=
                     scrollInfo.metrics.maxScrollExtent - 500) {
-                  widget.onLoadMore();
+                  // 避免重复调用加载更多
+                  if (!widget.isLoading && widget.hasMoreData) {
+                    widget.onLoadMore();
+                  }
                   return true;
                 }
                 return false;
@@ -111,7 +113,7 @@ class _VideoGridState extends State<VideoGrid> {
 
   Widget _buildGridContent() {
     return GridView.builder(
-      controller: _scrollController, // 添加滚动控制器
+      controller: _scrollController,
       padding: AppSpacing.pageMargin.copyWith(
         top: AppSpacing.md,
         bottom: AppSpacing.bottomNavigationBarMargin,
@@ -124,9 +126,13 @@ class _VideoGridState extends State<VideoGrid> {
       ),
       itemCount: widget.movies.length + (widget.hasMoreData ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {
+        // 显示加载指示器
         if (index == widget.movies.length && widget.hasMoreData) {
+          // 确保只调用一次加载更多
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            widget.onLoadMore();
+            if (!widget.isLoading) {
+              widget.onLoadMore();
+            }
           });
           return const Center(
             child: Padding(
@@ -172,10 +178,10 @@ class _VideoItem extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                 child: Stack(
+                  fit: StackFit.expand, // 使子组件填充整个Stack
                   children: [
                     CachedNetworkImage(
                       imageUrl: imageUrl,
-                      width: double.infinity,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const LoadingAnimation(),
                       errorWidget: (context, url, error) => Container(
@@ -188,6 +194,7 @@ class _VideoItem extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // 评分显示
                     if (movie.rate.isNotEmpty &&
                         double.tryParse(movie.rate) != null &&
                         double.parse(movie.rate) > 0)
@@ -226,6 +233,7 @@ class _VideoItem extends StatelessWidget {
                 ),
               ),
             ),
+            // 标题部分
             Padding(
               padding: const EdgeInsets.only(top: 6.0, left: 6.0, right: 6.0),
               child: Column(

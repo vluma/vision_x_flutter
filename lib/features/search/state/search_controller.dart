@@ -23,9 +23,25 @@ class SearchPageController extends ChangeNotifier {
   bool get hasSearched => _hasSearched;
   String get lastSearchQuery => _lastSearchQuery;
 
+  /// 检查控制器是否已被销毁
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// 安全地调用 notifyListeners
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
   /// 执行聚合搜索
   Future<void> performSearch(String query) async {
-    if (query.trim().isEmpty) {
+    if (query.trim().isEmpty || _disposed) {
       return;
     }
 
@@ -34,7 +50,7 @@ class SearchPageController extends ChangeNotifier {
     _hasSearched = true;
     _selectedCategory = '全部';
     _sortBy = 'default';
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       // 使用流式搜索方法，每个API返回结果后立即显示
@@ -44,7 +60,7 @@ class SearchPageController extends ChangeNotifier {
         query.trim(),
         (List<MediaDetail> results) async {
           // 当收到部分结果时更新UI
-          if (currentSearchId == _searchId) {
+          if (currentSearchId == _searchId && !_disposed) {
             tempResults.addAll(results);
 
             // 应用内容过滤
@@ -56,15 +72,15 @@ class SearchPageController extends ChangeNotifier {
             _mediaResults = List.from(filteredResults);
             _filteredResults = List.from(filteredResults);
             _aggregatedResults = _aggregateMedia(filteredResults);
-            notifyListeners();
+            _safeNotifyListeners();
           }
         },
         () async {
           // 当所有搜索完成时
-          if (currentSearchId == _searchId) {
+          if (currentSearchId == _searchId && !_disposed) {
             _isLoading = false;
             _lastSearchQuery = query.trim();
-            notifyListeners();
+            _safeNotifyListeners();
 
             // 更新分类
             _updateCategories();
@@ -72,9 +88,9 @@ class SearchPageController extends ChangeNotifier {
         },
       );
     } catch (e) {
-      if (currentSearchId == _searchId) {
+      if (currentSearchId == _searchId && !_disposed) {
         _isLoading = false;
-        notifyListeners();
+        _safeNotifyListeners();
       }
     }
   }
@@ -172,7 +188,7 @@ class SearchPageController extends ChangeNotifier {
       _selectedCategory = '全部';
       _filteredResults = List.from(_mediaResults);
       _aggregatedResults = _aggregateMedia(_filteredResults);
-      notifyListeners();
+      _safeNotifyListeners();
     }
 
     return sortedCategories;
@@ -204,6 +220,8 @@ class SearchPageController extends ChangeNotifier {
 
   /// 筛选结果
   Future<void> filterResults(String category) async {
+    if (_disposed) return;
+    
     _selectedCategory = category;
     List<MediaDetail> categoryResults;
 
@@ -223,11 +241,13 @@ class SearchPageController extends ChangeNotifier {
     // 应用当前排序
     _sortResults();
     _aggregatedResults = _aggregateMedia(_filteredResults);
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// 排序结果
   void _sortResults() {
+    if (_disposed) return;
+    
     switch (_sortBy) {
       case 'score':
         _filteredResults.sort((a, b) {
@@ -256,20 +276,24 @@ class SearchPageController extends ChangeNotifier {
 
   /// 更新排序方式
   void updateSortBy(String sortBy) {
+    if (_disposed) return;
+    
     _sortBy = sortBy;
     _sortResults();
     _aggregatedResults = _aggregateMedia(_filteredResults);
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// 清除搜索结果
   void clearResults() {
+    if (_disposed) return;
+    
     _mediaResults.clear();
     _filteredResults.clear();
     _aggregatedResults.clear();
     _selectedCategory = '全部';
     _hasSearched = false;
     _lastSearchQuery = '';
-    notifyListeners();
+    _safeNotifyListeners();
   }
 }
