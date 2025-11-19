@@ -29,6 +29,7 @@ dependencies:
   package_info_plus: ^8.0.0
   wakelock_plus: ^1.2.8
   fvp: ^0.35.0
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:

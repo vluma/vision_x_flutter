@@ -6,7 +6,6 @@ import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/loading_skeleton.dart';
-import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
 import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
@@ -197,9 +196,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     return state.map(
       initial: (_) => const LoadingSkeleton(),
       loading: (_) => const LoadingSkeleton(),
-      loaded: (loadedState) => _buildContentGrid(loadedState.movies
-          .map((movie) => _convertToDoubanMovie(movie))
-          .toList(), viewModel),
+      loaded: (loadedState) => _buildContentGrid(loadedState.movies, viewModel),
       error: (errorState) => Center(
         child: Text('错误: ${errorState.message}'),
       ),
@@ -210,7 +207,6 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
   int _calculateCrossAxisCount(double width) {
     // 根据宽度动态计算列数
     // 最小宽度200，最大宽度300
-    const minItemWidth = 200.0;
     const maxItemWidth = 300.0;
     
     // 计算列数
@@ -264,7 +260,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => viewModel.onItemTap(_convertToMovieEntity(movie), context),
+      onTap: () => viewModel.onItemTap(movie, context),
       child: CustomCard(
         padding: EdgeInsets.zero,
         child: Column(
@@ -334,28 +330,5 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
     );
   }
 
-  DoubanMovie _convertToDoubanMovie(MovieEntity movie) {
-    return DoubanMovie(
-      id: movie.id,
-      title: movie.title,
-      cover: movie.poster,
-      rate: movie.rating.toString(),
-      url: '',
-      isNew: false,
-      playable: true,
-      episodesInfo: '',
-      coverX: 0,
-      coverY: 0,
-    );
-  }
 
-  MovieEntity _convertToMovieEntity(DoubanMovie movie) {
-    return MovieEntity(
-      id: movie.id,
-      title: movie.title,
-      poster: movie.cover,
-      rating: double.tryParse(movie.rate) ?? 0.0,
-      year: 0,
-    );
-  }
 }

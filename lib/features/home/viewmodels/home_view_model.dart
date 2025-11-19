@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/home/data/movie_repository.dart';
-import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
+import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/features/home/models/filter_criteria.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
@@ -121,7 +121,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   /// 处理点击电影项
-  void onItemTap(MovieEntity movie, BuildContext context) {
+  void onItemTap(DoubanMovie movie, BuildContext context) {
     // 点击电影项时跳转到搜索页面
     // 搜索功能将在后续版本实现
     Future.microtask(() {

@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vision_x_flutter/shared/widgets/loading_animation.dart';
 import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
+import 'package:vision_x_flutter/features/detail_page/webview_page.dart';
+import 'dart:developer' as developer;
 
 /// 视频网格组件，支持下拉刷新和上拉加载更多
 class VideoGrid extends StatefulWidget {
@@ -194,6 +196,31 @@ class _VideoItem extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // NEW 标签
+                    if (movie.isNew)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'NEW',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ),
                     // 评分显示
                     if (movie.rate.isNotEmpty &&
                         double.tryParse(movie.rate) != null &&
@@ -226,6 +253,51 @@ class _VideoItem extends StatelessWidget {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                    // 豆瓣详情页链接
+                    if (movie.url.isNotEmpty)
+                      Positioned(
+                        left: 6,
+                        bottom: 6,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => WebViewPage(
+                                  url: movie.url,
+                                  title: movie.title,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.darkBackground.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.link,
+                                    color: Colors.white, size: 12),
+                                SizedBox(width: 3),
+                                Text(
+                                  '详情',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

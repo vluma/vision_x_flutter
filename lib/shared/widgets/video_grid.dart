@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
+import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 
 /// 视频网格组件
 class VideoGrid extends StatelessWidget {
-  final List<MovieEntity> movies;
+  final List<DoubanMovie> movies;
   final bool hasMoreData;
   final bool isLoading;
   final VoidCallback onRefresh;
   final VoidCallback onLoadMore;
-  final ValueChanged<MovieEntity> onItemTap;
+  final ValueChanged<DoubanMovie> onItemTap;
 
   const VideoGrid({
     super.key,
@@ -38,7 +38,7 @@ class VideoGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildMovieItem(BuildContext context, MovieEntity movie) {
+  Widget _buildMovieItem(BuildContext context, DoubanMovie movie) {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: InkWell(
@@ -55,7 +55,7 @@ class VideoGrid extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0),
                   image: DecorationImage(
-                    image: NetworkImage(movie.poster),
+                    image: NetworkImage(movie.cover),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -74,18 +74,18 @@ class VideoGrid extends StatelessWidget {
                     ),
                     const SizedBox(height: 4.0),
                     Text(
-                      '评分: ${movie.rating}',
+                      '评分: ${movie.rate}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4.0),
                     Text(
-                      '年份: ${movie.year}',
+                      '年份: ${_extractYearFromTitle(movie.title)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4.0),
-                    if (movie.genre != null)
+                    if (movie.playable)
                       Text(
-                        movie.genre!,
+                        '可播放',
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -98,6 +98,12 @@ class VideoGrid extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  int _extractYearFromTitle(String title) {
+    final regex = RegExp(r'\((\d{4})\)');
+    final match = regex.firstMatch(title);
+    return match != null ? int.parse(match.group(1)!) : DateTime.now().year;
   }
 
   Widget _buildLoadMoreIndicator() {

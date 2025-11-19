@@ -1,6 +1,6 @@
 library home_states;
 
-import '../entities/movie_entity.dart';
+import '../models/douban_movie.dart';
 
 /// 首页状态基类
 abstract class HomeState {
@@ -38,7 +38,7 @@ class HomeLoading extends HomeState {
 
 /// 加载成功状态
 class HomeLoaded extends HomeState {
-  final List<MovieEntity> movies;
+  final List<DoubanMovie> movies;
   final bool hasMore;
   final bool isLoadingMore;
 
@@ -49,7 +49,7 @@ class HomeLoaded extends HomeState {
   });
 
   HomeLoaded copyWith({
-    List<MovieEntity>? movies,
+    List<DoubanMovie>? movies,
     bool? hasMore,
     bool? isLoadingMore,
   }) {
