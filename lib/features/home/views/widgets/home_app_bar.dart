@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vision_x_flutter/features/home/models/filter_criteria.dart';
 
 /// 首页自定义 AppBar 组件
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -112,8 +113,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildSourceTags(BuildContext context) {
     // 使用默认标签，实际项目中应该从 ViewModel 获取动态标签
     final sources = selectedCategory == '电影'
-        ? ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美']
-        : ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧'];
+        ? FilterCriteria.movieSources
+        : FilterCriteria.tvSources;
 
     return SizedBox(
       height: 40,

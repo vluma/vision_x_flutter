@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vision_x_flutter/features/home/data/movie_repository.dart';
 import 'package:vision_x_flutter/features/home/entities/movie_entity.dart';
+import 'package:vision_x_flutter/features/home/models/filter_criteria.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 
@@ -10,31 +11,32 @@ import 'package:vision_x_flutter/services/api_service.dart';
 class HomeViewModel extends StateNotifier<HomeState> {
   final MovieRepository _movieRepository;
   
-  String _currentCategory = '电影';
-  String _currentSource = '热门';
-  String _currentSort = 'recommend';
+  FilterCriteria _filterCriteria = FilterCriteria.defaultCriteria;
 
   HomeViewModel(this._movieRepository) : super(const HomeInitial());
 
+  /// 获取当前筛选条件
+  FilterCriteria get filterCriteria => _filterCriteria;
+  
   /// 获取当前分类
-  String get currentCategory => _currentCategory;
+  String get currentCategory => _filterCriteria.category.label;
   
   /// 获取当前来源
-  String get currentSource => _currentSource;
+  String get currentSource => _filterCriteria.source;
   
   /// 获取当前排序
-  String get currentSort => _currentSort;
+  String get currentSort => _filterCriteria.sort;
 
   /// 加载首页数据
   Future<void> loadMovies() async {
     // 使用异步调度确保状态更新不会阻塞UI
     await Future.microtask(() => state = HomeLoading());
     try {
-      final type = _currentCategory == '电影' ? 'movie' : 'tv';
+      final type = _filterCriteria.category == MovieCategory.movie ? 'movie' : 'tv';
       final movies = await _movieRepository.getMovies(
         type: type,
-        tag: _currentSource,
-        sort: _currentSort,
+        tag: _filterCriteria.source,
+        sort: _filterCriteria.sort,
         pageLimit: 20,
       );
       await Future.microtask(() => state = HomeLoaded(movies: movies, hasMore: movies.length >= 20));
@@ -46,11 +48,11 @@ class HomeViewModel extends StateNotifier<HomeState> {
   /// 刷新数据
   Future<void> refresh() async {
     try {
-      final type = _currentCategory == '电影' ? 'movie' : 'tv';
+      final type = _filterCriteria.category == MovieCategory.movie ? 'movie' : 'tv';
       final movies = await _movieRepository.refreshMovies(
         type: type,
-        tag: _currentSource,
-        sort: _currentSort,
+        tag: _filterCriteria.source,
+        sort: _filterCriteria.sort,
         pageLimit: 20,
       );
       await Future.microtask(() => state = HomeLoaded(movies: movies, hasMore: movies.length >= 20));
@@ -68,11 +70,11 @@ class HomeViewModel extends StateNotifier<HomeState> {
     if (currentState is HomeLoaded && !currentState.isLoadingMore) {
       await Future.microtask(() => state = currentState.copyWith(isLoadingMore: true));
       try {
-        final type = _currentCategory == '电影' ? 'movie' : 'tv';
+        final type = _filterCriteria.category == MovieCategory.movie ? 'movie' : 'tv';
         final moreMovies = await _movieRepository.loadMoreMovies(
           type: type,
-          tag: _currentSource,
-          sort: _currentSort,
+          tag: _filterCriteria.source,
+          sort: _filterCriteria.sort,
           pageLimit: 20,
           pageStart: currentState.movies.length,
         );
@@ -90,26 +92,30 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   /// 更改分类
   Future<void> changeCategory(String category) async {
-    if (_currentCategory != category) {
-      _currentCategory = category;
-      // 切换分类时重置二级分类
-      _currentSource = category == '电影' ? '热门' : '热门';
+    final movieCategory = category == '电影' ? MovieCategory.movie : MovieCategory.tv;
+    if (_filterCriteria.category != movieCategory) {
+      _filterCriteria = _filterCriteria.copyWith(
+        category: movieCategory,
+        source: movieCategory == MovieCategory.movie 
+            ? FilterCriteria.movieSources.first 
+            : FilterCriteria.tvSources.first,
+      );
       await loadMovies();
     }
   }
 
   /// 更改来源
   Future<void> changeSource(String source) async {
-    if (_currentSource != source) {
-      _currentSource = source;
+    if (_filterCriteria.source != source) {
+      _filterCriteria = _filterCriteria.copyWith(source: source);
       await loadMovies();
     }
   }
 
   /// 更改排序
   Future<void> changeSort(String sort) async {
-    if (_currentSort != sort) {
-      _currentSort = sort;
+    if (_filterCriteria.sort != sort) {
+      _filterCriteria = _filterCriteria.copyWith(sort: sort);
       await loadMovies();
     }
   }

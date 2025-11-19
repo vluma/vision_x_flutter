@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
+import 'package:vision_x_flutter/features/home/models/filter_criteria.dart';
 import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
@@ -135,11 +136,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
 
   /// 构建排序选择器
   Widget _buildSortSelector(dynamic viewModel) {
-    final sortOptions = [
-      {'value': 'recommend', 'label': '推荐'},
-      {'value': 'time', 'label': '时间'},
-      {'value': 'rank', 'label': '评分'},
-    ];
+    final sortOptions = FilterCriteria.sortOptions;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -173,8 +170,8 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
   /// 构建来源标签
   Widget _buildSourceTags(dynamic viewModel) {
     final sources = viewModel.currentCategory == '电影'
-        ? ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美']
-        : ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧'];
+        ? FilterCriteria.movieSources
+        : FilterCriteria.tvSources;
 
     return SizedBox(
       height: 40,

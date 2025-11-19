@@ -1,13 +1,34 @@
+/// 豆瓣电影模型类
+/// 用于表示从豆瓣API获取的电影数据
 class DoubanMovie {
+  /// 电影唯一标识符
   final String id;
+  
+  /// 电影标题
   final String title;
+  
+  /// 电影封面图片URL
   final String cover;
+  
+  /// 电影评分
   final String rate;
+  
+  /// 电影详情页面URL
   final String url;
+  
+  /// 是否为新上映电影
   final bool isNew;
+  
+  /// 是否可播放
   final bool playable;
+  
+  /// 剧集信息（对于电视剧）
   final String episodesInfo;
+  
+  /// 封面图片宽度（像素）
   final int coverX;
+  
+  /// 封面图片高度（像素）
   final int coverY;
 
   DoubanMovie({
