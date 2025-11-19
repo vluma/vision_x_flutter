@@ -92,7 +92,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   /// 更改分类
   Future<void> changeCategory(String category) async {
-    final movieCategory = category == '电影' ? MovieCategory.movie : MovieCategory.tv;
+    final movieCategory = category == MovieCategory.movie.label ? MovieCategory.movie : MovieCategory.tv;
     if (_filterCriteria.category != movieCategory) {
       _filterCriteria = _filterCriteria.copyWith(
         category: movieCategory,

@@ -38,8 +38,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// 构建分类导航项
   List<Widget> _buildCategoryActions(BuildContext context) {
     return [
-      _buildCategoryItem(context, '电影'),
-      _buildCategoryItem(context, '电视剧'),
+      _buildCategoryItem(context, MovieCategory.movie.label),
+      _buildCategoryItem(context, MovieCategory.tv.label),
       _buildSortButton(context),
     ];
   }
@@ -112,7 +112,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// 构建源标签列表
   Widget _buildSourceTags(BuildContext context) {
     // 使用默认标签，实际项目中应该从 ViewModel 获取动态标签
-    final sources = selectedCategory == '电影'
+    final sources = selectedCategory == MovieCategory.movie.label
         ? FilterCriteria.movieSources
         : FilterCriteria.tvSources;
 

@@ -109,7 +109,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
 
   /// 构建分类选择器
   Widget _buildCategorySelector(dynamic viewModel) {
-    final categories = ['电影', '电视剧'];
+    final categories = [MovieCategory.movie.label, MovieCategory.tv.label];
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -169,7 +169,7 @@ class _HomePageDesktopState extends ConsumerState<HomePageDesktop> {
 
   /// 构建来源标签
   Widget _buildSourceTags(dynamic viewModel) {
-    final sources = viewModel.currentCategory == '电影'
+    final sources = viewModel.currentCategory == MovieCategory.movie.label
         ? FilterCriteria.movieSources
         : FilterCriteria.tvSources;
 

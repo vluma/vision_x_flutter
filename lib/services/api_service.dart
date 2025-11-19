@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/home/models/douban_movie.dart';
+import '../features/home/models/filter_criteria.dart';
 import '../shared/models/media_detail.dart';
 
 /// 搜索数据状态管理类，处理搜索查询和UI状态
@@ -38,44 +39,16 @@ class ApiService {
   static const String baseUrl = 'https://movie.douban.com/j';
 
   // 默认电影标签
-  static const List<String> _defaultMovieTags = [
-    "热门",
-    "最新",
-    "经典",
-    "豆瓣高分",
-    "冷门佳片",
-    "华语",
-    "欧美",
-    "韩国",
-    "日本",
-    "动作",
-    "喜剧",
-    "爱情",
-    "科幻",
-    "悬疑",
-    "恐怖",
-    "治愈",
-  ];
+  static List<String> get _defaultMovieTags => FilterCriteria.movieSources;
 
   // 默认电视标签
-  static const List<String> _defaultTvTags = [
-    "热门",
-    "美剧",
-    "英剧",
-    "韩剧",
-    "日剧",
-    "国产剧",
-    "港剧",
-    "日本动画",
-    "综艺",
-    "纪录片",
-  ];
+  static List<String> get _defaultTvTags => FilterCriteria.tvSources;
 
   /// 获取默认电影标签列表
-  static List<String> get defaultMovieTags => _defaultMovieTags;
+  static List<String> get defaultMovieTags => FilterCriteria.movieSources;
 
   /// 获取默认电视剧标签列表
-  static List<String> get defaultTvTags => _defaultTvTags;
+  static List<String> get defaultTvTags => FilterCriteria.tvSources;
 
   // 豆瓣API Dio实例
   static final Dio _dio = Dio(BaseOptions(
