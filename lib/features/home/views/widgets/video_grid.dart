@@ -117,8 +117,8 @@ class _VideoGridState extends State<VideoGrid> {
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 0,
-        mainAxisSpacing: 0,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
       ),
       itemCount: widget.movies.length + (widget.hasMoreData ? 1 : 0),
       itemBuilder: (BuildContext context, int index) {

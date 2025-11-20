@@ -9,7 +9,6 @@ class SearchPageController extends ChangeNotifier {
   List<MediaDetail> _filteredResults = [];
   List<MediaDetail> _aggregatedResults = [];
   String _selectedCategory = '全部';
-  String _sortBy = 'default';
   bool _isLoading = false;
   bool _hasSearched = false;
   String _lastSearchQuery = '';
@@ -49,7 +48,6 @@ class SearchPageController extends ChangeNotifier {
     _isLoading = true;
     _hasSearched = true;
     _selectedCategory = '全部';
-    _sortBy = 'default';
     _safeNotifyListeners();
 
     try {
@@ -238,48 +236,6 @@ class SearchPageController extends ChangeNotifier {
         (media) =>
             '${media.name ?? ''} ${media.subtitle ?? ''} ${media.type ?? ''} ${media.category ?? ''} ${media.remarks ?? ''}');
 
-    // 应用当前排序
-    _sortResults();
-    _aggregatedResults = _aggregateMedia(_filteredResults);
-    _safeNotifyListeners();
-  }
-
-  /// 排序结果
-  void _sortResults() {
-    if (_disposed) return;
-    
-    switch (_sortBy) {
-      case 'score':
-        _filteredResults.sort((a, b) {
-          final scoreA = double.tryParse(a.score ?? '0') ?? 0;
-          final scoreB = double.tryParse(b.score ?? '0') ?? 0;
-          return scoreB.compareTo(scoreA);
-        });
-        break;
-      case 'time':
-        _filteredResults.sort((b, a) {
-          return b.timeAdd.compareTo(a.timeAdd);
-        });
-        break;
-      case 'hits':
-        _filteredResults.sort((a, b) {
-          final hitsA = a.hits ?? 0;
-          final hitsB = b.hits ?? 0;
-          return hitsB.compareTo(hitsA);
-        });
-        break;
-      default:
-        // 默认排序，保持原有顺序
-        break;
-    }
-  }
-
-  /// 更新排序方式
-  void updateSortBy(String sortBy) {
-    if (_disposed) return;
-    
-    _sortBy = sortBy;
-    _sortResults();
     _aggregatedResults = _aggregateMedia(_filteredResults);
     _safeNotifyListeners();
   }

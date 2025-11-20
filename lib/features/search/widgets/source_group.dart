@@ -27,7 +27,7 @@ class SourceGroup extends StatelessWidget {
         // 来源标题
         Container(
           padding: const EdgeInsets.only(
-              left: AppSpacing.md, top: AppSpacing.md, bottom: AppSpacing.sm),
+              left: AppSpacing.xl, top: AppSpacing.md, bottom: AppSpacing.sm),
           child: Text(
             sourceName,
             style: const TextStyle(
@@ -47,7 +47,7 @@ class SourceGroup extends StatelessWidget {
     if (mediaList.length == 1) {
       // 只有一个媒体项，使用与聚合视图相同的布局
       return Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, bottom: 12),
         child: MediaGridItem(
           media: mediaList[0],
           onTap: () => onMediaTap(mediaList[0]),
@@ -61,7 +61,7 @@ class SourceGroup extends StatelessWidget {
           Expanded(
             child: Container(
               height: 180, // 固定卡片高度
-              margin: const EdgeInsets.only(right: 0),
+              margin: const EdgeInsets.only(left: AppSpacing.md),
               child: VerticalMediaItem(
                 media: mediaList[0],
                 onTap: () => onMediaTap(mediaList[0]),
@@ -69,10 +69,11 @@ class SourceGroup extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: AppSpacing.baseUnit),
           Expanded(
             child: Container(
               height: 180, // 固定卡片高度
-              margin: const EdgeInsets.only(left: 0),
+              margin: const EdgeInsets.only(right: AppSpacing.md),
               child: VerticalMediaItem(
                 media: mediaList[1],
                 onTap: () => onMediaTap(mediaList[1]),
@@ -87,13 +88,16 @@ class SourceGroup extends StatelessWidget {
       return SizedBox(
         height: 180, // 固定卡片高度
         child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           scrollDirection: Axis.horizontal,
           itemCount: mediaList.length,
           itemBuilder: (context, index) {
             final media = mediaList[index];
             return Container(
               width: 120,
-              margin: const EdgeInsets.only(right: 0),
+              margin: EdgeInsets.only(
+                right: index < mediaList.length - 1 ? AppSpacing.baseUnit : 0,
+              ),
               child: VerticalMediaItem(
                 media: media,
                 onTap: () => onMediaTap(media),

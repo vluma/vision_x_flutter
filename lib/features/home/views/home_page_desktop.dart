@@ -4,7 +4,6 @@ import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/features/home/models/filter_criteria.dart';
 import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
-import 'package:vision_x_flutter/features/home/views/widgets/video_grid.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/loading_skeleton.dart';
 import 'package:vision_x_flutter/shared/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';

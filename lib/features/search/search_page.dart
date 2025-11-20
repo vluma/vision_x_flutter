@@ -3,11 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vision_x_flutter/services/api_service.dart';
 import 'package:vision_x_flutter/features/search/state/search_controller.dart';
-import 'package:vision_x_flutter/features/search/widgets/sort_popup_menu.dart';
 import 'package:vision_x_flutter/features/search/widgets/category_tabs.dart';
 import 'package:vision_x_flutter/features/search/widgets/source_group.dart';
 import 'package:vision_x_flutter/features/search/widgets/media_grid_item.dart';
-import 'package:vision_x_flutter/features/search/widgets/media_grid_item_skeleton.dart';
 import 'package:vision_x_flutter/features/search/widgets/search_loading_skeleton.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
 import 'package:vision_x_flutter/shared/models/media_detail.dart';
@@ -120,7 +118,6 @@ class _SearchPageContent extends StatelessWidget {
                   onPressed: onToggleViewMode,
                   tooltip: isGroupedView ? '切换到聚合视图' : '切换到分组视图',
                 ),
-                SortPopupMenu(onSortChanged: searchController.updateSortBy),
               ],
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(searchController.isLoading ||
@@ -172,7 +169,7 @@ class _SearchPageContent extends StatelessWidget {
   Widget _buildGroupedView(
       Map<String, List<MediaDetail>> groupedResults, BuildContext context) {
     return ListView.builder(
-      padding: AppSpacing.pageMargin.copyWith(
+      padding: const EdgeInsets.only(
         top: AppSpacing.md,
         bottom: AppSpacing.bottomNavigationBarMargin,
       ),
@@ -181,10 +178,10 @@ class _SearchPageContent extends StatelessWidget {
         final sourceName = groupedResults.keys.elementAt(index);
         final mediaList = groupedResults[sourceName]!;
         return SourceGroup(
-          sourceName: sourceName,
-          mediaList: mediaList,
-          onMediaTap: (media) => _navigateToPlayer(context, media),
-          onDetailTap: (media) => _showDetailPage(context, media),
+            sourceName: sourceName,
+            mediaList: mediaList,
+            onMediaTap: (media) => _navigateToPlayer(context, media),
+            onDetailTap: (media) => _showDetailPage(context, media),
         );
       },
     );
@@ -194,9 +191,11 @@ class _SearchPageContent extends StatelessWidget {
     return Consumer<SearchPageController>(
       builder: (context, searchController, child) {
         return ListView.builder(
-          padding: AppSpacing.pageMargin.copyWith(
+          padding: const EdgeInsets.only(
             top: AppSpacing.md,
             bottom: AppSpacing.bottomNavigationBarMargin,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
           ),
           itemCount: searchController.aggregatedResults.length,
           itemBuilder: (context, index) {

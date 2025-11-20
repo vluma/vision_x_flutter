@@ -26,7 +26,7 @@ class CustomCard extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Card(
-      margin: margin ?? const EdgeInsets.all(8.0),
+      margin: margin ?? EdgeInsets.zero,
       elevation: elevation ?? 2,
       color: color ?? (isDarkMode ? AppColors.darkCardBackground : AppColors.lightCardBackground),
       shadowColor: isDarkMode ? AppColors.darkShadow : AppColors.lightShadow,

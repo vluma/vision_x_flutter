@@ -45,9 +45,9 @@ class MediaGridItem extends StatelessWidget {
       BuildContext context, String? imageUrl, bool isDarkMode) {
     final theme = Theme.of(context);
     return Container(
-      width: 70,
-      height: 100,
-      margin: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+      width: 80,
+      height: 112,
+      margin: const EdgeInsets.only(right: 12.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
