@@ -54,6 +54,62 @@ class _WebViewPageState extends State<WebViewPage> {
     }
   }
 
+  /// 注入JavaScript代码以拦截弹窗
+  Future<void> _injectPopupInterceptScript() async {
+    final script = '''
+      // 保存原始的弹窗函数
+      const originalAlert = window.alert;
+      const originalConfirm = window.confirm;
+      const originalPrompt = window.prompt;
+      
+      // 重写alert函数
+      window.alert = function(msg) {
+        if (msg && msg.toString) {
+          PopupInterceptor.postMessage('Alert: ' + msg.toString());
+        }
+        return true;
+      };
+      
+      // 重写confirm函数
+      window.confirm = function(msg) {
+        if (msg && msg.toString) {
+          PopupInterceptor.postMessage('Confirm: ' + msg.toString());
+        }
+        return true;
+      };
+      
+      // 重写prompt函数
+      window.prompt = function(msg, defaultValue) {
+        if (msg && msg.toString) {
+          PopupInterceptor.postMessage('Prompt: ' + msg.toString());
+        }
+        return defaultValue || '';
+      };
+      
+      // 拦截可能的第三方弹窗脚本
+      const observer = new MutationObserver(function(mutationsList) {
+        for (let mutation of mutationsList) {
+          if (mutation.type === 'childList') {
+            for (let node of mutation.addedNodes) {
+              if (node.tagName === 'SCRIPT' && node.src && node.src.includes('netease')) {
+                node.parentNode.removeChild(node);
+                PopupInterceptor.postMessage('Blocked third-party script: ' + node.src);
+              }
+            }
+          }
+        }
+      });
+      
+      observer.observe(document.body, { childList: true, subtree: true });
+    ''';
+    
+    try {
+      await _controller.runJavaScript(script);
+    } catch (e) {
+      print('注入弹窗拦截脚本失败: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +136,9 @@ class _WebViewPageState extends State<WebViewPage> {
                 _canGoBack = canGoBack;
               });
             }
+            
+            // 注入JavaScript代码以拦截弹窗
+            _injectPopupInterceptScript();
           },
           onWebResourceError: (WebResourceError error) {
             // 处理网页加载错误
@@ -125,6 +184,19 @@ class _WebViewPageState extends State<WebViewPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(message.message)),
             );
+          }
+        },
+      )
+      ..addJavaScriptChannel(
+        'PopupInterceptor',
+        onMessageReceived: (JavaScriptMessage message) {
+          // 处理被拦截的弹窗消息
+          if (mounted) {
+            print('拦截到弹窗: ${message.message}');
+            // 可以选择是否显示通知给用户
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(content: Text('网页尝试显示弹窗: ${message.message}')),
+            // );
           }
         },
       )

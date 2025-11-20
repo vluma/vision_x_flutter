@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vision_x_flutter/features/home/models/douban_movie.dart';
 import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/home_app_bar.dart';
@@ -74,6 +73,4 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
-  
-
 }

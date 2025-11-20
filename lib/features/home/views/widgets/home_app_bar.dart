@@ -96,13 +96,22 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     ];
 
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.sort),
+      icon: Icon(
+        Icons.sort,
+        color: Theme.of(context).iconTheme.color,
+      ),
+      color: Theme.of(context).cardColor, // 使用主题背景色
       onSelected: onSortChanged,
       itemBuilder: (BuildContext context) {
         return sortOptions.map((option) {
           return PopupMenuItem<String>(
             value: option['value']!,
-            child: Text(option['label']!),
+            child: Text(
+              option['label']!,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
           );
         }).toList();
       },
