@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/themes/spacing.dart';
-import '../../providers/settings_provider.dart';
+import 'package:vision_x_flutter/core/themes/spacing.dart';
 import '../../widgets/settings_card.dart';
+import '../../providers/settings_provider.dart';
 
 /// 功能开关设置区块
-///
-/// 用于控制应用的各种功能开关
+/// 
+/// 用于设置应用的各种功能开关
 class FeatureSwitchSection extends ConsumerWidget {
   /// 构造函数
   const FeatureSwitchSection({super.key});
@@ -19,283 +19,59 @@ class FeatureSwitchSection extends ConsumerWidget {
 
     return SettingsCard(
       title: '功能开关',
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 黄色内容过滤
-          Container(
-            padding: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom:
-                    BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+      content: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            // 黄色内容过滤
+            SwitchListTile(
+              activeColor: Theme.of(context).primaryColor,
+              title: const Text('过滤黄色内容'),
+              subtitle: const Text('开启后将过滤包含黄色内容的视频'),
+              value: settingsState.settings.yellowFilterEnabled,
+              onChanged: (bool value) {
+                settingsNotifier.updateYellowFilter(value);
+              },
+            ),
+            const Divider(height: 1),
+            // 广告过滤
+            SwitchListTile(
+              activeColor: Theme.of(context).primaryColor,
+              title: const Text('过滤广告'),
+              subtitle: const Text('开启后将过滤视频中的广告内容'),
+              value: settingsState.settings.adFilterEnabled,
+              onChanged: (bool value) {
+                settingsNotifier.updateAdFilter(value);
+              },
+            ),
+            // 广告过滤子选项
+            if (settingsState.settings.adFilterEnabled) ...[
+              const Divider(height: 1),
+              SwitchListTile(
+                activeColor: Theme.of(context).primaryColor,
+                title: const Text('通过元数据区分过滤广告'),
+                subtitle: const Text('通过视频元数据识别并过滤广告'),
+                value: settingsState.settings.adFilterByMetadata,
+                onChanged: (bool value) {
+                  settingsNotifier.updateAdFilterByMetadata(value);
+                },
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '黄色内容过滤',
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black87,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '过滤搜索列表中"伦理"等类型的视频',
-                        style: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black54,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  activeColor: Theme.of(context).primaryColor,
-                  value: settingsState.settings.yellowFilterEnabled,
-                  onChanged: (bool value) {
-                    settingsNotifier.updateYellowFilter(value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 分片广告过滤
-          Container(
-            padding: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom:
-                    BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+              const Divider(height: 1),
+              SwitchListTile(
+                activeColor: Theme.of(context).primaryColor,
+                title: const Text('通过分辨率区分过滤广告'),
+                subtitle: const Text('注意：Beta功能，可能导致未知问题'),
+                value: settingsState.settings.adFilterByResolution,
+                onChanged: (bool value) {
+                  settingsNotifier.updateAdFilterByResolution(value);
+                },
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            '分片广告过滤',
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black87,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Beta',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.orange.shade200
-                                    : Colors.orange.shade800,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '关闭可减少旧版浏览器卡顿',
-                        style: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black54,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '注意：此功能为Beta版本，可能导致未知问题',
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.orange.shade200
-                              : Colors.orange.shade800,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  activeColor: Theme.of(context).primaryColor,
-                  value: settingsState.settings.adFilterEnabled,
-                  onChanged: (bool value) {
-                    settingsNotifier.updateAdFilter(value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          // 广告过滤子选项
-          if (settingsState.settings.adFilterEnabled) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                      color: isDark ? Colors.white12 : Colors.black12),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              '通过元数据过滤广告',
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black87,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Beta',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.orange.shade200
-                                      : Colors.orange.shade800,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '通过码率和标签过滤广告（快速）',
-                          style: TextStyle(
-                            color: isDark ? Colors.white38 : Colors.black54,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '注意：Beta功能，可能导致未知问题',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.orange.shade200
-                                : Colors.orange.shade800,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    activeColor: Theme.of(context).primaryColor,
-                    value: settingsState.settings.adFilterByMetadata,
-                    onChanged: (bool value) {
-                      settingsNotifier.updateAdFilterByMetadata(value);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              '通过分辨率过滤广告',
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black87,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Beta',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.orange.shade200
-                                      : Colors.orange.shade800,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '通过分辨率区分过滤广告',
-                          style: TextStyle(
-                            color: isDark ? Colors.white38 : Colors.black54,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '注意：Beta功能，可能导致未知问题',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.orange.shade200
-                                : Colors.orange.shade800,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    activeColor: Theme.of(context).primaryColor,
-                    value: settingsState.settings.adFilterByResolution,
-                    onChanged: (bool value) {
-                      settingsNotifier.updateAdFilterByResolution(value);
-                    },
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

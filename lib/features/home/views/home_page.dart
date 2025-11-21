@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vision_x_flutter/core/utils/startup_manager.dart';
 import 'package:vision_x_flutter/features/home/providers/home_providers.dart';
 import 'package:vision_x_flutter/features/home/states/home_state.dart';
 import 'package:vision_x_flutter/features/home/views/widgets/home_app_bar.dart';
@@ -18,6 +19,8 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  static bool _updateChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +29,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       Future.microtask(() {
         ref.read(homeViewModelProvider.notifier).loadMovies();
       });
+      
+      // 在首页加载后检查更新
+      if (!_updateChecked) {
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            StartupManager.checkForUpdates(context);
+          }
+        });
+        _updateChecked = true;
+      }
     });
   }
 

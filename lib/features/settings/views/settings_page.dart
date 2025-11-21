@@ -41,21 +41,20 @@ class _SettingsContent extends ConsumerWidget {
       child: Padding(
         padding: AppSpacing.pageMargin.copyWith(
           top: AppSpacing.md,
-          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.lg,
         ),
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DataSourceSection(),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.md),
             CustomApiSection(),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.md),
             ThemeSection(),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.md),
             FeatureSwitchSection(),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.md),
             GeneralFunctionsSection(),
-            SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),

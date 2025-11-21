@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/themes/spacing.dart';
-import '../../providers/settings_provider.dart';
+import 'package:vision_x_flutter/core/themes/spacing.dart';
 import '../../widgets/settings_card.dart';
+import '../../providers/settings_provider.dart';
 
 /// 主题设置区块
 /// 
@@ -19,50 +19,47 @@ class ThemeSection extends ConsumerWidget {
 
     return SettingsCard(
       title: '主题设置',
-      content: ListTile(
-        title: Text(
-          '主题选择',
-          style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black87,
-          ),
+      content: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(12),
         ),
-        trailing: DropdownButton<int>(
-          value: settingsState.settings.selectedTheme,
-          dropdownColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-          items: [
-            DropdownMenuItem(
+        child: Column(
+          children: [
+            RadioListTile<int>(
+              activeColor: Theme.of(context).primaryColor,
+              title: const Text('跟随系统'),
               value: 0,
-              child: Text(
-                '系统默认',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
+              groupValue: settingsState.settings.selectedTheme,
+              onChanged: (int? value) {
+                if (value != null) {
+                  settingsNotifier.updateTheme(value, context);
+                }
+              },
             ),
-            DropdownMenuItem(
+            RadioListTile<int>(
+              activeColor: Theme.of(context).primaryColor,
+              title: const Text('浅色模式'),
               value: 1,
-              child: Text(
-                '浅色主题',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
+              groupValue: settingsState.settings.selectedTheme,
+              onChanged: (int? value) {
+                if (value != null) {
+                  settingsNotifier.updateTheme(value, context);
+                }
+              },
             ),
-            DropdownMenuItem(
+            RadioListTile<int>(
+              activeColor: Theme.of(context).primaryColor,
+              title: const Text('深色模式'),
               value: 2,
-              child: Text(
-                '深色主题',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
+              groupValue: settingsState.settings.selectedTheme,
+              onChanged: (int? value) {
+                if (value != null) {
+                  settingsNotifier.updateTheme(value, context);
+                }
+              },
             ),
           ],
-          onChanged: (int? value) {
-            if (value != null) {
-              settingsNotifier.updateTheme(value, context);
-            }
-          },
         ),
       ),
     );

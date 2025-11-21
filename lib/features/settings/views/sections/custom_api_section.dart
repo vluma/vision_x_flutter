@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/themes/spacing.dart';
-import '../../providers/settings_provider.dart';
+import 'package:vision_x_flutter/core/themes/spacing.dart';
 import '../../widgets/settings_card.dart';
+import '../../providers/settings_provider.dart';
 
 /// 自定义API设置区块
 /// 
@@ -36,237 +36,243 @@ class _CustomApiSectionState extends ConsumerState<CustomApiSection> {
 
     return SettingsCard(
       title: '自定义API',
-      action: IconButton(
-        onPressed: settingsNotifier.showAddCustomApiForm,
-        icon: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: Text(
-              '+',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+      content: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(12),
         ),
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(),
-      ),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 自定义API列表
-          if (settingsState.settings.customApis.isNotEmpty)
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListView.builder(
-                itemCount: settingsState.settings.customApis.length,
-                itemBuilder: (context, index) {
-                  final api = settingsState.settings.customApis[index];
-                  final isHidden = api['isHidden'] == 'true';
-                  return ListTile(
-                    title: Row(
-                      children: [
-                        Text(
-                          api['name']!,
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            fontSize: 14,
+        child: Column(
+          children: [
+            // 自定义API表单
+            if (settingsState.customApiForm.showForm) ...[
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _apiNameController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'API名称',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
                           ),
                         ),
-                        if (isHidden) ...[ 
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              '隐藏',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                            ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
                           ),
-                        ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextField(
+                      controller: _apiUrlController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'API地址',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextField(
+                      controller: _apiDetailController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: '详情地址（可选）',
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        Checkbox(
+                          activeColor: Theme.of(context).primaryColor,
+                          value: settingsState.customApiForm.isHiddenSource,
+                          onChanged: (bool? value) {
+                            settingsNotifier.updateIsHiddenSource(value ?? false);
+                          },
+                        ),
+                        const Text('隐藏资源站'),
                       ],
                     ),
-                    subtitle: Text(
-                      api['api']!,
-                      style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.black54,
-                        fontSize: 12,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete,
-                        color: isDark ? Colors.white38 : Colors.grey,
-                        size: 20,
-                      ),
-                      onPressed: () => settingsNotifier.removeCustomApi(index, context),
-                    ),
-                  );
-                },
-              ),
-            ),
-          // 添加自定义API表单
-          if (settingsState.customApiForm.showForm) ...[ 
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFFAFAFA),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _apiNameController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      labelText: 'API名称',
-                      labelStyle: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: isDark ? Colors.white12 : Colors.black12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _apiUrlController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      labelText: 'https://abc.com',
-                      labelStyle: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: isDark ? Colors.white12 : Colors.black12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _apiDetailController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      labelText: 'detail地址（可选）',
-                      labelStyle: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: isDark ? Colors.white12 : Colors.black12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // 隐藏资源站复选框
-                  Row(
-                    children: [
-                      Checkbox(
-                        activeColor: Theme.of(context).primaryColor,
-                        value: settingsState.customApiForm.isHiddenSource,
-                        onChanged: (bool? value) {
-                          settingsNotifier.updateIsHiddenSource(value ?? false);
-                        },
-                      ),
-                      Text(
-                        '隐藏资源站',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 12,
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => settingsNotifier.cancelAddCustomApi(),
+                          child: const Text('取消'),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          settingsNotifier.addCustomApi(
-                            _apiNameController.text,
-                            _apiUrlController.text,
-                            _apiDetailController.text,
-                            context,
-                          );
-                          _apiNameController.clear();
-                          _apiUrlController.clear();
-                          _apiDetailController.clear();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
+                        const SizedBox(width: AppSpacing.sm),
+                        ElevatedButton(
+                          onPressed: () {
+                            settingsNotifier.addCustomApi(
+                              _apiNameController.text,
+                              _apiUrlController.text,
+                              _apiDetailController.text,
+                              context,
+                            );
+                            _apiNameController.clear();
+                            _apiUrlController.clear();
+                            _apiDetailController.clear();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          child: const Text('添加'),
                         ),
-                        child: const Text(
-                          '添加',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          settingsNotifier.cancelAddCustomApi();
-                          _apiNameController.clear();
-                          _apiUrlController.clear();
-                          _apiDetailController.clear();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? const Color(0xFF3D3D3D)
-                              : const Color(0xFFE0E0E0),
-                          foregroundColor: isDark ? Colors.white : Colors.black87,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                        ),
-                        child: const Text(
-                          '取消',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              // 添加自定义API按钮
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => settingsNotifier.showAddCustomApiForm(),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('添加自定义API'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            // 自定义API列表
+            if (settingsState.settings.customApis.isNotEmpty) ...[
+              Container(
+                height: 150,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF252525) : Colors.white,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: settingsState.settings.customApis.length,
+                  itemBuilder: (context, index) {
+                    final api = settingsState.settings.customApis[index];
+                    final isHidden = api['isHidden'] == 'true';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF3D3D3D) : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 0,
+                        ),
+                        title: Text(
+                          api['name'] ?? '',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        subtitle: Text(
+                          api['api'] ?? '',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isHidden) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '隐藏',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            IconButton(
+                              onPressed: () => settingsNotifier.removeCustomApi(index, context),
+                              icon: Icon(
+                                Icons.delete,
+                                color: isDark ? Colors.redAccent : Colors.red,
+                                size: 20,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

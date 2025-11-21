@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vision_x_flutter/services/update_service.dart';
+import 'package:vision_x_flutter/services/install_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vision_x_flutter/core/themes/spacing.dart';
+import 'package:go_router/go_router.dart'; // 添加go_router导入
 import '../settings_controller.dart';
 
-class GeneralFunctionsSection extends StatelessWidget {
+class GeneralFunctionsSection extends StatefulWidget {
   const GeneralFunctionsSection({super.key});
+
+  @override
+  State<GeneralFunctionsSection> createState() => _GeneralFunctionsSectionState();
+}
+
+class _GeneralFunctionsSectionState extends State<GeneralFunctionsSection> {
+  bool _isCheckingUpdate = false;
+  bool _hasNewVersion = false;
+  String? _newVersion;
 
   // 导入配置
   void _importConfig(BuildContext context) {
@@ -24,10 +36,151 @@ class GeneralFunctionsSection extends StatelessWidget {
   }
 
   // 检查更新
-  void _checkUpdate(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('当前已是最新版本')),
+  Future<void> _checkUpdate(BuildContext context) async {
+    setState(() {
+      _isCheckingUpdate = true;
+      _hasNewVersion = false;
+      _newVersion = null;
+    });
+
+    try {
+      // 初始化更新服务，使用您提供的实际密钥
+      final updateService = UpdateService(
+        apiKey: '65e9608ac0509189f3a36b3170ac3065', // 您提供的API Key
+        appKey: '459d8d1f4abc2b79fca6d6a240bab74d', // 您提供的App Key
+      );
+
+      final updateInfo = await updateService.checkForUpdate();
+      
+      // 打印更新信息用于调试
+      if (updateInfo != null) {
+        debugPrint('=== App Update Info ===');
+        debugPrint('Has new version: ${updateInfo.buildHaveNewVersion}');
+        debugPrint('Current version: ${updateInfo.buildVersion}');
+        debugPrint('Version number: ${updateInfo.buildVersionNo}');
+        debugPrint('Build version: ${updateInfo.buildBuildVersion}');
+        debugPrint('Download URL: ${updateInfo.downloadURL}');
+        debugPrint('Build Key: ${updateInfo.buildKey}');
+        debugPrint('Update description: ${updateInfo.buildUpdateDescription}');
+        debugPrint('Need force update: ${updateInfo.needForceUpdate}');
+        debugPrint('========================');
+      } else {
+        debugPrint('=== App Update Info ===');
+        debugPrint('Failed to get update info or no update info available');
+        debugPrint('========================');
+      }
+
+      if (updateInfo != null && updateInfo.buildHaveNewVersion) {
+        // 有新版本
+        setState(() {
+          _hasNewVersion = true;
+          _newVersion = updateInfo.buildVersion;
+        });
+        _showUpdateDialog(context, updateInfo);
+      } else {
+        // 没有新版本
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('当前已是最新版本')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('=== App Update Error ===');
+      debugPrint('Error checking for update: $e');
+      debugPrint('========================');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('检查更新失败')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingUpdate = false;
+        });
+      }
+    }
+  }
+
+  /// 显示更新对话框
+  void _showUpdateDialog(BuildContext context, UpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('发现新版本 ${updateInfo.buildVersion}'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (updateInfo.buildUpdateDescription.isNotEmpty)
+                Text(updateInfo.buildUpdateDescription),
+              const SizedBox(height: 16),
+              Text('版本: ${updateInfo.buildVersion}'),
+              Text('版本号: ${updateInfo.buildVersionNo}'),
+              if (updateInfo.needForceUpdate)
+                const Text(
+                  '此更新为强制更新',
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              // 保存用户选择跳过该版本
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('skip_version', updateInfo.buildVersion);
+              if (mounted) {
+                Navigator.of(context).pop();
+                setState(() {
+                  _hasNewVersion = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('已设置当前版本不再提示')),
+                );
+              }
+            },
+            child: const Text('当前版本不再提示'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('稍后更新'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // 导航到WebView页面显示更新链接
+              _showUpdateWebView(context, updateInfo);
+            },
+            child: const Text('立即更新'),
+          ),
+        ],
+      ),
     );
+  }
+
+  /// 显示更新页面WebView
+  void _showUpdateWebView(BuildContext context, UpdateInfo updateInfo) {
+    // 使用安装服务生成更新链接
+    final installService = InstallService(
+      apiKey: '65e9608ac0509189f3a36b3170ac3065',
+    );
+    
+    String url;
+    if (updateInfo.buildKey.isNotEmpty) {
+      url = installService.generateInstallUrlByBuildKey(updateInfo.buildKey);
+    } else {
+      url = updateInfo.downloadURL;
+    }
+    
+    // 导航到WebView页面
+    context.push('/webview', extra: {'url': url, 'title': '应用更新'});
   }
 
   // 关于应用
@@ -84,6 +237,12 @@ class GeneralFunctionsSection extends StatelessWidget {
                 // 重新加载设置
                 final controller = Provider.of<SettingsController>(context, listen: false);
                 await controller.loadSettings();
+                
+                // 重置更新状态
+                setState(() {
+                  _hasNewVersion = false;
+                  _newVersion = null;
+                });
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('本地数据已清除')),
@@ -162,9 +321,38 @@ class GeneralFunctionsSection extends StatelessWidget {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 12),
               child: ElevatedButton.icon(
-                onPressed: () => _checkUpdate(context),
-                icon: const Icon(Icons.system_update, size: 18),
-                label: const Text('检查更新'),
+                onPressed: _isCheckingUpdate ? null : () => _checkUpdate(context),
+                icon: _isCheckingUpdate
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.system_update, size: 18),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('检查更新'),
+                    if (_hasNewVersion) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.brightness_1,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 12,
+                      ),
+                      if (_newVersion != null) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          'v$_newVersion',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
